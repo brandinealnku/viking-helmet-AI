@@ -2,13 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Viking Helmet AI Filter (Final Debug)</title>
-
-  <!-- TensorFlow.js union bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0/dist/tf.js"></script>
-
-  <!-- Face Landmarks Detection (MediaPipe facemesh package) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.1/dist/face-landmarks-detection.js"></script>
+  <title>Viking Helmet Overlay (Reliable Demo)</title>
 
   <style>
     body {
@@ -63,8 +57,12 @@
 </head>
 
 <body>
-  <h1>🪖 Viking Helmet AI Filter (Debug)</h1>
-  <p>AI runs in your browser, and we draw an overlay on top of the camera feed.</p>
+  <h1>🪖 Viking Helmet Overlay (Canvas Demo)</h1>
+  <p>
+    This shows how JavaScript can draw graphics on top of a live camera feed using
+    <code>&lt;canvas&gt;</code>. Real AI demos use the same idea, but move the helmet based on
+    face-tracking instead of a fixed position.
+  </p>
 
   <div id="videoContainer">
     <video id="video" autoplay playsinline muted></video>
@@ -78,11 +76,9 @@
     const canvas = document.getElementById("overlay");
     const ctx = canvas.getContext("2d");
     const statusEl = document.getElementById("status");
-    let model = null;
 
-    console.log("🔥 Viking script loaded");
+    console.log("🔥 Simple overlay script running");
 
-    // --- 1) Camera setup ----------------------------------------------------
     async function setupCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -105,66 +101,28 @@
       }
     }
 
-    // --- 2) Helpers for landmarks / boxes ----------------------------------
-    function getXY(pt) {
-      if (!pt) return null;
-      if (Array.isArray(pt)) return { x: pt[0], y: pt[1] };
-      if (typeof pt === "object" && "x" in pt && "y" in pt) {
-        return { x: pt.x, y: pt.y };
-      }
-      return null;
-    }
+    function drawStaticHelmet() {
+      const w = canvas.width;
+      const h = canvas.height;
 
-    function computeBoxFromLandmarks(landmarks) {
-      if (!landmarks || !landmarks.length) return null;
+      // Clear previous frame
+      ctx.clearRect(0, 0, w, h);
 
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      // Optional: faint transparent overlay just to make it obvious
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillRect(0, 0, w, h);
 
-      for (const pt of landmarks) {
-        const xy = getXY(pt);
-        if (!xy) continue;
-        const { x, y } = xy;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
+      // We'll put the helmet roughly near the top center of the frame
+      const faceWidth = w * 0.3;
+      const centerX = w / 2;
+      const topFaceY = h * 0.25;
 
-      if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) {
-        return null;
-      }
-      return {
-        topLeft: [minX, minY],
-        bottomRight: [maxX, maxY]
-      };
-    }
-
-    // --- 3) Drawing the helmet ---------------------------------------------
-    function drawHelmet(topLeft, bottomRight) {
-      if (!topLeft || !bottomRight) return;
-
-      const [x1, y1] = topLeft;
-      const [x2, y2] = bottomRight;
-
-      console.log("topLeft:", topLeft, "bottomRight:", bottomRight);
-
-      const faceWidth = x2 - x1;
-      const centerX = x1 + faceWidth / 2;
-      const topFaceY = y1;
       const helmetWidth = faceWidth * 1.6;
       const helmetHeight = faceWidth * 0.8;
       const helmetCenterY = topFaceY - helmetHeight * 0.4;
 
       ctx.save();
       ctx.lineWidth = 3;
-
-      // 🧪 Always draw this so we KNOW overlay is working
-      ctx.fillStyle = "rgba(0, 255, 0, 0.25)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // 🧪 Debug: face box
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(x1, y1, faceWidth, helmetHeight);
 
       // Helmet top
       ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
@@ -198,19 +156,20 @@
 
       // Left horn
       const leftBase = centerX - helmetWidth * 0.45;
+      const baseY = helmetCenterY;
       ctx.beginPath();
-      ctx.moveTo(leftBase, helmetCenterY);
+      ctx.moveTo(leftBase, baseY);
       ctx.quadraticCurveTo(
         leftBase - helmetWidth * 0.35,
-        helmetCenterY - helmetHeight,
+        baseY - helmetHeight,
         leftBase + helmetWidth * 0.05,
-        helmetCenterY - helmetHeight * 0.9
+        baseY - helmetHeight * 0.9
       );
       ctx.quadraticCurveTo(
         leftBase - helmetWidth * 0.25,
-        helmetCenterY - helmetHeight * 0.8,
+        baseY - helmetHeight * 0.8,
         leftBase,
-        helmetCenterY
+        baseY
       );
       ctx.fill();
       ctx.stroke();
@@ -218,18 +177,18 @@
       // Right horn
       const rightBase = centerX + helmetWidth * 0.45;
       ctx.beginPath();
-      ctx.moveTo(rightBase, helmetCenterY);
+      ctx.moveTo(rightBase, baseY);
       ctx.quadraticCurveTo(
         rightBase + helmetWidth * 0.35,
-        helmetCenterY - helmetHeight,
+        baseY - helmetHeight,
         rightBase - helmetWidth * 0.05,
-        helmetCenterY - helmetHeight * 0.9
+        baseY - helmetHeight * 0.9
       );
       ctx.quadraticCurveTo(
         rightBase + helmetWidth * 0.25,
-        helmetCenterY - helmetHeight * 0.8,
+        baseY - helmetHeight * 0.8,
         rightBase,
-        helmetCenterY
+        baseY
       );
       ctx.fill();
       ctx.stroke();
@@ -237,85 +196,20 @@
       ctx.restore();
     }
 
-    // --- 4) Main render loop -----------------------------------------------
-    async function renderLoop() {
-      if (!model) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Force plain numbers for output
-      const predictions = await model.estimateFaces({
-        input: video,
-        returnTensors: false,
-        flipHorizontal: false,
-        predictIrises: false
-      });
-
-      if (predictions.length > 0) {
-        const face = predictions[0];
-
-        if (!window._loggedFaceOnce) {
-          console.log("Face prediction keys:", Object.keys(face));
-          console.log("Example face object:", face);
-          window._loggedFaceOnce = true;
-        }
-
-        let topLeft = face.topLeft;
-        let bottomRight = face.bottomRight;
-
-        // Try boundingBox if needed
-        if ((!topLeft || !bottomRight) && face.boundingBox) {
-          topLeft = face.boundingBox.topLeft;
-          bottomRight = face.boundingBox.bottomRight;
-        }
-
-        // Fallback: compute from landmarks
-        if (!topLeft || !bottomRight) {
-          const landmarks =
-            face.scaledMesh || face.mesh || face.keypoints || face.landmarks;
-          const box = computeBoxFromLandmarks(landmarks);
-          if (box) {
-            topLeft = box.topLeft;
-            bottomRight = box.bottomRight;
-          }
-        }
-
-        if (topLeft && bottomRight) {
-          drawHelmet(topLeft, bottomRight);
-          statusEl.textContent = "Helmet active 🪖 (face detected)";
-        } else {
-          // Still draw green overlay so you at least SEE something
-          ctx.fillStyle = "rgba(0, 255, 0, 0.25)";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          statusEl.textContent = "Model loaded — face, but no box.";
-          console.log("Face detected but no usable box:", face);
-        }
-      } else {
-        // No faces: still show the overlay so demo is visual
-        ctx.fillStyle = "rgba(0, 255, 0, 0.25)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        statusEl.textContent = "Model loaded — no face detected.";
+    function renderLoop() {
+      if (!canvas.width || !canvas.height) {
+        requestAnimationFrame(renderLoop);
+        return;
       }
+
+      drawStaticHelmet();
+      statusEl.textContent = "Overlay active: static Viking helmet on top of video 🪖";
 
       requestAnimationFrame(renderLoop);
     }
 
-    // --- 5) Init -----------------------------------------------------------
     async function init() {
       await setupCamera();
-
-      statusEl.textContent = "Loading AI model…";
-
-      await tf.setBackend("webgl");
-      await tf.ready();
-      console.log("TFJS backend:", tf.getBackend());
-
-      model = await faceLandmarksDetection.load(
-        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-      );
-      console.log("Model loaded:", model);
-
-      statusEl.textContent = "Model loaded. Detecting face…";
       renderLoop();
     }
 

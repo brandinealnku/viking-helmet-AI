@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Viking Helmet AI Filter</title>
+
+  <!-- TensorFlow.js union bundle (includes core + converter + webgl backend) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0/dist/tf.js"></script>
+
+  <!-- Face Landmarks Detection model (MediaPipe Facemesh package) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.1/dist/face-landmarks-detection.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 0.25rem;
+      text-align: center;
+    }
+    p {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    #videoContainer {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      background: #020617;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    video, canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    #status {
+      margin-top: 12px;
+      font-size: 1rem;
+      color: #a5b4fc;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🪖 Viking Helmet AI Filter</h1>
+  <p>This runs AI in your browser — no Python, no server.</p>
+
+  <div id="videoContainer">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <div id="status">Loading camera…</div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+    let model;
+
+    // Start webcam
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 }
+        });
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            console.log("Video size:", video.videoWidth, video.videoHeight);
+            resolve();
+          };
+        });
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        statusEl.textContent = "Unable to access camera. Check permissions and HTTPS.";
+      }
+    }
+
+    // Draw helmet using only bounding box
+    function drawHelmet(topLeft, bottomRight) {
+      if (!topLeft || !bottomRight) return;
+
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+
+      const faceWidth = x2 - x1;
+      const centerX = x1 + faceWidth / 2;
+      const topFaceY = y1;
+      const helmetWidth = faceWidth * 1.6;
+      const helmetHeight = faceWidth * 0.8;
+      const helmetCenterY = topFaceY - helmetHeight * 0.4;
+
+      ctx.save();
+      ctx.lineWidth = 3;
+
+      // (Optional) debug: face box
+      ctx.strokeStyle = "red";
+      ctx.strokeRect(x1, y1, faceWidth, helmetHeight); // quick visual sanity check
+
+      // Helmet top (ellipse)
+      ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
+      ctx.strokeStyle = "rgba(120, 53, 15, 1)";
+      ctx.beginPath();
+      ctx.ellipse(
+        centerX,
+        helmetCenterY,
+        helmetWidth / 2,
+        helmetHeight / 2,
+        0,
+        Math.PI,
+        0,
+        true
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      // Helmet band
+      ctx.fillStyle = "rgba(250, 204, 21, 0.95)";
+      ctx.fillRect(
+        centerX - helmetWidth / 2,
+        helmetCenterY,
+        helmetWidth,
+        helmetHeight * 0.18
+      );
+
+      // Horns
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "white";
+
+      // Left horn
+      const leftBase = centerX - helmetWidth * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(leftBase, helmetCenterY);
+      ctx.quadraticCurveTo(
+        leftBase - helmetWidth * 0.35,
+        helmetCenterY - helmetHeight,
+        leftBase + helmetWidth * 0.05,
+        helmetCenterY - helmetHeight * 0.9
+      );
+      ctx.quadraticCurveTo(
+        leftBase - helmetWidth * 0.25,
+        helmetCenterY - helmetHeight * 0.8,
+        leftBase,
+        helmetCenterY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      // Right horn
+      const rightBase = centerX + helmetWidth * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(rightBase, helmetCenterY);
+      ctx.quadraticCurveTo(
+        rightBase + helmetWidth * 0.35,
+        helmetCenterY - helmetHeight,
+        rightBase - helmetWidth * 0.05,
+        helmetCenterY - helmetHeight * 0.9
+      );
+      ctx.quadraticCurveTo(
+        rightBase + helmetWidth * 0.25,
+        helmetCenterY - helmetHeight * 0.8,
+        rightBase,
+        helmetCenterY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // Main AI loop
+    async function renderLoop() {
+      if (!model) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const predictions = await model.estimateFaces({ input: video });
+
+      if (predictions.length > 0) {
+        const face = predictions[0];
+
+        // As per TF blog example, predictions[0].boundingBox.topLeft / bottomRight :contentReference[oaicite:0]{index=0}
+        const bb = face.boundingBox || {};
+        const topLeft = face.topLeft || bb.topLeft;
+        const bottomRight = face.bottomRight || bb.bottomRight;
+
+        if (topLeft && bottomRight) {
+          drawHelmet(topLeft, bottomRight);
+        } else {
+          console.log("Prediction found but no topLeft/bottomRight:", face);
+        }
+
+        statusEl.textContent = "Helmet active 🪖 (face detected)";
+      } else {
+        statusEl.textContent = "Model loaded — no face detected.";
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    async function init() {
+      await setupCamera();
+
+      statusEl.textContent = "Loading AI model…";
+
+      // Ensure TF.js backend is ready
+      await tf.setBackend("webgl");
+      await tf.ready();
+      console.log("TFJS backend:", tf.getBackend());
+
+      model = await faceLandmarksDetection.load(
+        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+      );
+      console.log("Model loaded:", model);
+
+      statusEl.textContent = "Model loaded. Detecting face…";
+      renderLoop();
+    }
+
+    init();
+  </script>
+</body>
+</html>

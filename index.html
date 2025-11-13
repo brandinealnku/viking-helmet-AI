@@ -65,178 +65,191 @@
 
   <div id="status">Loading camera…</div>
 
-  <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("overlay");
-    const ctx = canvas.getContext("2d");
-    const statusEl = document.getElementById("status");
-    let model;
+<script>
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("overlay");
+  const ctx = canvas.getContext("2d");
+  const statusEl = document.getElementById("status");
+  let model;
 
-    // Start webcam
-    async function setupCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 }
-        });
-        video.srcObject = stream;
+  // Start webcam
+  async function setupCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 }
+      });
+      video.srcObject = stream;
 
-        return new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            video.play();
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            console.log("Video size:", video.videoWidth, video.videoHeight);
-            resolve();
-          };
-        });
-      } catch (err) {
-        console.error("Error accessing camera:", err);
-        statusEl.textContent = "Unable to access camera. Check permissions and HTTPS.";
-      }
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          video.play();
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          console.log("Video size:", video.videoWidth, video.videoHeight);
+          resolve();
+        };
+      });
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      statusEl.textContent = "Unable to access camera. Check permissions and HTTPS.";
     }
+  }
 
-    // Draw helmet using only bounding box
-    function drawHelmet(topLeft, bottomRight) {
-      if (!topLeft || !bottomRight) return;
+  // Draw helmet using only bounding box
+  function drawHelmet(topLeft, bottomRight) {
+    if (!topLeft || !bottomRight) return;
 
-      const [x1, y1] = topLeft;
-      const [x2, y2] = bottomRight;
+    // topLeft & bottomRight should now be plain arrays of [x, y]
+    const [x1, y1] = topLeft;
+    const [x2, y2] = bottomRight;
 
-      const faceWidth = x2 - x1;
-      const centerX = x1 + faceWidth / 2;
-      const topFaceY = y1;
-      const helmetWidth = faceWidth * 1.6;
-      const helmetHeight = faceWidth * 0.8;
-      const helmetCenterY = topFaceY - helmetHeight * 0.4;
+    // If these are NaN, nothing will render — log for sanity
+    console.log("topLeft:", topLeft, "bottomRight:", bottomRight);
 
-      ctx.save();
-      ctx.lineWidth = 3;
+    const faceWidth = x2 - x1;
+    const centerX = x1 + faceWidth / 2;
+    const topFaceY = y1;
+    const helmetWidth = faceWidth * 1.6;
+    const helmetHeight = faceWidth * 0.8;
+    const helmetCenterY = topFaceY - helmetHeight * 0.4;
 
-      // (Optional) debug: face box
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(x1, y1, faceWidth, helmetHeight); // quick visual sanity check
+    ctx.save();
+    ctx.lineWidth = 3;
 
-      // Helmet top (ellipse)
-      ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
-      ctx.strokeStyle = "rgba(120, 53, 15, 1)";
-      ctx.beginPath();
-      ctx.ellipse(
-        centerX,
-        helmetCenterY,
-        helmetWidth / 2,
-        helmetHeight / 2,
-        0,
-        Math.PI,
-        0,
-        true
-      );
-      ctx.fill();
-      ctx.stroke();
+    // 🔴 Debug: draw face box
+    ctx.strokeStyle = "red";
+    ctx.strokeRect(x1, y1, faceWidth, helmetHeight);
 
-      // Helmet band
-      ctx.fillStyle = "rgba(250, 204, 21, 0.95)";
-      ctx.fillRect(
-        centerX - helmetWidth / 2,
-        helmetCenterY,
-        helmetWidth,
-        helmetHeight * 0.18
-      );
+    // 🧪 Debug: draw a fixed test rectangle so we KNOW overlay is visible
+    ctx.fillStyle = "rgba(0, 255, 0, 0.3)";
+    ctx.fillRect(10, 10, 100, 50);
 
-      // Horns
-      ctx.fillStyle = "white";
-      ctx.strokeStyle = "white";
+    // Helmet top (ellipse)
+    ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
+    ctx.strokeStyle = "rgba(120, 53, 15, 1)";
+    ctx.beginPath();
+    ctx.ellipse(
+      centerX,
+      helmetCenterY,
+      helmetWidth / 2,
+      helmetHeight / 2,
+      0,
+      Math.PI,
+      0,
+      true
+    );
+    ctx.fill();
+    ctx.stroke();
 
-      // Left horn
-      const leftBase = centerX - helmetWidth * 0.45;
-      ctx.beginPath();
-      ctx.moveTo(leftBase, helmetCenterY);
-      ctx.quadraticCurveTo(
-        leftBase - helmetWidth * 0.35,
-        helmetCenterY - helmetHeight,
-        leftBase + helmetWidth * 0.05,
-        helmetCenterY - helmetHeight * 0.9
-      );
-      ctx.quadraticCurveTo(
-        leftBase - helmetWidth * 0.25,
-        helmetCenterY - helmetHeight * 0.8,
-        leftBase,
-        helmetCenterY
-      );
-      ctx.fill();
-      ctx.stroke();
+    // Helmet band
+    ctx.fillStyle = "rgba(250, 204, 21, 0.95)";
+    ctx.fillRect(
+      centerX - helmetWidth / 2,
+      helmetCenterY,
+      helmetWidth,
+      helmetHeight * 0.18
+    );
 
-      // Right horn
-      const rightBase = centerX + helmetWidth * 0.45;
-      ctx.beginPath();
-      ctx.moveTo(rightBase, helmetCenterY);
-      ctx.quadraticCurveTo(
-        rightBase + helmetWidth * 0.35,
-        helmetCenterY - helmetHeight,
-        rightBase - helmetWidth * 0.05,
-        helmetCenterY - helmetHeight * 0.9
-      );
-      ctx.quadraticCurveTo(
-        rightBase + helmetWidth * 0.25,
-        helmetCenterY - helmetHeight * 0.8,
-        rightBase,
-        helmetCenterY
-      );
-      ctx.fill();
-      ctx.stroke();
+    // Horns
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "white";
 
-      ctx.restore();
-    }
+    // Left horn
+    const leftBase = centerX - helmetWidth * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(leftBase, helmetCenterY);
+    ctx.quadraticCurveTo(
+      leftBase - helmetWidth * 0.35,
+      helmetCenterY - helmetHeight,
+      leftBase + helmetWidth * 0.05,
+      helmetCenterY - helmetHeight * 0.9
+    );
+    ctx.quadraticCurveTo(
+      leftBase - helmetWidth * 0.25,
+      helmetCenterY - helmetHeight * 0.8,
+      leftBase,
+      helmetCenterY
+    );
+    ctx.fill();
+    ctx.stroke();
 
-    // Main AI loop
-    async function renderLoop() {
-      if (!model) return;
+    // Right horn
+    const rightBase = centerX + helmetWidth * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(rightBase, helmetCenterY);
+    ctx.quadraticCurveTo(
+      rightBase + helmetWidth * 0.35,
+      helmetCenterY - helmetHeight,
+      rightBase - helmetWidth * 0.05,
+      helmetCenterY - helmetHeight * 0.9
+    );
+    ctx.quadraticCurveTo(
+      rightBase + helmetWidth * 0.25,
+      helmetCenterY - helmetHeight * 0.8,
+      rightBase,
+      helmetCenterY
+    );
+    ctx.fill();
+    ctx.stroke();
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
 
-      const predictions = await model.estimateFaces({ input: video });
+  // Main AI loop
+  async function renderLoop() {
+    if (!model) return;
 
-      if (predictions.length > 0) {
-        const face = predictions[0];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // As per TF blog example, predictions[0].boundingBox.topLeft / bottomRight :contentReference[oaicite:0]{index=0}
-        const bb = face.boundingBox || {};
-        const topLeft = face.topLeft || bb.topLeft;
-        const bottomRight = face.bottomRight || bb.bottomRight;
+    // 🚨 Force plain JS numbers instead of tensors
+    const predictions = await model.estimateFaces({
+      input: video,
+      returnTensors: false,
+      flipHorizontal: false,
+      predictIrises: false
+    });
 
-        if (topLeft && bottomRight) {
-          drawHelmet(topLeft, bottomRight);
-        } else {
-          console.log("Prediction found but no topLeft/bottomRight:", face);
-        }
+    if (predictions.length > 0) {
+      const face = predictions[0];
 
-        statusEl.textContent = "Helmet active 🪖 (face detected)";
+      // Different model versions: try boundingBox.first, then topLeft/bottomRight
+      const bb = face.boundingBox || {};
+      const topLeft = face.topLeft || bb.topLeft;
+      const bottomRight = face.bottomRight || bb.bottomRight;
+
+      if (topLeft && bottomRight) {
+        drawHelmet(topLeft, bottomRight);
       } else {
-        statusEl.textContent = "Model loaded — no face detected.";
+        console.log("Face detected but no topLeft/bottomRight:", face);
       }
 
-      requestAnimationFrame(renderLoop);
+      statusEl.textContent = "Helmet active 🪖 (face detected)";
+    } else {
+      statusEl.textContent = "Model loaded — no face detected.";
     }
 
-    async function init() {
-      await setupCamera();
+    requestAnimationFrame(renderLoop);
+  }
 
-      statusEl.textContent = "Loading AI model…";
+  async function init() {
+    await setupCamera();
 
-      // Ensure TF.js backend is ready
-      await tf.setBackend("webgl");
-      await tf.ready();
-      console.log("TFJS backend:", tf.getBackend());
+    statusEl.textContent = "Loading AI model…";
 
-      model = await faceLandmarksDetection.load(
-        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-      );
-      console.log("Model loaded:", model);
+    await tf.setBackend("webgl");
+    await tf.ready();
+    console.log("TFJS backend:", tf.getBackend());
 
-      statusEl.textContent = "Model loaded. Detecting face…";
-      renderLoop();
-    }
+    model = await faceLandmarksDetection.load(
+      faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+    );
+    console.log("Model loaded:", model);
 
-    init();
-  </script>
+    statusEl.textContent = "Model loaded. Detecting face…";
+    renderLoop();
+  }
+
+  init();
+</script>
 </body>
 </html>

@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Viking Helmet Overlay (Reliable Demo)</title>
+  <title>AI Sunglasses Filter – JS + BlazeFace</title>
+
+  <!-- TensorFlow.js + BlazeFace (face detection) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 
   <style>
     body {
@@ -57,11 +61,10 @@
 </head>
 
 <body>
-  <h1>🪖 Viking Helmet Overlay (Canvas Demo)</h1>
+  <h1>😎 AI Sunglasses Filter (JS + BlazeFace)</h1>
   <p>
-    This shows how JavaScript can draw graphics on top of a live camera feed using
-    <code>&lt;canvas&gt;</code>. Real AI demos use the same idea, but move the helmet based on
-    face-tracking instead of a fixed position.
+    JavaScript is grabbing the webcam, running a BlazeFace model in your browser to detect your face,
+    and drawing <strong>AI-tracked sunglasses</strong> on a canvas overlay – no server, no Python.
   </p>
 
   <div id="videoContainer">
@@ -74,14 +77,18 @@
   <script>
     const NKU_GOLD = "#f7b718";
     const NKU_BLACK = "#111111";
-    const NKU_WHITE = "#ffffff";
+
     const video = document.getElementById("video");
     const canvas = document.getElementById("overlay");
     const ctx = canvas.getContext("2d");
     const statusEl = document.getElementById("status");
 
-    console.log("🔥 Simple overlay script running");
+    let model = null;
+    let videoReady = false;
 
+    console.log("🔥 AI sunglasses script running");
+
+    // 1️⃣ Camera setup
     async function setupCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -95,6 +102,7 @@
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
             console.log("Video size:", video.videoWidth, video.videoHeight);
+            videoReady = true;
             resolve();
           };
         });
@@ -104,159 +112,138 @@
       }
     }
 
-    function drawStaticHelmet() {
-  const w = canvas.width;
-  const h = canvas.height;
+    // 2️⃣ Draw NKU-gold "smart sunglasses" based on bounding box
+    function drawGlasses(topLeft, bottomRight) {
+      if (!topLeft || !bottomRight) return;
 
-  // Clear previous frame
-  ctx.clearRect(0, 0, w, h);
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
 
-  // Slight dark overlay to make the helmet pop
-  ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-  ctx.fillRect(0, 0, w, h);
+      const faceWidth = x2 - x1;
+      const faceHeight = bottomRight[1] - y1;
+      const centerX = x1 + faceWidth / 2;
 
-  // Position & size relative to video size
-  const faceWidth = w * 0.3;
-  const centerX = w / 2;
-  const topFaceY = h * 0.28;
+      // Position for glasses: about 1/3 down the face
+      const glassesWidth = faceWidth * 1.1;
+      const glassesHeight = faceHeight * 0.28;
+      const glassesY = y1 + faceHeight * 0.33;
+      const glassesX = centerX - glassesWidth / 2;
 
-  const helmetWidth = faceWidth * 1.7;
-  const helmetHeight = faceWidth * 0.9;
-  const helmetTopY = topFaceY - helmetHeight * 0.6;
-  const helmetBottomY = topFaceY + helmetHeight * 0.25;
+      // Each lens is half the width minus a small bridge
+      const bridgeWidth = glassesWidth * 0.08;
+      const lensWidth = (glassesWidth - bridgeWidth) / 2;
 
-  ctx.save();
-  ctx.lineWidth = 3;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
+      ctx.save();
+      ctx.lineWidth = 4;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
 
-  // === 1) Main helmet shape (black, slightly angular) ===
-  ctx.beginPath();
-  // Left side
-  ctx.moveTo(centerX - helmetWidth * 0.5, helmetBottomY);
-  ctx.lineTo(centerX - helmetWidth * 0.55, helmetTopY + helmetHeight * 0.3);
-  ctx.quadraticCurveTo(
-    centerX,
-    helmetTopY - helmetHeight * 0.4,         // peak
-    centerX + helmetWidth * 0.55,
-    helmetTopY + helmetHeight * 0.3          // right upper
-  );
-  // Right side down
-  ctx.lineTo(centerX + helmetWidth * 0.5, helmetBottomY);
-  // Bottom edge back to start
-  ctx.quadraticCurveTo(
-    centerX,
-    helmetBottomY + helmetHeight * 0.15,
-    centerX - helmetWidth * 0.5,
-    helmetBottomY
-  );
+      // Optional: faint transparent overlay so we know canvas is active
+      // Comment this out if you don't want the tint
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = NKU_BLACK;
-  ctx.strokeStyle = NKU_GOLD;
-  ctx.fill();
-  ctx.stroke();
+      // 🔲 Lenses (dark with gold frame)
+      function drawLens(x, y, w, h) {
+        const radius = h * 0.4;
 
-  // === 2) Center ridge (gold strip down the middle) ===
-  ctx.beginPath();
-  ctx.moveTo(centerX, helmetTopY - helmetHeight * 0.35);
-  ctx.lineTo(centerX, helmetBottomY);
-  ctx.strokeStyle = NKU_GOLD;
-  ctx.lineWidth = 5;
-  ctx.stroke();
-  ctx.lineWidth = 3; // reset for later
+        // Outer frame
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
 
-  // === 3) Gold band across the front ===
-  const bandHeight = helmetHeight * 0.22;
-  const bandTopY = topFaceY - bandHeight * 0.4;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fill();
+        ctx.strokeStyle = NKU_GOLD;
+        ctx.stroke();
+      }
 
-  ctx.beginPath();
-  ctx.moveTo(centerX - helmetWidth * 0.55, bandTopY);
-  ctx.lineTo(centerX + helmetWidth * 0.55, bandTopY);
-  ctx.lineTo(centerX + helmetWidth * 0.5, bandTopY + bandHeight);
-  ctx.lineTo(centerX - helmetWidth * 0.5, bandTopY + bandHeight);
-  ctx.closePath();
+      const leftX = glassesX;
+      const rightX = glassesX + lensWidth + bridgeWidth;
+      const lensY = glassesY;
 
-  ctx.fillStyle = NKU_GOLD;
-  ctx.strokeStyle = NKU_BLACK;
-  ctx.fill();
-  ctx.stroke();
+      // Left lens
+      drawLens(leftX, lensY, lensWidth, glassesHeight);
+      // Right lens
+      drawLens(rightX, lensY, lensWidth, glassesHeight);
 
-  // === 4) Small "NKU" plate in the center of the band ===
-  const plateWidth = helmetWidth * 0.25;
-  const plateHeight = bandHeight * 0.7;
-  const plateX = centerX - plateWidth / 2;
-  const plateY = bandTopY + (bandHeight - plateHeight) / 2;
+      // Bridge
+      ctx.beginPath();
+      ctx.moveTo(leftX + lensWidth, lensY + glassesHeight * 0.4);
+      ctx.lineTo(rightX, lensY + glassesHeight * 0.4);
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.stroke();
 
-  ctx.fillStyle = NKU_BLACK;
-  ctx.fillRect(plateX, plateY, plateWidth, plateHeight);
+      // Tiny arms (optional, extend to sides of head)
+      ctx.beginPath();
+      ctx.moveTo(leftX, lensY + glassesHeight * 0.45);
+      ctx.lineTo(leftX - faceWidth * 0.15, lensY + glassesHeight * 0.3);
+      ctx.moveTo(rightX + lensWidth, lensY + glassesHeight * 0.45);
+      ctx.lineTo(rightX + lensWidth + faceWidth * 0.15, lensY + glassesHeight * 0.3);
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.stroke();
 
-  ctx.fillStyle = NKU_GOLD;
-  ctx.font = `${Math.floor(plateHeight * 0.7)}px system-ui`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("NKU", centerX, plateY + plateHeight / 2);
+      ctx.restore();
+    }
 
-  // === 5) Horns (white with gold outline, more Norse-y) ===
-  ctx.strokeStyle = NKU_GOLD;
-  ctx.fillStyle = NKU_WHITE;
-
-  const hornBaseY = helmetTopY + helmetHeight * 0.15;
-
-  // Left horn
-  const leftBaseX = centerX - helmetWidth * 0.55;
-  ctx.beginPath();
-  ctx.moveTo(leftBaseX, hornBaseY);
-  ctx.quadraticCurveTo(
-    leftBaseX - helmetWidth * 0.4,
-    hornBaseY - helmetHeight * 0.9,
-    leftBaseX + helmetWidth * 0.05,
-    hornBaseY - helmetHeight * 0.85
-  );
-  ctx.quadraticCurveTo(
-    leftBaseX - helmetWidth * 0.25,
-    hornBaseY - helmetHeight * 0.7,
-    leftBaseX,
-    hornBaseY
-  );
-  ctx.fill();
-  ctx.stroke();
-
-  // Right horn
-  const rightBaseX = centerX + helmetWidth * 0.55;
-  ctx.beginPath();
-  ctx.moveTo(rightBaseX, hornBaseY);
-  ctx.quadraticCurveTo(
-    rightBaseX + helmetWidth * 0.4,
-    hornBaseY - helmetHeight * 0.9,
-    rightBaseX - helmetWidth * 0.05,
-    hornBaseY - helmetHeight * 0.85
-  );
-  ctx.quadraticCurveTo(
-    rightBaseX + helmetWidth * 0.25,
-    hornBaseY - helmetHeight * 0.7,
-    rightBaseX,
-    hornBaseY
-  );
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-    function renderLoop() {
-      if (!canvas.width || !canvas.height) {
+    // 3️⃣ Main AI loop
+    async function renderLoop() {
+      if (!model || !videoReady) {
         requestAnimationFrame(renderLoop);
         return;
       }
 
-      drawStaticHelmet();
-      statusEl.textContent = "Overlay active: static Viking helmet on top of video 🪖";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // BlazeFace: second arg = returnTensors (false → plain JS arrays) :contentReference[oaicite:1]{index=1}
+      const predictions = await model.estimateFaces(video, false);
+
+      if (predictions && predictions.length > 0) {
+        const face = predictions[0];
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+
+        if (topLeft && bottomRight) {
+          drawGlasses(topLeft, bottomRight);
+          statusEl.textContent =
+            "AI running in browser: sunglasses active 😎 (faces: " + predictions.length + ")";
+        } else {
+          statusEl.textContent = "Model loaded — face found, but no box.";
+          console.log("Face detected but missing box:", face);
+        }
+      } else {
+        statusEl.textContent = "Model loaded — no face detected yet. 👀";
+      }
 
       requestAnimationFrame(renderLoop);
     }
 
+    // 4️⃣ Init everything
     async function init() {
+      statusEl.textContent = "Loading camera…";
       await setupCamera();
+
+      statusEl.textContent = "Loading AI model (BlazeFace)…";
+      // Use WebGL if available, but don't die if not
+      try {
+        await tf.setBackend("webgl");
+      } catch (e) {
+        console.warn("Could not set backend to webgl, using default:", e);
+      }
+      await tf.ready();
+
+      model = await blazeface.load();
+      console.log("BlazeFace model loaded:", model);
+
+      statusEl.textContent = "Model loaded. Looking for your face…";
       renderLoop();
     }
 

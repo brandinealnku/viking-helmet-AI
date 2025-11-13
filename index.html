@@ -2,41 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Sunglasses Filter – Safe Tracked Version</title>
+  <title>NKU Norse AI Sunglasses Filter</title>
 
   <!-- TensorFlow.js + BlazeFace -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 
   <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --page-bg-top: #020617;
+      --page-bg-bottom: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, var(--page-bg-top), var(--page-bg-bottom));
       color: #e5e7eb;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 24px;
+      min-height: 100vh;
     }
+
+    .brand-bar {
+      width: 100%;
+      max-width: 840px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--nku-gold), #facc15);
+      color: var(--nku-black);
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .brand-bar span.left {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .brand-bar span.right {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
     h1 {
-      margin-bottom: 0.25rem;
+      margin: 4px 0;
       text-align: center;
+      font-size: 1.6rem;
     }
-    p {
+
+    p.subtitle {
       margin-top: 0;
       margin-bottom: 1rem;
       text-align: center;
-      max-width: 600px;
+      max-width: 640px;
+      font-size: 0.98rem;
+      color: #cbd5f5;
     }
+
     #videoContainer {
       position: relative;
       width: 640px;
-      height: 480px;
+      max-width: 100%;
+      aspect-ratio: 4 / 3;
       background: #020617;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      margin-top: 20px;
+      margin-top: 16px;
+      border: 2px solid rgba(247, 183, 24, 0.35);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
     }
+
     video {
       position: absolute;
       width: 100%;
@@ -44,6 +95,7 @@
       object-fit: cover;
       z-index: 0;
     }
+
     canvas {
       position: absolute;
       width: 100%;
@@ -51,20 +103,46 @@
       pointer-events: none;
       z-index: 1; /* above the video */
     }
+
     #status {
-      margin-top: 12px;
-      font-size: 1rem;
+      margin-top: 14px;
+      font-size: 0.98rem;
       color: #a5b4fc;
       text-align: center;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      text-align: center;
+      max-width: 520px;
+    }
+
+    code {
+      font-size: 0.88em;
+      background: rgba(15,23,42,0.8);
+      padding: 2px 6px;
+      border-radius: 999px;
     }
   </style>
 </head>
 
 <body>
-  <h1>😎 AI Sunglasses Filter (Tracked with Fallback)</h1>
-  <p>
-    BlazeFace runs in your browser. When it sees a face, it tries to position the sunglasses
-    over your eyes; if anything is off, it falls back to centered glasses so the demo always works.
+  <div class="brand-bar">
+    <span class="left">
+      NKU
+      <span style="font-weight:800;">NORSE</span>
+      <span style="font-weight:500;">AI · JS</span>
+    </span>
+    <span class="right">Student-facing browser demo · No backend · No Python</span>
+  </div>
+
+  <h1>😎 NKU Norse AI Sunglasses Filter</h1>
+  <p class="subtitle">
+    A tiny experiment for my INF / CS students: JavaScript grabs the webcam, a BlazeFace model
+    runs <strong>entirely in the browser</strong>, and when it sees a face, we overlay
+    Norse-gold sunglasses on a <code>&lt;canvas&gt;</code> layer. AI as a front-end teammate.
   </p>
 
   <div id="videoContainer">
@@ -73,6 +151,10 @@
   </div>
 
   <div id="status">Loading camera…</div>
+  <div class="hint">
+    Tip: move closer to the camera and face it directly so BlazeFace can lock on.
+    When it detects your face, the Norse glasses appear.
+  </div>
 
   <script>
     const NKU_GOLD = "#f7b718";
@@ -85,7 +167,7 @@
     let model = null;
     let videoReady = false;
 
-    console.log("🔥 Safe tracked sunglasses script running");
+    console.log("🔥 NKU Norse AI sunglasses script running");
 
     // 1️⃣ Camera setup
     async function setupCamera() {
@@ -111,13 +193,50 @@
       }
     }
 
-    // 2️⃣ Helper – draw centered glasses (guaranteed fallback)
+    // 2️⃣ Helper – draw a small NKU badge in the corner
+    function drawCornerBadge() {
+      const padding = 10;
+      const badgeWidth = 120;
+      const badgeHeight = 30;
+
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = "rgba(17,17,17,0.85)";
+      ctx.fillRect(
+        canvas.width - badgeWidth - padding,
+        canvas.height - badgeHeight - padding,
+        badgeWidth,
+        badgeHeight
+      );
+
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(
+        canvas.width - badgeWidth - padding,
+        canvas.height - badgeHeight - padding,
+        badgeWidth,
+        badgeHeight
+      );
+
+      ctx.fillStyle = NKU_GOLD;
+      ctx.font = "bold 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        "NKU • AI • JS",
+        canvas.width - badgeWidth / 2 - padding,
+        canvas.height - badgeHeight / 2 - padding
+      );
+
+      ctx.restore();
+    }
+
+    // 3️⃣ Helper – draw centered glasses (fallback)
     function drawCenteredGlasses() {
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
 
-      // Clear first
       ctx.clearRect(0, 0, w, h);
 
       // Slight dark tint
@@ -168,7 +287,6 @@
         ctx.stroke();
       }
 
-      // Left + right lenses
       drawLens(leftX, lensY, lensWidth, glassesHeight);
       drawLens(rightX, lensY, lensWidth, glassesHeight);
 
@@ -179,10 +297,11 @@
       ctx.strokeStyle = NKU_GOLD;
       ctx.stroke();
 
+      drawCornerBadge();
       ctx.restore();
     }
 
-    // 3️⃣ Helper – validate BlazeFace points
+    // 4️⃣ Helper – validate BlazeFace points
     function isValidPoint(pt) {
       return (
         Array.isArray(pt) &&
@@ -194,10 +313,10 @@
       );
     }
 
-    // 4️⃣ Draw glasses using bounding box (only if safe)
+    // 5️⃣ Draw glasses using bounding box (tracked)
     function drawGlassesFromBox(topLeft, bottomRight) {
       if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) {
-        return false; // signal that bounding box isn't usable
+        return false;
       }
 
       const [x1, y1] = topLeft;
@@ -212,7 +331,7 @@
 
       const glassesWidth = faceWidth * 1.1;
       const glassesHeight = faceHeight * 0.28;
-      const glassesY = y1 + faceHeight * 0.25;
+      const glassesY = y1 + faceHeight * 0.30;
       const glassesX = centerX - glassesWidth / 2;
 
       const bridgeWidth = glassesWidth * 0.08;
@@ -225,16 +344,9 @@
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
-      // Clear & tint
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Debug: small red dot at face center
-      ctx.fillStyle = "red";
-      ctx.beginPath();
-      ctx.arc(centerX, y1 + faceHeight * 0.4, 4, 0, Math.PI * 2);
-      ctx.fill();
 
       function drawLens(x, y, wLens, hLens) {
         const radius = hLens * 0.4;
@@ -266,7 +378,7 @@
       const rightX = glassesX + lensWidth + bridgeWidth;
 
       drawLens(leftX, lensY, lensWidth, glassesHeight);
-      drawLens(rightX, lensY, glassesHeight ? lensWidth : lensWidth, glassesHeight);
+      drawLens(rightX, lensY, lensWidth, glassesHeight);
 
       // Bridge
       ctx.beginPath();
@@ -275,12 +387,13 @@
       ctx.strokeStyle = NKU_GOLD;
       ctx.stroke();
 
+      drawCornerBadge();
       ctx.restore();
 
-      return true; // signal success
+      return true;
     }
 
-    // 5️⃣ Main AI loop
+    // 6️⃣ Main AI loop
     async function renderLoop() {
       if (!model || !videoReady) {
         requestAnimationFrame(renderLoop);
@@ -307,30 +420,27 @@
           }
 
           if (!usedBox) {
-            // If bounding box fails, draw centered glasses
             drawCenteredGlasses();
           }
 
           statusEl.textContent =
-            "AI running in browser: sunglasses active 😎 (faces: " +
+            "AI running in browser: Norse sunglasses active 😎 (faces: " +
             predictions.length +
             ")";
         } else {
-          // No faces → clear overlay
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           statusEl.textContent = "Model loaded — no face detected yet. 👀";
         }
       } catch (err) {
         console.error("Error in renderLoop:", err);
         statusEl.textContent = "Error in AI loop – falling back to centered glasses.";
-        // Fallback so demo still looks like something:
         drawCenteredGlasses();
       }
 
       requestAnimationFrame(renderLoop);
     }
 
-    // 6️⃣ Init
+    // 7️⃣ Init
     async function init() {
       statusEl.textContent = "Loading camera…";
       await setupCamera();

@@ -74,153 +74,191 @@
 
   <div id="status">Loading camera…</div>
 
-  <script>
-    const NKU_GOLD = "#f7b718";
+<script>
+  const NKU_GOLD = "#f7b718";
 
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("overlay");
-    const ctx = canvas.getContext("2d");
-    const statusEl = document.getElementById("status");
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("overlay");
+  const ctx = canvas.getContext("2d");
+  const statusEl = document.getElementById("status");
 
-    let model = null;
-    let videoReady = false;
+  let model = null;
+  let videoReady = false;
 
-    console.log("🔥 AI centered sunglasses script running");
+  console.log("🔥 AI sunglasses (tracked) script running");
 
-    // 1️⃣ Camera setup
-    async function setupCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 }
-        });
-        video.srcObject = stream;
+  // 1️⃣ Camera setup
+  async function setupCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 }
+      });
+      video.srcObject = stream;
 
-        return new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            video.play();
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            console.log("Video size:", video.videoWidth, video.videoHeight);
-            videoReady = true;
-            resolve();
-          };
-        });
-      } catch (err) {
-        console.error("Camera error:", err);
-        statusEl.textContent = "Camera error – check permissions & HTTPS.";
-      }
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          video.play();
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          console.log("Video size:", video.videoWidth, video.videoHeight);
+          videoReady = true;
+          resolve();
+        };
+      });
+    } catch (err) {
+      console.error("Camera error:", err);
+      statusEl.textContent = "Camera error – check permissions & HTTPS.";
     }
+  }
 
-    // 2️⃣ Draw BIG centered sunglasses (ignoring coordinates for now)
-    function drawCenteredGlasses() {
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
+  // 2️⃣ Draw sunglasses using the face bounding box
+  function drawGlassesFromBox(topLeft, bottomRight) {
+    if (!topLeft || !bottomRight) return;
 
-      ctx.clearRect(0, 0, w, h);
+    // BlazeFace with returnTensors=false → [x, y] arrays
+    const [x1, y1] = topLeft;
+    const [x2, y2] = bottomRight;
 
-      // Slight dark tint so students clearly see the overlay
-      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-      ctx.fillRect(0, 0, w, h);
+    const faceWidth = x2 - x1;
+    const faceHeight = bottomRight[1] - y1;
 
-      const centerX = w / 2;
-      const centerY = h * 0.35;
+    // Basic sanity check
+    if (faceWidth <= 0 || faceHeight <= 0) return;
 
-      const glassesWidth = w * 0.45;
-      const glassesHeight = h * 0.12;
+    const centerX = x1 + faceWidth / 2;
 
-      const bridgeWidth = glassesWidth * 0.08;
-      const lensWidth = (glassesWidth - bridgeWidth) / 2;
+    // Position for glasses: roughly 1/3 down the face box
+    const glassesWidth = faceWidth * 1.1;
+    const glassesHeight = faceHeight * 0.28;
+    const glassesY = y1 + faceHeight * 0.30;
+    const glassesX = centerX - glassesWidth / 2;
 
-      const lensY = centerY - glassesHeight / 2;
-      const leftX = centerX - glassesWidth / 2;
-      const rightX = leftX + lensWidth + bridgeWidth;
+    const bridgeWidth = glassesWidth * 0.08;
+    const lensWidth = (glassesWidth - bridgeWidth) / 2;
 
-      ctx.save();
-      ctx.lineWidth = 4;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
+    const lensY = glassesY;
 
-      function drawLens(x, y, wLens, hLens) {
-        const radius = hLens * 0.4;
+    ctx.save();
+    ctx.lineWidth = 4;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
 
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + wLens - radius, y);
-        ctx.quadraticCurveTo(x + wLens, y, x + wLens, y + radius);
-        ctx.lineTo(x + wLens, y + hLens - radius);
-        ctx.quadraticCurveTo(x + wLens, y + hLens, x + wLens - radius, y + hLens);
-        ctx.lineTo(x + radius, y + hLens);
-        ctx.quadraticCurveTo(x, y + hLens, x, y + hLens - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
+    // Optional: faint tint over whole frame to make overlay obvious
+    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fill();
-        ctx.strokeStyle = NKU_GOLD;
-        ctx.stroke();
-      }
+    // Helper to draw one lens
+    function drawLens(x, y, wLens, hLens) {
+      const radius = hLens * 0.4;
 
-      // Left + right lenses
-      drawLens(leftX, lensY, lensWidth, glassesHeight);
-      drawLens(rightX, lensY, lensWidth, glassesHeight);
-
-      // Bridge
       ctx.beginPath();
-      ctx.moveTo(leftX + lensWidth, centerY);
-      ctx.lineTo(rightX, centerY);
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + wLens - radius, y);
+      ctx.quadraticCurveTo(x + wLens, y, x + wLens, y + radius);
+      ctx.lineTo(x + wLens, y + hLens - radius);
+      ctx.quadraticCurveTo(x + wLens, y + hLens, x + wLens - radius, y + hLens);
+      ctx.lineTo(x + radius, y + hLens);
+      ctx.quadraticCurveTo(x, y + hLens, x, y + hLens - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+      ctx.fill();
       ctx.strokeStyle = NKU_GOLD;
       ctx.stroke();
-
-      ctx.restore();
     }
 
-    // 3️⃣ Main AI loop – model is just an ON/OFF switch for the filter
-    async function renderLoop() {
-      if (!model || !videoReady) {
-        requestAnimationFrame(renderLoop);
-        return;
-      }
+    const leftX = glassesX;
+    const rightX = glassesX + lensWidth + bridgeWidth;
 
-      // Ask the model if there are any faces in the frame
-      const predictions = await model.estimateFaces(video, false);
+    // Left + right lenses
+    drawLens(leftX, lensY, lensWidth, glassesHeight);
+    drawLens(rightX, lensY, lensWidth, glassesHeight);
 
-      if (predictions && predictions.length > 0) {
-        // At least one face detected → turn the filter ON
-        drawCenteredGlasses();
-        statusEl.textContent =
-          "AI running in browser: sunglasses ON 😎 (faces: " + predictions.length + ")";
-      } else {
-        // No face → clear the overlay
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        statusEl.textContent = "Model loaded — no face detected yet. 👀";
-      }
+    // Bridge
+    ctx.beginPath();
+    ctx.moveTo(leftX + lensWidth, lensY + glassesHeight * 0.45);
+    ctx.lineTo(rightX, lensY + glassesHeight * 0.45);
+    ctx.strokeStyle = NKU_GOLD;
+    ctx.stroke();
 
+    // (Optional) Tiny arms that go toward the ears
+    ctx.beginPath();
+    ctx.moveTo(leftX, lensY + glassesHeight * 0.5);
+    ctx.lineTo(leftX - faceWidth * 0.15, lensY + glassesHeight * 0.3);
+    ctx.moveTo(rightX + lensWidth, lensY + glassesHeight * 0.5);
+    ctx.lineTo(
+      rightX + lensWidth + faceWidth * 0.15,
+      lensY + glassesHeight * 0.3
+    );
+    ctx.strokeStyle = NKU_GOLD;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // 3️⃣ Main AI loop – now uses bounding box to position glasses
+  async function renderLoop() {
+    if (!model || !videoReady) {
       requestAnimationFrame(renderLoop);
+      return;
     }
 
-    // 4️⃣ Init everything
-    async function init() {
-      statusEl.textContent = "Loading camera…";
-      await setupCamera();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      statusEl.textContent = "Loading AI model (BlazeFace)…";
-      try {
-        await tf.setBackend("webgl");
-      } catch (e) {
-        console.warn("Could not set backend to webgl, using default:", e);
+    // BlazeFace: second arg = returnTensors (false → JS arrays)
+    const predictions = await model.estimateFaces(video, false);
+
+    if (predictions && predictions.length > 0) {
+      const face = predictions[0];
+      const topLeft = face.topLeft;
+      const bottomRight = face.bottomRight;
+
+      // Log once so you can see the structure
+      if (!window._loggedOnce) {
+        console.log("Sample BlazeFace prediction:", face);
+        window._loggedOnce = true;
       }
-      await tf.ready();
 
-      model = await blazeface.load();
-      console.log("BlazeFace model loaded:", model);
-
-      statusEl.textContent = "Model loaded. Looking for your face…";
-      renderLoop();
+      if (topLeft && bottomRight) {
+        drawGlassesFromBox(topLeft, bottomRight);
+        statusEl.textContent =
+          "AI running in browser: tracked sunglasses 😎 (faces: " +
+          predictions.length +
+          ")";
+      } else {
+        statusEl.textContent = "Model loaded — face found, but no box.";
+        console.log("Face detected but missing box:", face);
+      }
+    } else {
+      statusEl.textContent = "Model loaded — no face detected yet. 👀";
     }
 
-    init();
-  </script>
+    requestAnimationFrame(renderLoop);
+  }
+
+  // 4️⃣ Init everything
+  async function init() {
+    statusEl.textContent = "Loading camera…";
+    await setupCamera();
+
+    statusEl.textContent = "Loading AI model (BlazeFace)…";
+    try {
+      await tf.setBackend("webgl");
+    } catch (e) {
+      console.warn("Could not set backend to webgl, using default:", e);
+    }
+    await tf.ready();
+
+    model = await blazeface.load();
+    console.log("BlazeFace model loaded:", model);
+
+    statusEl.textContent = "Model loaded. Tracking your face…";
+    renderLoop();
+  }
+
+  init();
+</script>
 </body>
 </html>

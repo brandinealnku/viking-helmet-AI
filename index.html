@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Viking Helmet AI Filter</title>
+  <title>Viking Helmet AI Filter (Debug)</title>
 
-  <!-- TensorFlow.js union bundle (includes core + converter + webgl backend) -->
+  <!-- TensorFlow.js union bundle -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.6.0/dist/tf.js"></script>
 
-  <!-- Face Landmarks Detection model (MediaPipe Facemesh package) -->
+  <!-- Face Landmarks Detection (MediaPipe facemesh package) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.1/dist/face-landmarks-detection.js"></script>
 
   <style>
@@ -28,6 +28,7 @@
       margin-top: 0;
       margin-bottom: 1rem;
       text-align: center;
+      max-width: 600px;
     }
     #videoContainer {
       position: relative;
@@ -38,12 +39,19 @@
       overflow: hidden;
       margin-top: 20px;
     }
-    video, canvas {
+    video {
       position: absolute;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      z-index: 0;
+    }
+    canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
+      z-index: 1; /* ensure canvas is ABOVE the video */
     }
     #status {
       margin-top: 12px;
@@ -55,7 +63,7 @@
 </head>
 
 <body>
-  <h1>Demo Viking Helmet AI Filter</h1>
+  <h1>🪖 Viking Helmet AI Filter (Debug Version)</h1>
   <p>This runs AI in your browser — no Python, no server.</p>
 
   <div id="videoContainer">
@@ -65,191 +73,249 @@
 
   <div id="status">Loading camera…</div>
 
-<script>
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("overlay");
-  const ctx = canvas.getContext("2d");
-  const statusEl = document.getElementById("status");
-  let model;
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+    let model;
 
-  // Start webcam
-  async function setupCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 }
-      });
-      video.srcObject = stream;
+    console.log("🔥 Viking script loaded");
 
-      return new Promise((resolve) => {
-        video.onloadedmetadata = () => {
-          video.play();
-          canvas.width = video.videoWidth || 640;
-          canvas.height = video.videoHeight || 480;
-          console.log("Video size:", video.videoWidth, video.videoHeight);
-          resolve();
-        };
-      });
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      statusEl.textContent = "Unable to access camera. Check permissions and HTTPS.";
+    // 1️⃣ Start webcam
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 }
+        });
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            // Set canvas to match video pixels
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            console.log("Video size:", video.videoWidth, video.videoHeight);
+            resolve();
+          };
+        });
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        statusEl.textContent = "Unable to access camera. Check permissions and HTTPS.";
+      }
     }
-  }
 
-  // Draw helmet using only bounding box
-  function drawHelmet(topLeft, bottomRight) {
-    if (!topLeft || !bottomRight) return;
+    // Helper: normalize a landmark point to {x, y}
+    function getXY(pt) {
+      if (!pt) return null;
+      if (Array.isArray(pt)) {
+        return { x: pt[0], y: pt[1] };
+      }
+      if (typeof pt === "object" && "x" in pt && "y" in pt) {
+        return { x: pt.x, y: pt.y };
+      }
+      return null;
+    }
 
-    // topLeft & bottomRight should now be plain arrays of [x, y]
-    const [x1, y1] = topLeft;
-    const [x2, y2] = bottomRight;
+    // Compute a bounding box from landmarks if needed
+    function computeBoxFromLandmarks(landmarks) {
+      if (!landmarks || !landmarks.length) return null;
 
-    // If these are NaN, nothing will render — log for sanity
-    console.log("topLeft:", topLeft, "bottomRight:", bottomRight);
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
-    const faceWidth = x2 - x1;
-    const centerX = x1 + faceWidth / 2;
-    const topFaceY = y1;
-    const helmetWidth = faceWidth * 1.6;
-    const helmetHeight = faceWidth * 0.8;
-    const helmetCenterY = topFaceY - helmetHeight * 0.4;
-
-    ctx.save();
-    ctx.lineWidth = 3;
-
-    // 🔴 Debug: draw face box
-    ctx.strokeStyle = "red";
-    ctx.strokeRect(x1, y1, faceWidth, helmetHeight);
-
-    // 🧪 Debug: draw a fixed test rectangle so we KNOW overlay is visible
-    ctx.fillStyle = "rgba(0, 255, 0, 0.3)";
-    ctx.fillRect(10, 10, 100, 50);
-
-    // Helmet top (ellipse)
-    ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
-    ctx.strokeStyle = "rgba(120, 53, 15, 1)";
-    ctx.beginPath();
-    ctx.ellipse(
-      centerX,
-      helmetCenterY,
-      helmetWidth / 2,
-      helmetHeight / 2,
-      0,
-      Math.PI,
-      0,
-      true
-    );
-    ctx.fill();
-    ctx.stroke();
-
-    // Helmet band
-    ctx.fillStyle = "rgba(250, 204, 21, 0.95)";
-    ctx.fillRect(
-      centerX - helmetWidth / 2,
-      helmetCenterY,
-      helmetWidth,
-      helmetHeight * 0.18
-    );
-
-    // Horns
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "white";
-
-    // Left horn
-    const leftBase = centerX - helmetWidth * 0.45;
-    ctx.beginPath();
-    ctx.moveTo(leftBase, helmetCenterY);
-    ctx.quadraticCurveTo(
-      leftBase - helmetWidth * 0.35,
-      helmetCenterY - helmetHeight,
-      leftBase + helmetWidth * 0.05,
-      helmetCenterY - helmetHeight * 0.9
-    );
-    ctx.quadraticCurveTo(
-      leftBase - helmetWidth * 0.25,
-      helmetCenterY - helmetHeight * 0.8,
-      leftBase,
-      helmetCenterY
-    );
-    ctx.fill();
-    ctx.stroke();
-
-    // Right horn
-    const rightBase = centerX + helmetWidth * 0.45;
-    ctx.beginPath();
-    ctx.moveTo(rightBase, helmetCenterY);
-    ctx.quadraticCurveTo(
-      rightBase + helmetWidth * 0.35,
-      helmetCenterY - helmetHeight,
-      rightBase - helmetWidth * 0.05,
-      helmetCenterY - helmetHeight * 0.9
-    );
-    ctx.quadraticCurveTo(
-      rightBase + helmetWidth * 0.25,
-      helmetCenterY - helmetHeight * 0.8,
-      rightBase,
-      helmetCenterY
-    );
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // Main AI loop
-  async function renderLoop() {
-    if (!model) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 🚨 Force plain JS numbers instead of tensors
-    const predictions = await model.estimateFaces({
-      input: video,
-      returnTensors: false,
-      flipHorizontal: false,
-      predictIrises: false
-    });
-
-    if (predictions.length > 0) {
-      const face = predictions[0];
-
-      // Different model versions: try boundingBox.first, then topLeft/bottomRight
-      const bb = face.boundingBox || {};
-      const topLeft = face.topLeft || bb.topLeft;
-      const bottomRight = face.bottomRight || bb.bottomRight;
-
-      if (topLeft && bottomRight) {
-        drawHelmet(topLeft, bottomRight);
-      } else {
-        console.log("Face detected but no topLeft/bottomRight:", face);
+      for (const pt of landmarks) {
+        const xy = getXY(pt);
+        if (!xy) continue;
+        const { x, y } = xy;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
       }
 
-      statusEl.textContent = "Helmet active 🪖 (face detected)";
-    } else {
-      statusEl.textContent = "Model loaded — no face detected.";
+      if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) {
+        return null;
+      }
+      return {
+        topLeft: [minX, minY],
+        bottomRight: [maxX, maxY]
+      };
     }
 
-    requestAnimationFrame(renderLoop);
-  }
+    // 2️⃣ Draw helmet using bounding box
+    function drawHelmet(topLeft, bottomRight) {
+      if (!topLeft || !bottomRight) return;
 
-  async function init() {
-    await setupCamera();
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
 
-    statusEl.textContent = "Loading AI model…";
+      console.log("topLeft:", topLeft, "bottomRight:", bottomRight);
 
-    await tf.setBackend("webgl");
-    await tf.ready();
-    console.log("TFJS backend:", tf.getBackend());
+      const faceWidth = x2 - x1;
+      const centerX = x1 + faceWidth / 2;
+      const topFaceY = y1;
+      const helmetWidth = faceWidth * 1.6;
+      const helmetHeight = faceWidth * 0.8;
+      const helmetCenterY = topFaceY - helmetHeight * 0.4;
 
-    model = await faceLandmarksDetection.load(
-      faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-    );
-    console.log("Model loaded:", model);
+      ctx.save();
+      ctx.lineWidth = 3;
 
-    statusEl.textContent = "Model loaded. Detecting face…";
-    renderLoop();
-  }
+      // 🧪 Debug: green test rectangle so we KNOW overlay is drawing
+      ctx.fillStyle = "rgba(0, 255, 0, 0.25)";
+      ctx.fillRect(10, 10, 120, 60);
 
-  init();
-</script>
+      // 🧪 Debug: red box around face
+      ctx.strokeStyle = "red";
+      ctx.strokeRect(x1, y1, faceWidth, helmetHeight);
+
+      // Helmet top (ellipse)
+      ctx.fillStyle = "rgba(202, 138, 4, 0.95)";
+      ctx.strokeStyle = "rgba(120, 53, 15, 1)";
+      ctx.beginPath();
+      ctx.ellipse(
+        centerX,
+        helmetCenterY,
+        helmetWidth / 2,
+        helmetHeight / 2,
+        0,
+        Math.PI,
+        0,
+        true
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      // Helmet band
+      ctx.fillStyle = "rgba(250, 204, 21, 0.95)";
+      ctx.fillRect(
+        centerX - helmetWidth / 2,
+        helmetCenterY,
+        helmetWidth,
+        helmetHeight * 0.18
+      );
+
+      // Horns
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "white";
+
+      // Left horn
+      const leftBase = centerX - helmetWidth * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(leftBase, helmetCenterY);
+      ctx.quadraticCurveTo(
+        leftBase - helmetWidth * 0.35,
+        helmetCenterY - helmetHeight,
+        leftBase + helmetWidth * 0.05,
+        helmetCenterY - helmetHeight * 0.9
+      );
+      ctx.quadraticCurveTo(
+        leftBase - helmetWidth * 0.25,
+        helmetCenterY - helmetHeight * 0.8,
+        leftBase,
+        helmetCenterY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      // Right horn
+      const rightBase = centerX + helmetWidth * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(rightBase, helmetCenterY);
+      ctx.quadraticCurveTo(
+        rightBase + helmetWidth * 0.35,
+        helmetCenterY - helmetHeight,
+        rightBase - helmetWidth * 0.05,
+        helmetCenterY - helmetHeight * 0.9
+      );
+      ctx.quadraticCurveTo(
+        rightBase + helmetWidth * 0.25,
+        helmetCenterY - helmetHeight * 0.8,
+        rightBase,
+        helmetCenterY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 3️⃣ Main AI loop
+    async function renderLoop() {
+      if (!model) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const predictions = await model.estimateFaces({
+        input: video,
+        returnTensors: false,
+        flipHorizontal: false,
+        predictIrises: false
+      });
+
+      if (predictions.length > 0) {
+        const face = predictions[0];
+
+        if (!window._loggedOnce) {
+          console.log("Face prediction keys:", Object.keys(face));
+          console.log("Example face object:", face);
+          window._loggedOnce = true;
+        }
+
+        let topLeft = face.topLeft;
+        let bottomRight = face.bottomRight;
+
+        // Newer versions may use boundingBox
+        if ((!topLeft || !bottomRight) && face.boundingBox) {
+          topLeft = face.boundingBox.topLeft;
+          bottomRight = face.boundingBox.bottomRight;
+        }
+
+        // Fallback: build box from landmarks if needed
+        if (!topLeft || !bottomRight) {
+          const landmarks =
+            face.scaledMesh || face.mesh || face.keypoints || face.landmarks;
+          const box = computeBoxFromLandmarks(landmarks);
+          if (box) {
+            topLeft = box.topLeft;
+            bottomRight = box.bottomRight;
+          }
+        }
+
+        if (topLeft && bottomRight) {
+          drawHelmet(topLeft, bottomRight);
+          statusEl.textContent = "Helmet active 🪖 (face detected)";
+        } else {
+          console.log("Face detected but no usable box:", face);
+          statusEl.textContent = "Model loaded — face, but no box.";
+        }
+      } else {
+        statusEl.textContent = "Model loaded — no face detected.";
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    async function init() {
+      await setupCamera();
+
+      statusEl.textContent = "Loading AI model…";
+
+      await tf.setBackend("webgl");
+      await tf.ready();
+      console.log("TFJS backend:", tf.getBackend());
+
+      model = await faceLandmarksDetection.load(
+        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+      );
+      console.log("Model loaded:", model);
+
+      statusEl.textContent = "Model loaded. Detecting face…";
+      renderLoop();
+    }
+
+    init();
+  </script>
 </body>
 </html>

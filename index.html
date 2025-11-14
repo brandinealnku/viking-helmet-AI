@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter Studio</title>
+  <title>NKU Norse AI Filter Studio (Tracked)</title>
 
   <!-- TensorFlow.js + BlazeFace -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -225,14 +225,14 @@
       <span class="bold">NORSE</span>
       <span>AI • JS</span>
     </span>
-    <span class="right">Browser-only demo · No backend · Perfect for class & LinkedIn</span>
+    <span class="right">Browser-only demo · No backend · Face-tracked filters</span>
   </div>
 
-  <h1>😎 NKU Norse AI Filter Studio</h1>
+  <h1>😎 NKU Norse AI Filter Studio (Tracked)</h1>
   <p class="subtitle">
     JavaScript grabs the webcam, a BlazeFace model runs <strong>entirely in your browser</strong>
-    to detect faces, and when it sees you, it overlays NKU-themed filters on a
-    <code>&lt;canvas&gt;</code> layer. AI as your front-end teammate.
+    to detect faces, and when it sees you, it positions NKU-themed filters relative to your face
+    on a <code>&lt;canvas&gt;</code> layer.
   </p>
 
   <div id="videoContainer">
@@ -243,7 +243,7 @@
   <div id="status">Loading camera…</div>
   <div class="hint">
     Tip: use a modern browser (Chrome, Edge, Firefox, or Safari), allow camera access,
-    and face the camera directly. When the model detects your face, the Norse filters turn on.
+    and face the camera directly. When the model detects your face, the Norse filters will follow you.
   </div>
 
   <div class="controls">
@@ -285,13 +285,13 @@
     let activeFilter = "sunglasses";
 
     const filterLabels = {
-      sunglasses: "Norse shades",
-      helmet: "Viking helmet",
-      glow: "gold aura",
+      sunglasses: "tracked Norse shades",
+      helmet: "tracked Viking helmet",
+      glow: "tracked gold aura",
       none: "no filter",
     };
 
-    console.log("🔥 NKU Norse AI Filter Studio script running");
+    console.log("🔥 NKU Norse AI Filter Studio (Tracked) script running");
 
     // === TFJS backend selection (webgl → wasm → cpu) ===
     async function getBestBackend() {
@@ -308,7 +308,6 @@
           console.warn("Backend not available:", b, e);
         }
       }
-      // If all fail, tf will fall back to whatever it can, but we log:
       console.warn("No preferred backend available, using default:", tf.getBackend());
     }
 
@@ -345,7 +344,31 @@
       }
     }
 
-    // === Small NKU badge in corner ===
+    // === Utilities ===
+    function clearOverlay() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function isValidPoint(pt) {
+      return (
+        Array.isArray(pt) &&
+        pt.length >= 2 &&
+        typeof pt[0] === "number" &&
+        typeof pt[1] === "number" &&
+        Number.isFinite(pt[0]) &&
+        Number.isFinite(pt[1])
+      );
+    }
+
+    function isValidBox(topLeft, bottomRight) {
+      if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+      return faceWidth > 0 && faceHeight > 0;
+    }
+
     function drawCornerBadge() {
       const padding = 10;
       const badgeWidth = 130;
@@ -383,34 +406,34 @@
       ctx.restore();
     }
 
-    // === Filters (centered, stable, AI-gated) ===
-
     function drawBaseTint() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function drawNorseShades() {
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
+    // === Tracked filters (using face bounding box) ===
 
-      drawBaseTint();
+    function drawTrackedNorseShades(topLeft, bottomRight) {
+      if (!isValidBox(topLeft, bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
 
-      const centerX = w / 2;
-      const centerY = h * 0.35;
-
-      const glassesWidth = w * 0.45;
-      const glassesHeight = h * 0.12;
+      const centerX = x1 + faceWidth / 2;
+      const glassesWidth = faceWidth * 1.15;
+      const glassesHeight = faceHeight * 0.32;
+      const glassesY = y1 + faceHeight * 0.32;
+      const glassesX = centerX - glassesWidth / 2;
 
       const bridgeWidth = glassesWidth * 0.08;
       const lensWidth = (glassesWidth - bridgeWidth) / 2;
-
-      const lensY = centerY - glassesHeight / 2;
-      const leftX = centerX - glassesWidth / 2;
-      const rightX = leftX + lensWidth + bridgeWidth;
+      const lensY = glassesY;
 
       ctx.save();
+      clearOverlay();
+      drawBaseTint();
+
       ctx.lineWidth = 4;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
@@ -441,38 +464,51 @@
         ctx.stroke();
       }
 
-      // Lenses
+      const leftX = glassesX;
+      const rightX = glassesX + lensWidth + bridgeWidth;
+
       drawLens(leftX, lensY, lensWidth, glassesHeight);
       drawLens(rightX, lensY, lensWidth, glassesHeight);
 
       // Bridge
       ctx.beginPath();
-      ctx.moveTo(leftX + lensWidth, centerY);
-      ctx.lineTo(rightX, centerY);
+      ctx.moveTo(leftX + lensWidth, lensY + glassesHeight * 0.45);
+      ctx.lineTo(rightX, lensY + glassesHeight * 0.45);
       ctx.strokeStyle = NKU_GOLD;
       ctx.stroke();
 
-      ctx.restore();
+      // Optional: tiny red dot near face center for debugging
+      /*
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(centerX, y1 + faceHeight * 0.4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      */
+
       drawCornerBadge();
+      ctx.restore();
+      return true;
     }
 
-    function drawNorseHelmet() {
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
+    function drawTrackedHelmet(topLeft, bottomRight) {
+      if (!isValidBox(topLeft, bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
 
-      drawBaseTint();
-
-      const faceWidth = w * 0.3;
-      const centerX = w / 2;
-      const topFaceY = h * 0.28;
+      const centerX = x1 + faceWidth / 2;
+      const topFaceY = y1; // top of face box
 
       const helmetWidth = faceWidth * 1.7;
-      const helmetHeight = faceWidth * 0.9;
-      const helmetTopY = topFaceY - helmetHeight * 0.6;
-      const helmetBottomY = topFaceY + helmetHeight * 0.25;
+      const helmetHeight = faceHeight * 0.9;
+      const helmetTopY = topFaceY - helmetHeight * 0.7;
+      const helmetBottomY = topFaceY + helmetHeight * 0.3;
 
       ctx.save();
+      clearOverlay();
+      drawBaseTint();
+
       ctx.lineWidth = 3;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
@@ -582,19 +618,272 @@
       ctx.fill();
       ctx.stroke();
 
+      drawCornerBadge();
+      ctx.restore();
+      return true;
+    }
+
+    function drawTrackedGoldAura(topLeft, bottomRight) {
+      if (!isValidBox(topLeft, bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+
+      const centerX = x1 + faceWidth / 2;
+      const centerY = y1 + faceHeight * 0.4;
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.save();
+      clearOverlay();
+
+      // Darken edges
+      const gradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        faceWidth * 0.1,
+        centerX,
+        centerY,
+        Math.max(w, h) * 0.6
+      );
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0.0)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0.7)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+
+      // Gold aura circle
+      const auraRadius = Math.max(faceWidth, faceHeight) * 0.8;
+      const auraGradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        auraRadius * 0.2,
+        centerX,
+        centerY,
+        auraRadius
+      );
+      auraGradient.addColorStop(0, "rgba(247, 183, 24, 0.7)");
+      auraGradient.addColorStop(0.5, "rgba(247, 183, 24, 0.25)");
+      auraGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = auraGradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Text above face
+      ctx.fillStyle = NKU_GOLD;
+      ctx.font = "bold 24px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("Future Norse Coder", centerX, y1 - faceHeight * 0.1);
+
+      drawCornerBadge();
+      ctx.restore();
+      return true;
+    }
+
+    // Fallback centered versions (if box is invalid)
+    function drawCenteredNorseShades() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      clearOverlay();
+      drawBaseTint();
+
+      const centerX = w / 2;
+      const centerY = h * 0.35;
+
+      const glassesWidth = w * 0.45;
+      const glassesHeight = h * 0.12;
+
+      const bridgeWidth = glassesWidth * 0.08;
+      const lensWidth = (glassesWidth - bridgeWidth) / 2;
+
+      const lensY = centerY - glassesHeight / 2;
+      const leftX = centerX - glassesWidth / 2;
+      const rightX = leftX + lensWidth + bridgeWidth;
+
+      ctx.save();
+      ctx.lineWidth = 4;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      function drawLens(x, y, wLens, hLens) {
+        const radius = hLens * 0.4;
+
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + wLens - radius, y);
+        ctx.quadraticCurveTo(x + wLens, y, x + wLens, y + radius);
+        ctx.lineTo(x + wLens, y + hLens - radius);
+        ctx.quadraticCurveTo(
+          x + wLens,
+          y + hLens,
+          x + wLens - radius,
+          y + hLens
+        );
+        ctx.lineTo(x + radius, y + hLens);
+        ctx.quadraticCurveTo(x, y + hLens, x, y + hLens - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+        ctx.fill();
+        ctx.strokeStyle = NKU_GOLD;
+        ctx.stroke();
+      }
+
+      drawLens(leftX, lensY, lensWidth, glassesHeight);
+      drawLens(rightX, lensY, lensWidth, glassesHeight);
+
+      ctx.beginPath();
+      ctx.moveTo(leftX + lensWidth, centerY);
+      ctx.lineTo(rightX, centerY);
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.stroke();
+
       ctx.restore();
       drawCornerBadge();
     }
 
-    function drawGoldAura() {
+    function drawCenteredHelmet() {
+      // reuse earlier static helmet draw
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      clearOverlay();
+      drawBaseTint();
+
+      const faceWidth = w * 0.3;
+      const centerX = w / 2;
+      const topFaceY = h * 0.28;
+
+      const helmetWidth = faceWidth * 1.7;
+      const helmetHeight = faceWidth * 0.9;
+      const helmetTopY = topFaceY - helmetHeight * 0.6;
+      const helmetBottomY = topFaceY + helmetHeight * 0.25;
+
+      ctx.save();
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - helmetWidth * 0.5, helmetBottomY);
+      ctx.lineTo(centerX - helmetWidth * 0.55, helmetTopY + helmetHeight * 0.3);
+      ctx.quadraticCurveTo(
+        centerX,
+        helmetTopY - helmetHeight * 0.4,
+        centerX + helmetWidth * 0.55,
+        helmetTopY + helmetHeight * 0.3
+      );
+      ctx.lineTo(centerX + helmetWidth * 0.5, helmetBottomY);
+      ctx.quadraticCurveTo(
+        centerX,
+        helmetBottomY + helmetHeight * 0.15,
+        centerX - helmetWidth * 0.5,
+        helmetBottomY
+      );
+
+      ctx.fillStyle = NKU_BLACK;
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, helmetTopY - helmetHeight * 0.35);
+      ctx.lineTo(centerX, helmetBottomY);
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.lineWidth = 3;
+
+      const bandHeight = helmetHeight * 0.22;
+      const bandTopY = topFaceY - bandHeight * 0.4;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - helmetWidth * 0.55, bandTopY);
+      ctx.lineTo(centerX + helmetWidth * 0.55, bandTopY);
+      ctx.lineTo(centerX + helmetWidth * 0.5, bandTopY + bandHeight);
+      ctx.lineTo(centerX - helmetWidth * 0.5, bandTopY + bandHeight);
+      ctx.closePath();
+
+      ctx.fillStyle = NKU_GOLD;
+      ctx.strokeStyle = NKU_BLACK;
+      ctx.fill();
+      ctx.stroke();
+
+      const plateWidth = helmetWidth * 0.25;
+      const plateHeight = bandHeight * 0.7;
+      const plateX = centerX - plateWidth / 2;
+      const plateY = bandTopY + (bandHeight - plateHeight) / 2;
+
+      ctx.fillStyle = NKU_BLACK;
+      ctx.fillRect(plateX, plateY, plateWidth, plateHeight);
+
+      ctx.fillStyle = NKU_GOLD;
+      ctx.font = `${Math.floor(plateHeight * 0.7)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("NKU", centerX, plateY + plateHeight / 2);
+
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.fillStyle = "#ffffff";
+
+      const hornBaseY = helmetTopY + helmetHeight * 0.15;
+
+      const leftBaseX = centerX - helmetWidth * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(leftBaseX, hornBaseY);
+      ctx.quadraticCurveTo(
+        leftBaseX - helmetWidth * 0.4,
+        hornBaseY - helmetHeight * 0.9,
+        leftBaseX + helmetWidth * 0.05,
+        hornBaseY - helmetHeight * 0.85
+      );
+      ctx.quadraticCurveTo(
+        leftBaseX - helmetWidth * 0.25,
+        hornBaseY - helmetHeight * 0.7,
+        leftBaseX,
+        hornBaseY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      const rightBaseX = centerX + helmetWidth * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(rightBaseX, hornBaseY);
+      ctx.quadraticCurveTo(
+        rightBaseX + helmetWidth * 0.4,
+        hornBaseY - helmetHeight * 0.9,
+        rightBaseX - helmetWidth * 0.05,
+        hornBaseY - helmetHeight * 0.85
+      );
+      ctx.quadraticCurveTo(
+        rightBaseX + helmetWidth * 0.25,
+        hornBaseY - helmetHeight * 0.7,
+        rightBaseX,
+        hornBaseY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      drawCornerBadge();
+      ctx.restore();
+    }
+
+    function drawCenteredGoldAura() {
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
 
       ctx.save();
-      ctx.clearRect(0, 0, w, h);
+      clearOverlay();
 
-      // Darken edges
       const gradient = ctx.createRadialGradient(
         w / 2,
         h * 0.4,
@@ -608,7 +897,6 @@
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, w, h);
 
-      // Gold aura circle
       const auraRadius = Math.min(w, h) * 0.28;
       const auraGradient = ctx.createRadialGradient(
         w / 2,
@@ -626,7 +914,6 @@
       ctx.arc(w / 2, h * 0.4, auraRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Text
       ctx.fillStyle = NKU_GOLD;
       ctx.font = "bold 24px system-ui";
       ctx.textAlign = "center";
@@ -637,21 +924,19 @@
       ctx.restore();
     }
 
-    function clearOverlay() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function drawActiveFilter() {
-      clearOverlay();
-
+    function drawFilterWithBox(topLeft, bottomRight) {
+      let success = false;
       if (activeFilter === "sunglasses") {
-        drawNorseShades();
+        success = drawTrackedNorseShades(topLeft, bottomRight);
+        if (!success) drawCenteredNorseShades();
       } else if (activeFilter === "helmet") {
-        drawNorseHelmet();
+        success = drawTrackedHelmet(topLeft, bottomRight);
+        if (!success) drawCenteredHelmet();
       } else if (activeFilter === "glow") {
-        drawGoldAura();
+        success = drawTrackedGoldAura(topLeft, bottomRight);
+        if (!success) drawCenteredGoldAura();
       } else if (activeFilter === "none") {
-        // no overlay
+        clearOverlay();
       }
     }
 
@@ -676,7 +961,17 @@
       const hasFace = Array.isArray(predictions) && predictions.length > 0;
 
       if (hasFace && activeFilter !== "none") {
-        drawActiveFilter();
+        const face = predictions[0];
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+
+        if (!window._loggedOnce) {
+          console.log("Sample BlazeFace prediction:", face);
+          window._loggedOnce = true;
+        }
+
+        drawFilterWithBox(topLeft, bottomRight);
+
         statusEl.textContent =
           "AI running in browser: " +
           filterLabels[activeFilter] +
@@ -710,9 +1005,7 @@
       snapCanvas.height = h;
       const sctx = snapCanvas.getContext("2d");
 
-      // Draw the current video frame
       sctx.drawImage(video, 0, 0, w, h);
-      // Draw the current overlay on top
       sctx.drawImage(canvas, 0, 0, w, h);
 
       const dataURL = snapCanvas.toDataURL("image/png");
@@ -720,13 +1013,13 @@
       const a = document.createElement("a");
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       a.href = dataURL;
-      a.download = `nku-norse-ai-selfie-${timestamp}.png`;
+      a.download = `nku-norse-ai-selfie-tracked-${timestamp}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
       statusEl.textContent =
-        "Snapshot saved! 📸 Share your Norse AI selfie on LinkedIn or with your class.";
+        "Snapshot saved! 📸 Share your tracked Norse AI selfie on LinkedIn or with your class.";
     }
 
     // === UI wiring ===
@@ -755,7 +1048,7 @@
         console.log("BlazeFace model loaded:", model);
 
         statusEl.textContent =
-          "Model loaded. Move into frame to activate Norse AI filters.";
+          "Model loaded. Move into frame to activate tracked Norse AI filters.";
         renderLoop();
       } catch (err) {
         console.error("Init error:", err);

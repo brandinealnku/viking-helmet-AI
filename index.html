@@ -354,6 +354,38 @@
       font-weight: 600;
     }
 
+    /* Preview section */
+    .preview-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .preview-section h2 {
+      font-size: 1rem;
+      margin: 0 0 6px;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+      margin-bottom: 6px;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    .preview-hint {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
     /* Info footer */
     .info-footer {
       margin-top: 8px;
@@ -407,6 +439,10 @@
       .filters-row {
         justify-content: center;
       }
+
+      .preview-image-wrapper {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -448,7 +484,7 @@
           </li>
           <li>
             <span class="step-number">3.</span>
-            <span>Capture a selfie and decide if you want to save it.</span>
+            <span>Capture a selfie, preview it, and decide if you want to send it to Brandi.</span>
           </li>
         </ul>
       </div>
@@ -496,12 +532,23 @@
         </button>
       </section>
 
+      <!-- Preview section -->
+      <section class="preview-section" id="previewSection" style="display: none;">
+        <h2>Your Norse AI snapshot</h2>
+        <div class="preview-image-wrapper">
+          <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
+        </div>
+        <p class="preview-hint">
+          This is the image that was just captured. It’s also saved to your Downloads as a PNG.
+          If you choose to email it, attach that PNG file to the message.
+        </p>
+      </section>
+
       <!-- Info footer -->
       <section class="info-footer">
         <p>
-          When you capture a selfie, you’ll be asked if you want to save it to your
-          <span class="folder-label">NKU_AI_Selfies</span> folder.
-          Your browser simply downloads a PNG — you decide where it goes and whether you share it.
+          When you capture a selfie, your browser downloads a PNG. You stay in control of what you keep,
+          where you store it, and whether you email it to your instructor.
         </p>
         <p>
           <strong>What this teaches:</strong> how AI can run directly in the browser,
@@ -513,7 +560,8 @@
   </div>
 
   <script>
-    // Folder label used in messaging + filename
+    // 🔧 CONFIG: update this to your real email
+    const INSTRUCTOR_EMAIL = "nealb3@nku.edu";
     const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
 
     const video = document.getElementById("video");
@@ -525,6 +573,9 @@
     const captureBtn = document.getElementById("captureBtn");
     const videoSkeleton = document.getElementById("videoSkeleton");
     const filterButtons = document.querySelectorAll(".filter-btn");
+
+    const previewSection = document.getElementById("previewSection");
+    const snapshotPreview = document.getElementById("snapshotPreview");
 
     let model = null;
     let videoReady = false;
@@ -688,7 +739,6 @@
       const aspect = helmetImg.height / helmetImg.width;
       const overlayHeight = overlayWidth * aspect;
 
-      // Position helmet so it sits above + slightly overlapping forehead
       const drawX = centerX - overlayWidth / 2;
       const drawY = topFaceY - overlayHeight * 0.55;
 
@@ -748,18 +798,9 @@
       requestAnimationFrame(renderLoop);
     }
 
-    // Capture snapshot
+    // Capture snapshot: show preview, download, then ask about email
     function captureSnapshot() {
       if (!videoReady) return;
-
-      const ok = confirm(
-        `Do you want to save this image to your “${TARGET_FOLDER_LABEL}” folder?\n\n` +
-        `Your browser will download a PNG. You choose where to store or share it.`
-      );
-      if (!ok) {
-        setStatus("Snapshot canceled. You stay in control.", "active");
-        return;
-      }
 
       const w = canvas.width;
       const h = canvas.height;
@@ -770,13 +811,19 @@
       snapCanvas.height = h;
       const sctx = snapCanvas.getContext("2d");
 
+      // Draw current video frame + overlay
       sctx.drawImage(video, 0, 0, w, h);
       sctx.drawImage(canvas, 0, 0, w, h);
 
       const dataURL = snapCanvas.toDataURL("image/png");
+
+      // 1) Show preview on the page
+      snapshotPreview.src = dataURL;
+      previewSection.style.display = "block";
+
+      // 2) Download the PNG so the student has the file
       const a = document.createElement("a");
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-
       a.href = dataURL;
       a.download = `${TARGET_FOLDER_LABEL}-selfie-${timestamp}.png`;
       document.body.appendChild(a);
@@ -784,9 +831,29 @@
       document.body.removeChild(a);
 
       setStatus(
-        `Snapshot saved. Check your downloads and move it into “${TARGET_FOLDER_LABEL}” if you’d like.`,
+        `Snapshot saved. Check your Downloads and attach it if you choose to email it.`,
         "active"
       );
+
+      // 3) Ask if they want to email the image
+      const ok = confirm(
+        `Do you want to email this snapshot to your instructor at ${INSTRUCTOR_EMAIL}?\n\n` +
+        `Your email app will open with a pre-filled message. Please attach the PNG from your Downloads.`
+      );
+
+      if (ok) {
+        const subject = encodeURIComponent("NKU Norse AI Filter Snapshot");
+        const body = encodeURIComponent(
+          "Hi,\n\nHere is my NKU Norse AI Filter selfie.\n\n" +
+          "I have attached the PNG file that was downloaded from the demo.\n\n" +
+          "- "
+        );
+
+        const mailtoLink = `mailto:${INSTRUCTOR_EMAIL}?subject=${subject}&body=${body}`;
+        window.location.href = mailtoLink;
+      } else {
+        setStatus("Snapshot captured. You decided not to email it (which is totally fine).", "active");
+      }
     }
 
     // Start flow (user gesture → camera → AI)

@@ -2,48 +2,141 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Face-Tracked Canva Overlay (Minimal)</title>
+  <title>NKU Norse AI Filter – Canva Overlay</title>
 
   <!-- TensorFlow.js + BlazeFace -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --page-bg-top: #020617;
+      --page-bg-bottom: #020617;
+      --card-bg: rgba(15, 23, 42, 0.9);
+      --border-soft: rgba(148, 163, 184, 0.5);
+      --accent: #a5b4fc;
+      --text-soft: #cbd5f5;
+      --danger: #f97373;
+      --success: #4ade80;
+      --idle: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, sans-serif;
-      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617 0%, #020617 55%, #000000 100%);
       color: #e5e7eb;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
       min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      padding: 18px 12px 32px;
     }
 
-    h1 {
-      margin-bottom: 0.25rem;
-      text-align: center;
+    .app-shell {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    p {
-      margin-top: 0;
-      margin-bottom: 1rem;
-      text-align: center;
-      max-width: 560px;
+    /* Brand header */
+    .brand-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--nku-gold), #facc15);
+      color: var(--nku-black);
+      font-weight: 600;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .brand-left {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       font-size: 0.95rem;
-      color: #cbd5f5;
     }
 
+    .brand-left .bold {
+      font-weight: 800;
+    }
+
+    .brand-right {
+      font-size: 0.88rem;
+      opacity: 0.9;
+      text-align: right;
+    }
+
+    /* Main card */
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.8);
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      backdrop-filter: blur(18px);
+    }
+
+    .card-header {
+      text-align: center;
+    }
+
+    .card-header h1 {
+      margin: 4px 0 6px;
+      font-size: 1.55rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      opacity: 0.9;
+    }
+
+    .card-header p {
+      margin: 6px auto 0;
+      max-width: 640px;
+      font-size: 0.94rem;
+      color: var(--text-soft);
+    }
+
+    /* Video + overlay */
     #videoContainer {
       position: relative;
-      width: 640px;
-      max-width: 100%;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
       aspect-ratio: 4 / 3;
-      background: #000;
-      border-radius: 12px;
+      border-radius: 18px;
       overflow: hidden;
-      border: 2px solid rgba(148, 163, 184, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: radial-gradient(circle, #020617 0%, #000000 70%);
     }
 
     video,
@@ -58,50 +151,311 @@
       pointer-events: none;
     }
 
-    #status {
-      margin-top: 10px;
+    /* Skeleton shimmer while waiting */
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        #020617 0%,
+        #020617 30%,
+        #111827 45%,
+        #020617 60%,
+        #020617 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -120% 0;
+      }
+      100% {
+        background-position: 120% 0;
+      }
+    }
+
+    /* Status row */
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
       font-size: 0.9rem;
-      color: #a5b4fc;
-      text-align: center;
+    }
+
+    .status-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--idle);
+      box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.6);
+      transform: scale(1);
+      transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    .status-dot.idle {
+      background: var(--idle);
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 10px 0 rgba(74, 222, 128, 0.9);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 10px 0 rgba(248, 113, 113, 0.9);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      color: var(--accent);
+    }
+
+    .status-hint {
+      color: #9ca3af;
+      font-size: 0.8rem;
+      text-align: right;
+    }
+
+    /* Controls */
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 18px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #startBtn {
+      background: #020617;
+      border: 1px solid var(--border-soft);
+      color: #e5e7eb;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+      transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.1s ease;
+    }
+
+    #startBtn:hover:not(:disabled) {
+      background: #111827;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.85);
+    }
+
+    #startBtn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #captureBtn {
+      background: linear-gradient(90deg, var(--nku-gold), #f97316);
+      color: var(--nku-black);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.85);
+      transition: transform 0.08s ease, box-shadow 0.1s ease;
+    }
+
+    #captureBtn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95);
+    }
+
+    #captureBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Info footer section */
+    .info-footer {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    .info-footer strong {
+      color: var(--text-soft);
+    }
+
+    .folder-label {
+      color: var(--nku-gold);
+      font-weight: 600;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding-inline: 10px;
+      }
+
+      .brand-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .brand-right {
+        text-align: left;
+      }
+
+      .card {
+        padding-inline: 14px;
+      }
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .status-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status-hint {
+        text-align: left;
+        width: 100%;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>AI + JavaScript + Canva Overlay</h1>
-  <p>
-    This demo uses <strong>TensorFlow.js + BlazeFace</strong> to detect your face in real time
-    and draws a <strong>PNG from Canva</strong> (sunglasses) on top of your eyes using the
-    <code>&lt;canvas&gt;</code> element. All in the browser. No backend. No Python.
-  </p>
+  <div class="app-shell">
+    <!-- NKU brand top bar -->
+    <header class="brand-bar">
+      <div class="brand-left">
+        NKU
+        <span class="bold">NORSE</span>
+        <span>AI • JS</span>
+      </div>
+      <div class="brand-right">
+        Browser-only AI filter · Canva overlays · Perfect for class demos & LinkedIn
+      </div>
+    </header>
 
-  <div id="videoContainer">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="overlay"></canvas>
+    <!-- Main card -->
+    <main class="card">
+      <div class="card-header">
+        <div class="badge-pill">
+          <span>REALTIME • IN-BROWSER • FACE TRACKED</span>
+        </div>
+        <h1>😎 NKU Norse AI Filter – Modern UX</h1>
+        <p>
+          JavaScript grabs your webcam, <strong>TensorFlow.js + BlazeFace</strong> detect your face,
+          and a <strong>Canva PNG overlay</strong> is drawn in real time on
+          <code>&lt;canvas&gt;</code>. All in the browser — no backend, no Python.
+        </p>
+      </div>
+
+      <!-- Video + overlay -->
+      <section id="videoContainer">
+        <div class="video-skeleton" id="videoSkeleton"></div>
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </section>
+
+      <!-- Status row -->
+      <section class="status-row">
+        <div class="status-main">
+          <span id="statusDot" class="status-dot idle"></span>
+          <span id="statusText" class="status-text">
+            Tap “Start Camera & AI” to begin.
+          </span>
+        </div>
+        <div class="status-hint">
+          Tip: Use a modern browser over <strong>HTTPS</strong>, then allow camera access.
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="controls-row">
+        <button id="startBtn">
+          🚀 Start Camera & AI
+        </button>
+        <button id="captureBtn" disabled>
+          📸 Capture Norse Selfie
+        </button>
+      </section>
+
+      <!-- Info footer -->
+      <section class="info-footer">
+        <p>
+          When you capture a selfie, you’ll be asked if you want to save it to your
+          <span class="folder-label">NKU_AI_Selfies</span> folder.
+          Your browser will download a PNG — students can drag it into that folder or upload it to Canvas/Teams.
+        </p>
+        <p>
+          <strong>Under the hood:</strong> this demo uses
+          <code>getUserMedia</code> for the webcam,
+          <code>BlazeFace</code> for face detection, and
+          <code>ctx.drawImage()</code> to position a Canva-designed PNG relative to your face box.
+        </p>
+      </section>
+    </main>
   </div>
 
-  <div id="status">Loading camera…</div>
-
   <script>
+    // 🔧 Folder label shown to users in the confirm + filename
+    const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
+
     const video = document.getElementById("video");
     const canvas = document.getElementById("overlay");
     const ctx = canvas.getContext("2d");
-    const statusEl = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const statusDot = document.getElementById("statusDot");
+    const startBtn = document.getElementById("startBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const videoSkeleton = document.getElementById("videoSkeleton");
 
     let model = null;
     let videoReady = false;
-
-    // 1) Load your Canva PNG (put overlay.png in the same folder as this file)
-    const overlayImg = new Image();
-    overlayImg.src = "overlay.png"; // <- change filename if needed
     let overlayReady = false;
+    let aiRunning = false;
+    let lastRenderTime = 0;
+
+    // Load Canva PNG overlay (must sit next to index.html as overlay.png)
+    const overlayImg = new Image();
+    overlayImg.src = "overlay.png"; // e.g., Norse sunglasses / helmet PNG from Canva
 
     overlayImg.onload = () => {
       overlayReady = true;
-      console.log("Overlay image loaded");
+      console.log("Overlay image loaded:", overlayImg.width, overlayImg.height);
     };
 
-    // 2) Helper: choose best TFJS backend available (webgl -> wasm -> cpu)
+    // Status helpers
+    function setStatus(message, mode = "idle") {
+      statusText.textContent = message;
+      statusDot.classList.remove("idle", "active", "error");
+      statusDot.classList.add(mode);
+    }
+
+    // TFJS backend selection
     async function getBestBackend() {
       const backendsToTry = ["webgl", "wasm", "cpu"];
       for (const b of backendsToTry) {
@@ -119,18 +473,27 @@
       console.warn("Using default TFJS backend:", tf.getBackend());
     }
 
-    // 3) Start the camera
+    // Camera setup (mobile-friendly)
     async function setupCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        statusEl.textContent =
-          "This browser does not support getUserMedia. Try a modern browser like Chrome, Edge, Firefox, or Safari.";
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus(
+          "This browser does not support getUserMedia. Try a modern browser like Chrome, Edge, Firefox, or Safari.",
+          "error"
+        );
         throw new Error("getUserMedia not supported");
       }
 
+      const constraints = {
+        audio: false,
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user", // front camera on mobile
+        },
+      };
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 }
-        });
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
 
         return new Promise((resolve) => {
@@ -139,17 +502,22 @@
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
             videoReady = true;
+            videoSkeleton.style.display = "none";
+            console.log("Video ready:", canvas.width, canvas.height);
             resolve();
           };
         });
       } catch (err) {
         console.error("Camera error:", err);
-        statusEl.textContent =
-          "Camera error – check permissions and make sure no other app is using the camera.";
+        setStatus(
+          "Camera error – check permissions and make sure no other app is using the camera.",
+          "error"
+        );
         throw err;
       }
     }
 
+    // BlazeFace helpers
     function isValidPoint(pt) {
       return (
         Array.isArray(pt) &&
@@ -170,52 +538,59 @@
       return faceWidth > 0 && faceHeight > 0;
     }
 
-    // 4) Draw the Canva overlay based on the face box
+    // Draw Canva overlay relative to face box
     function drawOverlayOnFace(topLeft, bottomRight) {
-      if (!overlayReady || !isValidBox(topLeft, bottomRight)) return;
+      if (!overlayReady || !isValidBox(topLeft, bottomRight)) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
 
       const [x1, y1] = topLeft;
       const [x2, y2] = bottomRight;
-
       const faceWidth = x2 - x1;
       const faceHeight = y2 - y1;
 
-      // We'll center the overlay around the "eye line"
+      // Approx eye line
       const centerX = x1 + faceWidth / 2;
-      const centerY = y1 + faceHeight * 0.4; // tweak this if overlay sits too high/low
+      const centerY = y1 + faceHeight * 0.4; // adjust if overlay too high/low
 
-      // Scale overlay relative to face
-      const overlayWidth = faceWidth * 1.3; // a bit wider than face
+      // Scale overlay relative to face width
+      const overlayWidth = faceWidth * 1.3;
       const aspect = overlayImg.height / overlayImg.width;
       const overlayHeight = overlayWidth * aspect;
 
       const drawX = centerX - overlayWidth / 2;
       const drawY = centerY - overlayHeight / 2;
 
-      // Clear old frame
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Optional: slightly darken the background for contrast
-      ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+      // subtle dark tint behind overlay
+      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw the PNG
       ctx.drawImage(overlayImg, drawX, drawY, overlayWidth, overlayHeight);
     }
 
-    // 5) Main AI loop
-    async function renderLoop() {
+    // AI loop (with simple throttle for mobile)
+    async function renderLoop(timestamp) {
       if (!model || !videoReady) {
         requestAnimationFrame(renderLoop);
         return;
       }
+
+      const msSinceLast = timestamp - lastRenderTime;
+      if (msSinceLast < 70) {
+        requestAnimationFrame(renderLoop);
+        return;
+      }
+      lastRenderTime = timestamp;
 
       let predictions = [];
       try {
         predictions = await model.estimateFaces(video, false);
       } catch (e) {
         console.error("Error running BlazeFace:", e);
-        statusEl.textContent = "Error running the AI model. Try refreshing the page.";
+        setStatus("Error running the AI model. Try refreshing the page.", "error");
         requestAnimationFrame(renderLoop);
         return;
       }
@@ -226,42 +601,101 @@
         const bottomRight = face.bottomRight;
 
         drawOverlayOnFace(topLeft, bottomRight);
-
-        statusEl.textContent =
-          "AI is running in your browser: Canva overlay is tracking your face 😎 (faces: " +
-          predictions.length +
-          ")";
+        setStatus(
+          "AI running in your browser: Canva overlay is tracking your face 😎",
+          "active"
+        );
       } else {
-        // No face detected → clear overlay
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        statusEl.textContent = "Model loaded — no face detected yet. 👀";
+        setStatus("Model loaded — no face detected yet. 👀", "active");
       }
 
       requestAnimationFrame(renderLoop);
     }
 
-    // 6) Initialize everything
-    async function init() {
+    // Capture snapshot
+    function captureSnapshot() {
+      if (!videoReady) return;
+
+      const ok = confirm(
+        `Do you want to save this image to your “${TARGET_FOLDER_LABEL}” folder?\n\n` +
+        `Your browser will download a PNG. Move it into ${TARGET_FOLDER_LABEL} or upload it where you need.`
+      );
+      if (!ok) {
+        setStatus("Snapshot canceled.", "active");
+        return;
+      }
+
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      const snapCanvas = document.createElement("canvas");
+      snapCanvas.width = w;
+      snapCanvas.height = h;
+      const sctx = snapCanvas.getContext("2d");
+
+      // Draw current video frame + overlay
+      sctx.drawImage(video, 0, 0, w, h);
+      sctx.drawImage(canvas, 0, 0, w, h);
+
+      const dataURL = snapCanvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+      a.href = dataURL;
+      a.download = `${TARGET_FOLDER_LABEL}-selfie-${timestamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setStatus(
+        `Snapshot saved! 📸 Check your Downloads and move it into “${TARGET_FOLDER_LABEL}” if you’d like.`,
+        "active"
+      );
+    }
+
+    // Start flow (user gesture → camera → AI)
+    async function startExperience() {
       try {
-        statusEl.textContent = "Loading camera…";
+        startBtn.disabled = true;
+        captureBtn.disabled = true;
+        setStatus("Requesting camera access…", "idle");
+
         await setupCamera();
 
-        statusEl.textContent = "Loading AI model (BlazeFace)…";
+        setStatus("Loading AI model (BlazeFace)…", "idle");
         await getBestBackend();
 
         model = await blazeface.load();
-        console.log("BlazeFace model loaded:", model);
+        console.log("BlazeFace model loaded");
+        aiRunning = true;
+        captureBtn.disabled = false;
 
-        statusEl.textContent =
-          "Model loaded. Move into frame and watch your Canva overlay track your face.";
-        renderLoop();
+        setStatus(
+          "Model loaded. Move into frame and watch your Canva overlay track your face.",
+          "active"
+        );
+
+        requestAnimationFrame(renderLoop);
       } catch (err) {
         console.error("Init error:", err);
-        // status text already set in setupCamera/getBestBackend
+        startBtn.disabled = false;
+        setStatus(
+          "This device or browser may not fully support this demo. Try the latest Chrome, Edge, Firefox, or Safari over HTTPS.",
+          "error"
+        );
       }
     }
 
-    init();
+    // Wire up buttons
+    startBtn.addEventListener("click", () => {
+      startExperience();
+    });
+
+    captureBtn.addEventListener("click", () => {
+      captureSnapshot();
+    });
   </script>
 </body>
 </html>

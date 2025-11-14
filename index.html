@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter – Canva Overlay</title>
+  <title>INF 286: NKU Norse AI Filter</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
 
   <!-- TensorFlow.js + BlazeFace -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -15,147 +21,42 @@
       --nku-gold: #f7b718;
       --nku-black: #111111;
       --page-bg-top: #020617;
-      --page-bg-bottom: #020617;
-      --card-bg: rgba(15, 23, 42, 0.9);
-      --border-soft: rgba(148, 163, 184, 0.5);
+      --page-bg-bottom: #000000;
       --accent: #a5b4fc;
-      --text-soft: #cbd5f5;
-      --danger: #f97373;
-      --success: #4ade80;
-      --idle: #e5e7eb;
-    }
-
-    * {
-      box-sizing: border-box;
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #020617 0%, #020617 55%, #000000 100%);
-      color: #e5e7eb;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: radial-gradient(circle at top, var(--page-bg-top) 0%, #020617 55%, var(--page-bg-bottom) 100%);
       min-height: 100vh;
-      margin: 0;
-      padding: 18px 12px 32px;
+      color: #e5e7eb;
     }
 
-    .app-shell {
-      width: 100%;
-      max-width: 960px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .nk-bg-card {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      backdrop-filter: blur(16px);
     }
 
-    /* Brand header */
-    .brand-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 10px 16px;
+    .nk-brand-pill {
       border-radius: 999px;
       background: linear-gradient(90deg, var(--nku-gold), #facc15);
       color: var(--nku-black);
-      font-weight: 600;
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
     }
 
-    .brand-left {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 5px;
+    .nk-brand-pill span {
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      font-size: 0.95rem;
+      font-size: 0.8rem;
     }
 
-    .brand-left .bold {
-      font-weight: 800;
-    }
-
-    .brand-right {
-      font-size: 0.88rem;
-      opacity: 0.9;
-      text-align: right;
-    }
-
-    /* Main card */
-    .card {
-      background: var(--card-bg);
-      border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.8);
-      padding: 18px 18px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      backdrop-filter: blur(18px);
-    }
-
-    .card-header {
-      text-align: center;
-    }
-
-    .card-header h1 {
-      margin: 4px 0 6px;
-      font-size: 1.55rem;
-    }
-
-    .badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-soft);
-      opacity: 0.9;
-    }
-
-    .card-header p {
-      margin: 6px auto 0;
-      max-width: 640px;
-      font-size: 0.94rem;
-      color: var(--text-soft);
-    }
-
-    .steps-list {
-      margin: 8px auto 0;
-      max-width: 580px;
-      padding-left: 0;
-      list-style: none;
-      font-size: 0.9rem;
-      color: #e5e7eb;
-      text-align: left;
-    }
-
-    .steps-list li {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-
-    .steps-list span.step-number {
-      font-weight: 700;
-      color: var(--nku-gold);
-      min-width: 1.5em;
-    }
-
-    /* Video + overlay */
     #videoContainer {
       position: relative;
       width: 100%;
       max-width: 720px;
       margin: 0 auto;
       aspect-ratio: 4 / 3;
-      border-radius: 18px;
+      border-radius: 1rem;
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.7);
       background: radial-gradient(circle, #020617 0%, #000000 70%);
@@ -173,7 +74,6 @@
       pointer-events: none;
     }
 
-    /* Skeleton shimmer while waiting */
     .video-skeleton {
       position: absolute;
       inset: 0;
@@ -191,160 +91,42 @@
     }
 
     @keyframes shimmer {
-      0% {
-        background-position: -120% 0;
-      }
-      100% {
-        background-position: 120% 0;
-      }
-    }
-
-    /* Status row */
-    .status-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-    }
-
-    .status-main {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
     }
 
     .status-dot {
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
-      background: var(--idle);
+      display: inline-block;
+      background: #e5e7eb;
       box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.6);
-      transform: scale(1);
-      transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-    }
-
-    .status-dot.idle {
-      background: var(--idle);
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     }
 
     .status-dot.active {
-      background: var(--success);
-      box-shadow: 0 0 10px 0 rgba(74, 222, 128, 0.9);
+      background: #4ade80;
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
       transform: scale(1.05);
     }
 
     .status-dot.error {
-      background: var(--danger);
-      box-shadow: 0 0 10px 0 rgba(248, 113, 113, 0.9);
+      background: #f97373;
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
       transform: scale(1.05);
-    }
-
-    .status-text {
-      color: var(--accent);
-    }
-
-    .status-hint {
-      color: #9ca3af;
-      font-size: 0.8rem;
-      text-align: right;
-    }
-
-    /* Controls */
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      margin-top: 4px;
-    }
-
-    .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-      margin-top: 6px;
-    }
-
-    button {
-      border-radius: 999px;
-      border: none;
-      padding: 10px 18px;
-      font-size: 0.92rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    #startBtn {
-      background: #020617;
-      border: 1px solid var(--border-soft);
-      color: #e5e7eb;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
-      transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.1s ease;
-    }
-
-    #startBtn:hover:not(:disabled) {
-      background: #111827;
-      transform: translateY(-1px);
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.85);
-    }
-
-    #startBtn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    #captureBtn {
-      background: linear-gradient(90deg, var(--nku-gold), #f97316);
-      color: var(--nku-black);
-      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.85);
-      transition: transform 0.08s ease, box-shadow 0.1s ease;
-    }
-
-    #captureBtn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95);
-    }
-
-    #captureBtn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
     }
 
     .filter-btn {
       border-radius: 999px;
       border: 1px solid rgba(148, 163, 184, 0.5);
-      padding: 7px 12px;
-      font-size: 0.85rem;
       background: #020617;
       color: #e5e7eb;
-      cursor: pointer;
+      font-size: 0.9rem;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: background 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
-    }
-
-    .filter-btn span.emoji {
-      font-size: 1rem;
-    }
-
-    .filter-btn:hover {
-      background: #111827;
-      transform: translateY(-1px);
-      border-color: rgba(148, 163, 184, 0.9);
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
     }
 
     .filter-btn.active {
@@ -354,26 +136,18 @@
       font-weight: 600;
     }
 
-    /* Preview section */
-    .preview-section {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(148, 163, 184, 0.4);
-    }
-
-    .preview-section h2 {
-      font-size: 1rem;
-      margin: 0 0 6px;
+    .filter-btn:hover {
+      background: #111827;
+      color: #e5e7eb;
     }
 
     .preview-image-wrapper {
       width: 100%;
       max-width: 480px;
-      border-radius: 16px;
+      border-radius: 1rem;
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.5);
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-      margin-bottom: 6px;
     }
 
     #snapshotPreview {
@@ -381,187 +155,145 @@
       display: block;
     }
 
-    .preview-hint {
-      font-size: 0.8rem;
-      color: #9ca3af;
+    .text-accent {
+      color: var(--accent);
     }
 
-    /* Info footer */
-    .info-footer {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-
-    .info-footer strong {
-      color: var(--text-soft);
-    }
-
-    .folder-label {
-      color: var(--nku-gold);
-      font-weight: 600;
-    }
-
-    @media (max-width: 720px) {
-      body {
-        padding-inline: 10px;
-      }
-
-      .brand-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .brand-right {
-        text-align: left;
-      }
-
-      .card {
-        padding-inline: 14px;
-      }
-
-      button {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .status-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .status-hint {
-        text-align: left;
-        width: 100%;
-      }
-
-      .filters-row {
-        justify-content: center;
-      }
-
-      .preview-image-wrapper {
-        max-width: 100%;
-      }
+    .badge-nk {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #cbd5f5;
     }
   </style>
 </head>
 
 <body>
-  <div class="app-shell">
-    <!-- NKU brand top bar -->
-    <header class="brand-bar">
-      <div class="brand-left">
-        NKU
-        <span class="bold">NORSE</span>
+  <div class="container py-4 py-md-5">
+    <!-- Brand header -->
+    <div class="nk-brand-pill px-3 py-2 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-baseline gap-2">
+        <span>NKU</span>
+        <span class="fw-bold">Norse</span>
         <span>AI • JS</span>
       </div>
-      <div class="brand-right">
+      <div class="small text-end">
         Fast way to try AI in the browser · Built for students
       </div>
-    </header>
+    </div>
 
     <!-- Main card -->
-    <main class="card">
-      <div class="card-header">
-        <div class="badge-pill">
-          <span>AI FACE FILTER • IN-BROWSER • NO LOGIN</span>
-        </div>
-        <h1>😎 Try the NKU Norse AI Filter</h1>
-        <p>
-          This quick demo shows how JavaScript, TensorFlow.js, and a Canva design work together.
-          Everything runs in your browser — you stay in control the whole time.
-        </p>
+    <div class="card nk-bg-card text-light shadow-lg">
+      <div class="card-body">
+        <!-- Header -->
+        <div class="text-center mb-3">
+          <div class="badge-nk px-3 py-1 mb-2 d-inline-flex align-items-center gap-2">
+            <span>AI FACE FILTER</span>
+            <span>•</span>
+            <span>IN-BROWSER</span>
+            <span>•</span>
+            <span>NO LOGIN</span>
+          </div>
+          <h1 class="h4 mb-2">😀🤖😎 Try the NKU Norse AI Filter</h1>
+          <p class="mb-2 text-secondary">
+            This quick demo shows how JavaScript, TensorFlow.js, and design work together.
+            Everything runs in your browser - you stay in control the whole time.
+          </p>
 
-        <ul class="steps-list">
-          <li>
-            <span class="step-number">1.</span>
-            <span>Tap <strong>Start Camera &amp; AI</strong> and allow camera access.</span>
-          </li>
-          <li>
-            <span class="step-number">2.</span>
-            <span>Choose a filter: <strong>Glasses</strong>, <strong>Helmet</strong>, or <strong>No filter</strong>.</span>
-          </li>
-          <li>
-            <span class="step-number">3.</span>
-            <span>Capture a selfie, preview it, and decide if you want to send it to Brandi.</span>
-          </li>
-        </ul>
+          <ul class="list-unstyled small text-start mx-auto" style="max-width: 580px;">
+            <li class="d-flex mb-1">
+              <span class="fw-bold me-2 text-warning">1.</span>
+              <span>Tap <strong>Start Camera &amp; AI</strong> and allow camera access.</span>
+            </li>
+            <li class="d-flex mb-1">
+              <span class="fw-bold me-2 text-warning">2.</span>
+              <span>Choose a filter: <strong>Glasses</strong>, <strong>Helmet</strong>, or <strong>No filter</strong>.</span>
+            </li>
+            <li class="d-flex mb-1">
+              <span class="fw-bold me-2 text-warning">3.</span>
+              <span>Capture a selfie, preview it, and decide if you want to send it to Brandi.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Video + overlay -->
+        <div class="mb-3">
+          <div id="videoContainer">
+            <div class="video-skeleton" id="videoSkeleton"></div>
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+          </div>
+        </div>
+
+        <!-- Status row -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusText" class="small text-accent">
+              Tap “Start Camera & AI” to begin.
+            </span>
+          </div>
+          <div class="small text-secondary text-md-end">
+            Best results: modern browser, HTTPS, and facing the camera in good light.
+          </div>
+        </div>
+
+        <!-- Filter buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3" aria-label="Choose filter">
+          <button class="filter-btn active" data-filter="glasses" type="button">
+            <span>😎</span> Glasses filter
+          </button>
+          <button class="filter-btn" data-filter="helmet" type="button">
+            <span>🪖</span> Helmet filter
+          </button>
+          <button class="filter-btn" data-filter="none" type="button">
+            <span>🚫</span> No filter
+          </button>
+        </div>
+
+        <!-- Controls -->
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-3">
+          <button id="startBtn" type="button" class="btn btn-outline-light px-4">
+            🚀 Start Camera &amp; AI
+          </button>
+          <button id="captureBtn" type="button" class="btn btn-warning text-dark px-4" disabled>
+            📸 Capture Norse Selfie
+          </button>
+        </div>
+
+        <!-- Preview section -->
+        <div id="previewSection" class="mt-3" style="display: none;">
+          <h2 class="h6 mb-2">Your Norse AI snapshot</h2>
+          <div class="preview-image-wrapper mb-2">
+            <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
+          </div>
+          <p class="small text-secondary mb-0">
+            This is the image that was just captured. It’s also saved to your Downloads as a PNG.
+            If you choose to email it, attach that PNG file to the message.
+          </p>
+        </div>
+
+        <!-- Info footer -->
+        <div class="mt-3 small text-secondary">
+          <p class="mb-1">
+            When you capture a selfie, your browser downloads a PNG. You stay in control of what you keep,
+            where you store it, and whether you email it to your instructor.
+          </p>
+          <p class="mb-0">
+            <strong>What this teaches:</strong> how AI can run directly in the browser,
+            how web apps access the camera safely, and how front-end developers can plug AI into
+            everyday user experiences.
+          </p>
+        </div>
       </div>
-
-      <!-- Video + overlay -->
-      <section id="videoContainer">
-        <div class="video-skeleton" id="videoSkeleton"></div>
-        <video id="video" autoplay playsinline muted></video>
-        <canvas id="overlay"></canvas>
-      </section>
-
-      <!-- Status row -->
-      <section class="status-row">
-        <div class="status-main">
-          <span id="statusDot" class="status-dot idle"></span>
-          <span id="statusText" class="status-text">
-            Tap “Start Camera & AI” to begin.
-          </span>
-        </div>
-        <div class="status-hint">
-          Best results: modern browser, HTTPS, and facing the camera in good light.
-        </div>
-      </section>
-
-      <!-- Filter selection -->
-      <section class="filters-row" aria-label="Choose filter">
-        <button class="filter-btn active" data-filter="glasses">
-          <span class="emoji">😎</span> Glasses filter
-        </button>
-        <button class="filter-btn" data-filter="helmet">
-          <span class="emoji">🪖</span> Helmet filter
-        </button>
-        <button class="filter-btn" data-filter="none">
-          <span class="emoji">🚫</span> No filter
-        </button>
-      </section>
-
-      <!-- Controls -->
-      <section class="controls-row">
-        <button id="startBtn">
-          🚀 Start Camera &amp; AI
-        </button>
-        <button id="captureBtn" disabled>
-          📸 Capture Norse Selfie
-        </button>
-      </section>
-
-      <!-- Preview section -->
-      <section class="preview-section" id="previewSection" style="display: none;">
-        <h2>Your Norse AI snapshot</h2>
-        <div class="preview-image-wrapper">
-          <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
-        </div>
-        <p class="preview-hint">
-          This is the image that was just captured. It’s also saved to your Downloads as a PNG.
-          If you choose to email it, attach that PNG file to the message.
-        </p>
-      </section>
-
-      <!-- Info footer -->
-      <section class="info-footer">
-        <p>
-          When you capture a selfie, your browser downloads a PNG. You stay in control of what you keep,
-          where you store it, and whether you email it to your instructor.
-        </p>
-        <p>
-          <strong>What this teaches:</strong> how AI can run directly in the browser,
-          how web apps access the camera safely, and how front-end developers can plug AI into
-          everyday user experiences.
-        </p>
-      </section>
-    </main>
+    </div>
   </div>
 
   <script>
     // 🔧 CONFIG: update this to your real email
-    const INSTRUCTOR_EMAIL = "nealb3@nku.edu";
+    const INSTRUCTOR_EMAIL = "your.email@nku.edu";
     const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
 
     const video = document.getElementById("video");
@@ -602,14 +334,16 @@
       console.log("Helmet image loaded:", helmetImg.width, helmetImg.height);
     };
 
-    // Status helpers
     function setStatus(message, mode = "idle") {
       statusText.textContent = message;
-      statusDot.classList.remove("idle", "active", "error");
-      statusDot.classList.add(mode);
+      statusDot.classList.remove("active", "error");
+      if (mode === "active") {
+        statusDot.classList.add("active");
+      } else if (mode === "error") {
+        statusDot.classList.add("error");
+      }
     }
 
-    // TFJS backend selection
     async function getBestBackend() {
       const backendsToTry = ["webgl", "wasm", "cpu"];
       for (const b of backendsToTry) {
@@ -627,7 +361,6 @@
       console.warn("Using default TFJS backend:", tf.getBackend());
     }
 
-    // Camera setup (mobile-friendly)
     async function setupCamera() {
       if (!navigator.mediaDevices?.getUserMedia) {
         setStatus(
@@ -692,7 +425,6 @@
       return faceWidth > 0 && faceHeight > 0;
     }
 
-    // Draw glasses overlay relative to face box
     function drawGlassesOnFace(topLeft, bottomRight) {
       if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -705,7 +437,7 @@
       const faceHeight = y2 - y1;
 
       const centerX = x1 + faceWidth / 2;
-      const centerY = y1 + faceHeight * 0.4; // eye line
+      const centerY = y1 + faceHeight * 0.4;
 
       const overlayWidth = faceWidth * 1.3;
       const aspect = glassesImg.height / glassesImg.width;
@@ -720,7 +452,6 @@
       ctx.drawImage(glassesImg, drawX, drawY, overlayWidth, overlayHeight);
     }
 
-    // Draw helmet overlay relative to face box
     function drawHelmetOnFace(topLeft, bottomRight) {
       if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -730,10 +461,9 @@
       const [x1, y1] = topLeft;
       const [x2, y2] = bottomRight;
       const faceWidth = x2 - x1;
-      const faceHeight = y2 - y1;
 
       const centerX = x1 + faceWidth / 2;
-      const topFaceY = y1; // top of face box
+      const topFaceY = y1;
 
       const overlayWidth = faceWidth * 1.6;
       const aspect = helmetImg.height / helmetImg.width;
@@ -748,7 +478,6 @@
       ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
     }
 
-    // AI loop (with simple throttle)
     async function renderLoop(timestamp) {
       if (!model || !videoReady) {
         requestAnimationFrame(renderLoop);
@@ -798,10 +527,8 @@
       requestAnimationFrame(renderLoop);
     }
 
-    // Capture snapshot: show preview, download, then ask about email
     function captureSnapshot() {
       if (!videoReady) return;
-
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
@@ -811,17 +538,16 @@
       snapCanvas.height = h;
       const sctx = snapCanvas.getContext("2d");
 
-      // Draw current video frame + overlay
       sctx.drawImage(video, 0, 0, w, h);
       sctx.drawImage(canvas, 0, 0, w, h);
 
       const dataURL = snapCanvas.toDataURL("image/png");
 
-      // 1) Show preview on the page
+      // Show preview
       snapshotPreview.src = dataURL;
       previewSection.style.display = "block";
 
-      // 2) Download the PNG so the student has the file
+      // Download PNG
       const a = document.createElement("a");
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       a.href = dataURL;
@@ -831,11 +557,10 @@
       document.body.removeChild(a);
 
       setStatus(
-        `Snapshot saved. Check your Downloads and attach it if you choose to email it.`,
+        "Snapshot saved. Check your Downloads and attach it if you choose to email it.",
         "active"
       );
 
-      // 3) Ask if they want to email the image
       const ok = confirm(
         `Do you want to email this snapshot to your instructor at ${INSTRUCTOR_EMAIL}?\n\n` +
         `Your email app will open with a pre-filled message. Please attach the PNG from your Downloads.`
@@ -848,15 +573,16 @@
           "I have attached the PNG file that was downloaded from the demo.\n\n" +
           "- "
         );
-
         const mailtoLink = `mailto:${INSTRUCTOR_EMAIL}?subject=${subject}&body=${body}`;
         window.location.href = mailtoLink;
       } else {
-        setStatus("Snapshot captured. You decided not to email it (which is totally fine).", "active");
+        setStatus(
+          "Snapshot captured. You decided not to email it (which is totally fine).",
+          "active"
+        );
       }
     }
 
-    // Start flow (user gesture → camera → AI)
     async function startExperience() {
       try {
         startBtn.disabled = true;
@@ -888,7 +614,7 @@
       }
     }
 
-    // Filter button wiring
+    // Filter buttons
     filterButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const chosen = btn.getAttribute("data-filter");
@@ -917,14 +643,8 @@
       });
     });
 
-    // Wire up buttons
-    startBtn.addEventListener("click", () => {
-      startExperience();
-    });
-
-    captureBtn.addEventListener("click", () => {
-      captureSnapshot();
-    });
+    startBtn.addEventListener("click", startExperience);
+    captureBtn.addEventListener("click", captureSnapshot);
   </script>
 </body>
 </html>

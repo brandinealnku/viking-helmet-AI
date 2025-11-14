@@ -324,9 +324,9 @@
             </h1>
 
             <p class="nk-lead mb-3">
-              This demo shows how far modern web tech has come — a live face-tracking filter built with 
-              <strong>JavaScript</strong>, <strong>TensorFlow.js</strong>, and custom <strong>Canva assets</strong>.  
-              Everything runs right in your browser. No Python. No server. No upload.  
+              This demo shows how far modern web tech has come — a live face-tracking filter built with
+              <strong>JavaScript</strong>, <strong>TensorFlow.js</strong>, and custom <strong>Canva assets</strong>.
+              Everything runs right in your browser. No Python. No server. No upload.
               Just pure, fast, client-side AI.
             </p>
 
@@ -384,17 +384,28 @@
                 </div>
               </div>
 
-              <!-- Filter controls -->
+              <!-- Filter controls (thumbnail buttons) -->
               <div class="d-flex justify-content-center mb-3">
                 <div class="filter-group" aria-label="Choose filter">
                   <button class="filter-btn active" data-filter="glasses" type="button">
-                    <span class="emoji">😎</span> Glasses
+                    <img src="assets/thumbnails/glasses-thumb.png"
+                         alt="Glasses filter preview"
+                         class="filter-thumb" />
+                    <span>Glasses</span>
                   </button>
+
                   <button class="filter-btn" data-filter="helmet" type="button">
-                    <span class="emoji">🪖</span> Helmet
+                    <img src="assets/thumbnails/helmet-thumb.png"
+                         alt="Helmet filter preview"
+                         class="filter-thumb" />
+                    <span>Helmet</span>
                   </button>
+
                   <button class="filter-btn" data-filter="none" type="button">
-                    <span class="emoji">🚫</span> No filter
+                    <img src="assets/thumbnails/none-thumb.png"
+                         alt="No filter selected"
+                         class="filter-thumb" />
+                    <span>No filter</span>
                   </button>
                 </div>
               </div>
@@ -426,7 +437,7 @@
         <!-- Footer text -->
         <footer class="mt-4 pt-3 border-top" style="border-color: #e5e7eb;">
           <p class="nk-subsection-body mb-0">
-            Your data stays entirely on your device — nothing is uploaded or stored.  
+            Your data stays entirely on your device — nothing is uploaded or stored.
             This is a hands-on, low-pressure way to explore modern AI user experiences in the browser.
           </p>
         </footer>

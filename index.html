@@ -453,7 +453,7 @@
   const snapshotPreview = document.getElementById("snapshotPreview");
 
   let faceModel = null;         // BlazeFace
-  let bodyPixModel = null;      // BodyPix (optional)
+  let bodyPixModel = null;      // BodyPix (for Griffin Hall background)
   let videoReady = false;
   let glassesImgReady = false;
   let helmetImgReady = false;
@@ -464,7 +464,7 @@
   // 'glasses' | 'helmet' | 'none'
   let activeFilter = "glasses";
 
-  // Offscreen canvases for compositing
+  // Offscreen canvases for compositing when using Griffin Hall
   const tempCanvas = document.createElement("canvas");
   const tempCtx = tempCanvas.getContext("2d");
 
@@ -479,7 +479,7 @@
     console.log("✅ Griffin Hall background loaded:", bgImage.naturalWidth, bgImage.naturalHeight);
   };
   bgImage.onerror = () => {
-    console.warn("⚠️ Could not load griffin-hall.jpg. Falling back to plain video background.");
+    console.warn("⚠️ Could not load griffin-hall.jpg. Griffin Hall background will be disabled.");
     bgReady = false;
   };
 
@@ -663,20 +663,23 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // Draw the current video frame as a base
-    tempCtx.drawImage(video, 0, 0, w, h);
+    // Draw current frame depending on filter
+    // If activeFilter === 'none' AND bg + BodyPix are ready, use Griffin Hall background.
+    // Otherwise, just show direct camera feed.
+    const useGriffinHall =
+      activeFilter === "none" && bgReady && bodyPixModel;
 
-    // Decide whether to use Griffin Hall background (only if both bg and BodyPix are ready)
-    const canUseBackground = bgReady && bodyPixModel;
+    if (useGriffinHall) {
+      // Composite Griffin Hall + person
+      tempCtx.drawImage(video, 0, 0, w, h);
 
-    if (canUseBackground) {
       try {
         const segmentation = await bodyPixModel.segmentPerson(video, {
           internalResolution: "medium",
           segmentationThreshold: 0.7,
         });
 
-        const mask = segmentation.data; // Uint8Array or Float32Array
+        const mask = segmentation.data;
 
         const frameImageData = tempCtx.getImageData(0, 0, w, h);
         const framePixels = frameImageData.data;
@@ -687,7 +690,7 @@
 
         const len = mask.length;
         for (let i = 0; i < len; i++) {
-          const isPerson = mask[i] > 0; // works for 0/1 or probabilities
+          const isPerson = mask[i] > 0;
           const offset = i * 4;
           if (!isPerson) {
             framePixels[offset]     = bgPixels[offset];
@@ -699,15 +702,15 @@
 
         ctx.putImageData(frameImageData, 0, 0);
       } catch (e) {
-        console.error("BodyPix error, falling back to video only:", e);
+        console.error("BodyPix error, falling back to plain video:", e);
         ctx.drawImage(video, 0, 0, w, h);
       }
     } else {
-      // Fallback: just draw the camera feed
+      // Glasses / Helmet or BodyPix unavailable: just draw camera frame
       ctx.drawImage(video, 0, 0, w, h);
     }
 
-    // Now run face detection and draw overlays on top
+    // Now run face detection and draw overlays if needed
     let predictions = [];
     try {
       predictions = await faceModel.estimateFaces(video, false);
@@ -725,25 +728,15 @@
 
       if (activeFilter === "glasses") {
         drawGlassesOnFace(topLeft, bottomRight);
-        setStatus(
-          canUseBackground
-            ? "AI is running: glasses filter with Griffin Hall background."
-            : "AI is running: glasses filter on live camera.",
-          "active"
-        );
+        setStatus("AI is running: glasses filter on live camera.", "active");
       } else if (activeFilter === "helmet") {
         drawHelmetOnFace(topLeft, bottomRight);
-        setStatus(
-          canUseBackground
-            ? "AI is running: helmet filter with Griffin Hall background."
-            : "AI is running: helmet filter on live camera.",
-          "active"
-        );
+        setStatus("AI is running: helmet filter on live camera.", "active");
       } else {
         setStatus(
-          canUseBackground
-            ? "AI is running with Griffin Hall background. No visual filter applied."
-            : "AI is running on live camera. No visual filter applied.",
+          useGriffinHall
+            ? "AI is running: Griffin Hall background with no filter."
+            : "AI is running: live camera with no filter.",
           "active"
         );
       }
@@ -824,7 +817,7 @@
       // Face detection model
       faceModel = await blazeface.load();
 
-      // Try to load BodyPix, but don't fail the whole demo if it breaks
+      // Try to load BodyPix (used only when activeFilter === 'none')
       try {
         bodyPixModel = await bodyPix.load({
           architecture: "MobileNetV1",
@@ -834,7 +827,7 @@
         });
         console.log("✅ BodyPix model loaded");
       } catch (e) {
-        console.warn("⚠️ BodyPix failed to load. Continuing without background replacement.", e);
+        console.warn("⚠️ BodyPix failed to load. Griffin Hall background will be disabled.", e);
         bodyPixModel = null;
       }
 
@@ -842,7 +835,7 @@
       captureBtn.disabled = false;
 
       setStatus(
-        "AI is ready. Move into frame and watch the filter follow your face.",
+        "AI is ready. Choose a filter or 'No filter' to see different effects.",
         "active"
       );
 
@@ -868,17 +861,19 @@
 
       if (activeFilter === "glasses") {
         setStatus(
-          "Glasses filter selected. When the AI sees your face, it will add the overlay.",
+          "Glasses filter selected. Background uses your live camera.",
           aiRunning ? "active" : "idle"
         );
       } else if (activeFilter === "helmet") {
         setStatus(
-          "Helmet filter selected. When the AI sees your face, it will add the overlay.",
+          "Helmet filter selected. Background uses your live camera.",
           aiRunning ? "active" : "idle"
         );
       } else {
         setStatus(
-          "No filter selected. The AI still runs, but nothing is added on top of the video.",
+          bgReady && bodyPixModel
+            ? "No filter selected. If models are ready, you'll appear in front of Griffin Hall."
+            : "No filter selected. Griffin Hall background will appear when models are ready.",
           aiRunning ? "active" : "idle"
         );
       }

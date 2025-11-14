@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>INF 286: NKU Norse AI Filter</title>
+  <title>NKU Norse AI Filter – Browser-Based AI Demo</title>
 
   <!-- Bootstrap 5 CSS -->
   <link
@@ -23,42 +23,80 @@
       --page-bg-top: #020617;
       --page-bg-bottom: #000000;
       --accent: #a5b4fc;
+      --muted: #9ca3af;
     }
 
     body {
       background: radial-gradient(circle at top, var(--page-bg-top) 0%, #020617 55%, var(--page-bg-bottom) 100%);
       min-height: 100vh;
       color: #e5e7eb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .nk-bg-card {
-      background: rgba(15, 23, 42, 0.94);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      backdrop-filter: blur(16px);
+    .nk-shell {
+      max-width: 1100px;
     }
 
+    /* Brand bar */
     .nk-brand-pill {
       border-radius: 999px;
       background: linear-gradient(90deg, var(--nku-gold), #facc15);
       color: var(--nku-black);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     }
-
     .nk-brand-pill span {
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 0.8rem;
+      letter-spacing: 0.09em;
+      font-size: 0.78rem;
     }
 
+    /* Main card */
+    .nk-card {
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      backdrop-filter: blur(18px);
+      border-radius: 1.25rem;
+    }
+
+    .nk-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      color: #cbd5f5;
+    }
+
+    .nk-title {
+      font-size: clamp(1.6rem, 2.3vw, 2.1rem);
+      font-weight: 650;
+    }
+
+    .nk-lead {
+      font-size: 0.98rem;
+      color: #cbd5f5;
+    }
+
+    /* Steps list */
+    .nk-step-list li {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.9rem;
+    }
+    .nk-step-num {
+      font-weight: 700;
+      color: var(--nku-gold);
+      min-width: 1.4rem;
+      text-align: right;
+    }
+
+    /* Video container */
     #videoContainer {
       position: relative;
       width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
       aspect-ratio: 4 / 3;
       border-radius: 1rem;
       overflow: hidden;
-      border: 1px solid rgba(148, 163, 184, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.65);
       background: radial-gradient(circle, #020617 0%, #000000 70%);
     }
 
@@ -74,6 +112,7 @@
       pointer-events: none;
     }
 
+    /* Skeleton shimmer */
     .video-skeleton {
       position: absolute;
       inset: 0;
@@ -95,6 +134,7 @@
       100% { background-position: 120% 0; }
     }
 
+    /* Status */
     .status-dot {
       width: 10px;
       height: 10px;
@@ -102,193 +142,235 @@
       display: inline-block;
       background: #e5e7eb;
       box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.6);
-      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
     }
-
     .status-dot.active {
       background: #4ade80;
       box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
       transform: scale(1.05);
     }
-
     .status-dot.error {
       background: #f97373;
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
       transform: scale(1.05);
     }
+    .status-text {
+      color: var(--accent);
+      font-size: 0.88rem;
+    }
+    .status-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
 
+    /* Filter buttons */
     .filter-btn {
       border-radius: 999px;
       border: 1px solid rgba(148, 163, 184, 0.5);
       background: #020617;
       color: #e5e7eb;
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      padding: 0.45rem 0.9rem;
+      padding: 0.4rem 0.9rem;
     }
-
     .filter-btn.active {
       background: var(--nku-gold);
       color: var(--nku-black);
       border-color: rgba(17, 24, 39, 0.9);
       font-weight: 600;
     }
-
     .filter-btn:hover {
       background: #111827;
       color: #e5e7eb;
     }
 
+    /* Main buttons */
+    #startBtn {
+      border-radius: 999px;
+      border-width: 1px;
+    }
+    #captureBtn {
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* Preview */
     .preview-image-wrapper {
       width: 100%;
-      max-width: 480px;
+      max-width: 420px;
       border-radius: 1rem;
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.5);
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
     }
-
     #snapshotPreview {
       width: 100%;
       display: block;
     }
 
-    .text-accent {
-      color: var(--accent);
+    /* Secondary text blocks */
+    .nk-subsection-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #9ca3af;
+    }
+    .nk-subsection-body {
+      font-size: 0.85rem;
+      color: #d1d5db;
     }
 
-    .badge-nk {
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #cbd5f5;
+    @media (max-width: 768px) {
+      .nk-shell {
+        padding-inline: 0.75rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="container py-4 py-md-5">
-    <!-- Brand header -->
-    <div class="nk-brand-pill px-3 py-2 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div class="container py-4 py-lg-5 nk-shell">
+    <!-- Brand bar -->
+    <header class="nk-brand-pill px-3 py-2 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div class="d-flex align-items-baseline gap-2">
         <span>NKU</span>
         <span class="fw-bold">Norse</span>
-        <span>AI • JS</span>
+        <span>AI • JavaScript</span>
       </div>
       <div class="small text-end">
-        Fast way to try AI in the browser · Built for students
+        Browser-only AI demo · Designed for teaching & student projects
       </div>
-    </div>
+    </header>
 
-    <!-- Main card -->
-    <div class="card nk-bg-card text-light shadow-lg">
-      <div class="card-body">
-        <!-- Header -->
-        <div class="text-center mb-3">
-          <div class="badge-nk px-3 py-1 mb-2 d-inline-flex align-items-center gap-2">
-            <span>AI FACE FILTER</span>
-            <span>•</span>
-            <span>IN-BROWSER</span>
-            <span>•</span>
-            <span>NO LOGIN</span>
+    <!-- Main content card -->
+    <main class="card nk-card shadow-lg border-0">
+      <div class="card-body p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <!-- Left: Text / explanation -->
+          <div class="col-lg-5">
+            <p class="nk-eyebrow mb-1">In-browser AI · No backend required</p>
+            <h1 class="nk-title mb-2">
+              NKU Norse AI Filter
+            </h1>
+            <p class="nk-lead mb-3">
+              A live face filter built with <strong>JavaScript</strong>, <strong>TensorFlow.js</strong>,
+              and <strong>Canva overlays</strong>. Everything runs locally in your browser — no Python,
+              no server, and no login.
+            </p>
+
+            <hr class="border-secondary border-opacity-50 my-3" />
+
+            <section class="mb-3">
+              <h2 class="nk-subsection-title mb-2">How it works for you</h2>
+              <ul class="nk-step-list list-unstyled mb-2">
+                <li>
+                  <span class="nk-step-num">1.</span>
+                  <span>Click <strong>Start Camera &amp; AI</strong> and allow camera access.</span>
+                </li>
+                <li>
+                  <span class="nk-step-num">2.</span>
+                  <span>Pick a filter: <strong>Glasses</strong>, <strong>Helmet</strong>, or <strong>No filter</strong>.</span>
+                </li>
+                <li>
+                  <span class="nk-step-num">3.</span>
+                  <span>Capture a selfie, preview it, and decide if you want to email it to your instructor.</span>
+                </li>
+              </ul>
+              <p class="nk-subsection-body mb-0">
+                Use this as a template for your own AI-powered web experiences: replace overlays,
+                change the prompts, or wire it into a class assignment.
+              </p>
+            </section>
+
+            <section class="mt-3 mt-lg-4">
+              <h2 class="nk-subsection-title mb-2">What this demo teaches</h2>
+              <p class="nk-subsection-body mb-1">
+                • How modern websites access hardware safely using <code>getUserMedia</code>.<br />
+                • How <code>&lt;canvas&gt;</code> lets you layer graphics on top of live video.<br />
+                • How client-side AI (TensorFlow.js + BlazeFace) can power real-time effects without
+                sending data to a server.
+              </p>
+            </section>
           </div>
-          <h1 class="h4 mb-2">😀🤖😎 Try the NKU Norse AI Filter</h1>
-          <p class="mb-2 text-secondary">
-            This quick demo shows how JavaScript, TensorFlow.js, and design work together.
-            Everything runs in your browser - you stay in control the whole time.
+
+          <!-- Right: Demo card -->
+          <div class="col-lg-7">
+            <section class="bg-dark bg-opacity-75 border rounded-4 border-secondary border-opacity-50 p-3 p-lg-3">
+              <!-- Video + overlay -->
+              <div class="mb-3">
+                <div id="videoContainer">
+                  <div class="video-skeleton" id="videoSkeleton"></div>
+                  <video id="video" autoplay playsinline muted></video>
+                  <canvas id="overlay"></canvas>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span id="statusDot" class="status-dot"></span>
+                  <span id="statusText" class="status-text">
+                    Tap “Start Camera &amp; AI” to begin.
+                  </span>
+                </div>
+                <div class="status-hint text-md-end">
+                  Tip: Use a modern browser over HTTPS, with decent lighting.
+                </div>
+              </div>
+
+              <!-- Filter controls -->
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3" aria-label="Choose filter">
+                <button class="filter-btn active" data-filter="glasses" type="button">
+                  <span>😎</span> Glasses filter
+                </button>
+                <button class="filter-btn" data-filter="helmet" type="button">
+                  <span>🪖</span> Helmet filter
+                </button>
+                <button class="filter-btn" data-filter="none" type="button">
+                  <span>🚫</span> No filter
+                </button>
+              </div>
+
+              <!-- Main controls -->
+              <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-2">
+                <button id="startBtn" type="button" class="btn btn-outline-light px-4">
+                  🚀 Start Camera &amp; AI
+                </button>
+                <button id="captureBtn" type="button" class="btn btn-warning text-dark px-4" disabled>
+                  📸 Capture Norse Selfie
+                </button>
+              </div>
+
+              <!-- Preview -->
+              <div id="previewSection" class="mt-3" style="display: none;">
+                <h2 class="h6 mb-2">Your Norse AI snapshot</h2>
+                <div class="preview-image-wrapper mb-2">
+                  <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
+                </div>
+                <p class="small text-secondary mb-0">
+                  This is the image that was just captured. It’s also saved to your Downloads as a PNG.
+                  If you choose to email it, attach that PNG file to the message.
+                </p>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Footer text -->
+        <footer class="mt-4 pt-3 border-top border-secondary border-opacity-50">
+          <p class="nk-subsection-body mb-1">
+            When you capture a selfie, your browser downloads a PNG. You decide what to keep, where to store it,
+            and whether to email it to your instructor — giving you a hands-on, low-risk way to see what
+            AI-enhanced front-end experiences feel like.
           </p>
-
-          <ul class="list-unstyled small text-start mx-auto" style="max-width: 580px;">
-            <li class="d-flex mb-1">
-              <span class="fw-bold me-2 text-warning">1.</span>
-              <span>Tap <strong>Start Camera &amp; AI</strong> and allow camera access.</span>
-            </li>
-            <li class="d-flex mb-1">
-              <span class="fw-bold me-2 text-warning">2.</span>
-              <span>Choose a filter: <strong>Glasses</strong>, <strong>Helmet</strong>, or <strong>No filter</strong>.</span>
-            </li>
-            <li class="d-flex mb-1">
-              <span class="fw-bold me-2 text-warning">3.</span>
-              <span>Capture a selfie, preview it, and decide if you want to send it to Brandi.</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Video + overlay -->
-        <div class="mb-3">
-          <div id="videoContainer">
-            <div class="video-skeleton" id="videoSkeleton"></div>
-            <video id="video" autoplay playsinline muted></video>
-            <canvas id="overlay"></canvas>
-          </div>
-        </div>
-
-        <!-- Status row -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <span id="statusDot" class="status-dot"></span>
-            <span id="statusText" class="small text-accent">
-              Tap “Start Camera & AI” to begin.
-            </span>
-          </div>
-          <div class="small text-secondary text-md-end">
-            Best results: modern browser, HTTPS, and facing the camera in good light.
-          </div>
-        </div>
-
-        <!-- Filter buttons -->
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3" aria-label="Choose filter">
-          <button class="filter-btn active" data-filter="glasses" type="button">
-            <span>😎</span> Glasses filter
-          </button>
-          <button class="filter-btn" data-filter="helmet" type="button">
-            <span>🪖</span> Helmet filter
-          </button>
-          <button class="filter-btn" data-filter="none" type="button">
-            <span>🚫</span> No filter
-          </button>
-        </div>
-
-        <!-- Controls -->
-        <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-3">
-          <button id="startBtn" type="button" class="btn btn-outline-light px-4">
-            🚀 Start Camera &amp; AI
-          </button>
-          <button id="captureBtn" type="button" class="btn btn-warning text-dark px-4" disabled>
-            📸 Capture Norse Selfie
-          </button>
-        </div>
-
-        <!-- Preview section -->
-        <div id="previewSection" class="mt-3" style="display: none;">
-          <h2 class="h6 mb-2">Your Norse AI snapshot</h2>
-          <div class="preview-image-wrapper mb-2">
-            <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
-          </div>
-          <p class="small text-secondary mb-0">
-            This is the image that was just captured. It’s also saved to your Downloads as a PNG.
-            If you choose to email it, attach that PNG file to the message.
-          </p>
-        </div>
-
-        <!-- Info footer -->
-        <div class="mt-3 small text-secondary">
-          <p class="mb-1">
-            When you capture a selfie, your browser downloads a PNG. You stay in control of what you keep,
-            where you store it, and whether you email it to your instructor.
-          </p>
-          <p class="mb-0">
-            <strong>What this teaches:</strong> how AI can run directly in the browser,
-            how web apps access the camera safely, and how front-end developers can plug AI into
-            everyday user experiences.
-          </p>
-        </div>
+        </footer>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
@@ -404,7 +486,6 @@
       }
     }
 
-    // BlazeFace helpers
     function isValidPoint(pt) {
       return (
         Array.isArray(pt) &&

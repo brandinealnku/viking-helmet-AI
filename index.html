@@ -444,7 +444,7 @@
           </li>
           <li>
             <span class="step-number">2.</span>
-            <span>Choose <strong>Glasses filter</strong> or <strong>No filter</strong>.</span>
+            <span>Choose a filter: <strong>Glasses</strong>, <strong>Helmet</strong>, or <strong>No filter</strong>.</span>
           </li>
           <li>
             <span class="step-number">3.</span>
@@ -478,6 +478,9 @@
         <button class="filter-btn active" data-filter="glasses">
           <span class="emoji">😎</span> Glasses filter
         </button>
+        <button class="filter-btn" data-filter="helmet">
+          <span class="emoji">🪖</span> Helmet filter
+        </button>
         <button class="filter-btn" data-filter="none">
           <span class="emoji">🚫</span> No filter
         </button>
@@ -510,7 +513,7 @@
   </div>
 
   <script>
-    // Change this label to match how you talk about the folder in class
+    // Folder label used in messaging + filename
     const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
 
     const video = document.getElementById("video");
@@ -526,22 +529,27 @@
     let model = null;
     let videoReady = false;
     let glassesImgReady = false;
+    let helmetImgReady = false;
     let aiRunning = false;
     let lastRenderTime = 0;
-    let activeFilter = "glasses"; // 'glasses' | 'none'
 
-    // Load Canva PNG overlays (glasses used now, helmet ready for later)
+    // 'glasses' | 'helmet' | 'none'
+    let activeFilter = "glasses";
+
+    // Load Canva PNG overlays
     const glassesImg = new Image();
     glassesImg.src = "glasses.png";
-
     glassesImg.onload = () => {
       glassesImgReady = true;
       console.log("Glasses image loaded:", glassesImg.width, glassesImg.height);
     };
 
-    // Optional future use: helmet
     const helmetImg = new Image();
-    helmetImg.src = "helmet.png"; // not used yet, but loaded for future filters
+    helmetImg.src = "helmet.png";
+    helmetImg.onload = () => {
+      helmetImgReady = true;
+      console.log("Helmet image loaded:", helmetImg.width, helmetImg.height);
+    };
 
     // Status helpers
     function setStatus(message, mode = "idle") {
@@ -646,7 +654,7 @@
       const faceHeight = y2 - y1;
 
       const centerX = x1 + faceWidth / 2;
-      const centerY = y1 + faceHeight * 0.4; // approximate eye line
+      const centerY = y1 + faceHeight * 0.4; // eye line
 
       const overlayWidth = faceWidth * 1.3;
       const aspect = glassesImg.height / glassesImg.width;
@@ -656,12 +664,38 @@
       const drawY = centerY - overlayHeight / 2;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // subtle dark tint to focus attention
       ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       ctx.drawImage(glassesImg, drawX, drawY, overlayWidth, overlayHeight);
+    }
+
+    // Draw helmet overlay relative to face box
+    function drawHelmetOnFace(topLeft, bottomRight) {
+      if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+
+      const centerX = x1 + faceWidth / 2;
+      const topFaceY = y1; // top of face box
+
+      const overlayWidth = faceWidth * 1.6;
+      const aspect = helmetImg.height / helmetImg.width;
+      const overlayHeight = overlayWidth * aspect;
+
+      // Position helmet so it sits above + slightly overlapping forehead
+      const drawX = centerX - overlayWidth / 2;
+      const drawY = topFaceY - overlayHeight * 0.55;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
     }
 
     // AI loop (with simple throttle)
@@ -695,15 +729,14 @@
 
         if (activeFilter === "glasses") {
           drawGlassesOnFace(topLeft, bottomRight);
-          setStatus(
-            "AI is running: the glasses filter is tracking your face.",
-            "active"
-          );
+          setStatus("AI is running: the glasses filter is tracking your face.", "active");
+        } else if (activeFilter === "helmet") {
+          drawHelmetOnFace(topLeft, bottomRight);
+          setStatus("AI is running: the helmet filter is tracking your face.", "active");
         } else {
-          // no filter: clear overlay but keep AI status
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           setStatus(
-            "AI is running with no visual filter. You can switch back to glasses anytime.",
+            "AI is running with no visual filter. You can switch back to glasses or helmet anytime.",
             "active"
           );
         }
@@ -800,6 +833,11 @@
         if (activeFilter === "glasses") {
           setStatus(
             "Glasses filter selected. When the AI sees your face, it will add the overlay.",
+            aiRunning ? "active" : "idle"
+          );
+        } else if (activeFilter === "helmet") {
+          setStatus(
+            "Helmet filter selected. When the AI sees your face, it will add the overlay.",
             aiRunning ? "active" : "idle"
           );
         } else {

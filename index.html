@@ -453,7 +453,7 @@
   const snapshotPreview = document.getElementById("snapshotPreview");
 
   let faceModel = null;         // BlazeFace
-  let bodyPixModel = null;      // BodyPix (for Griffin Hall background)
+  let bodyPixModel = null;      // BodyPix (for Griffin Hall background when no filter)
   let videoReady = false;
   let glassesImgReady = false;
   let helmetImgReady = false;
@@ -470,6 +470,12 @@
 
   const bgCanvas = document.createElement("canvas");
   const bgCtx = bgCanvas.getContext("2d");
+
+  // 🔁 Face smoothing + hold
+  let lastFaceBox = null;      // { topLeft: [x1,y1], bottomRight: [x2,y2] }
+  let lastFaceTime = 0;        // timestamp of last detection
+  const FACE_HOLD_MS = 200;    // keep last face box for this long when detection drops
+  const SMOOTH_ALPHA = 0.25;   // 0–1; lower = smoother, higher = snappier
 
   // Load Griffin Hall background image
   const bgImage = new Image();
@@ -597,6 +603,25 @@
     return faceWidth > 0 && faceHeight > 0;
   }
 
+  // Smooth between previous and new face box
+  function smoothBox(oldBox, newBox, alpha) {
+    if (!oldBox) return newBox;
+    const [ox1, oy1] = oldBox.topLeft;
+    const [ox2, oy2] = oldBox.bottomRight;
+    const [nx1, ny1] = newBox.topLeft;
+    const [nx2, ny2] = newBox.bottomRight;
+
+    const sx1 = ox1 + alpha * (nx1 - ox1);
+    const sy1 = oy1 + alpha * (ny1 - oy1);
+    const sx2 = ox2 + alpha * (nx2 - ox2);
+    const sy2 = oy2 + alpha * (ny2 - oy2);
+
+    return {
+      topLeft: [sx1, sy1],
+      bottomRight: [sx2, sy2],
+    };
+  }
+
   // 🎯 Tweaked math for cropped glasses.png
   function drawGlassesOnFace(topLeft, bottomRight) {
     if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) {
@@ -663,9 +688,8 @@
     const w = canvas.width;
     const h = canvas.height;
 
-    // Draw current frame depending on filter
-    // If activeFilter === 'none' AND bg + BodyPix are ready, use Griffin Hall background.
-    // Otherwise, just show direct camera feed.
+    // Decide whether to use Griffin Hall background:
+    // only when "No filter" is active AND bg + BodyPix are ready.
     const useGriffinHall =
       activeFilter === "none" && bgReady && bodyPixModel;
 
@@ -710,7 +734,7 @@
       ctx.drawImage(video, 0, 0, w, h);
     }
 
-    // Now run face detection and draw overlays if needed
+    // Now run face detection and use smoothed face boxes
     let predictions = [];
     try {
       predictions = await faceModel.estimateFaces(video, false);
@@ -721,10 +745,30 @@
       return;
     }
 
+    let boxToUse = null;
+
     if (Array.isArray(predictions) && predictions.length > 0) {
       const face = predictions[0];
-      const topLeft = face.topLeft;
-      const bottomRight = face.bottomRight;
+      const rawBox = {
+        topLeft: face.topLeft,
+        bottomRight: face.bottomRight,
+      };
+
+      // Smooth with previous box
+      boxToUse = smoothBox(lastFaceBox, rawBox, SMOOTH_ALPHA);
+      lastFaceBox = boxToUse;
+      lastFaceTime = timestamp;
+    } else {
+      // If we recently had a face, keep using it briefly
+      if (lastFaceBox && timestamp - lastFaceTime < FACE_HOLD_MS) {
+        boxToUse = lastFaceBox;
+      } else {
+        lastFaceBox = null;
+      }
+    }
+
+    if (boxToUse) {
+      const { topLeft, bottomRight } = boxToUse;
 
       if (activeFilter === "glasses") {
         drawGlassesOnFace(topLeft, bottomRight);

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Face-Tracked Canva Overlay (Minimal)</title>
+
+  <!-- TensorFlow.js + BlazeFace -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 0.25rem;
+      text-align: center;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      text-align: center;
+      max-width: 560px;
+      font-size: 0.95rem;
+      color: #cbd5f5;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 640px;
+      max-width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid rgba(148, 163, 184, 0.6);
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      pointer-events: none;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>AI + JavaScript + Canva Overlay</h1>
+  <p>
+    This demo uses <strong>TensorFlow.js + BlazeFace</strong> to detect your face in real time
+    and draws a <strong>PNG from Canva</strong> (sunglasses) on top of your eyes using the
+    <code>&lt;canvas&gt;</code> element. All in the browser. No backend. No Python.
+  </p>
+
+  <div id="videoContainer">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <div id="status">Loading camera…</div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+
+    let model = null;
+    let videoReady = false;
+
+    // 1) Load your Canva PNG (put overlay.png in the same folder as this file)
+    const overlayImg = new Image();
+    overlayImg.src = "overlay.png"; // <- change filename if needed
+    let overlayReady = false;
+
+    overlayImg.onload = () => {
+      overlayReady = true;
+      console.log("Overlay image loaded");
+    };
+
+    // 2) Helper: choose best TFJS backend available (webgl -> wasm -> cpu)
+    async function getBestBackend() {
+      const backendsToTry = ["webgl", "wasm", "cpu"];
+      for (const b of backendsToTry) {
+        try {
+          const ok = await tf.setBackend(b);
+          if (ok) {
+            await tf.ready();
+            console.log("Using TFJS backend:", tf.getBackend());
+            return;
+          }
+        } catch (e) {
+          console.warn("Backend not available:", b, e);
+        }
+      }
+      console.warn("Using default TFJS backend:", tf.getBackend());
+    }
+
+    // 3) Start the camera
+    async function setupCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusEl.textContent =
+          "This browser does not support getUserMedia. Try a modern browser like Chrome, Edge, Firefox, or Safari.";
+        throw new Error("getUserMedia not supported");
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 }
+        });
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            videoReady = true;
+            resolve();
+          };
+        });
+      } catch (err) {
+        console.error("Camera error:", err);
+        statusEl.textContent =
+          "Camera error – check permissions and make sure no other app is using the camera.";
+        throw err;
+      }
+    }
+
+    function isValidPoint(pt) {
+      return (
+        Array.isArray(pt) &&
+        pt.length >= 2 &&
+        typeof pt[0] === "number" &&
+        typeof pt[1] === "number" &&
+        Number.isFinite(pt[0]) &&
+        Number.isFinite(pt[1])
+      );
+    }
+
+    function isValidBox(topLeft, bottomRight) {
+      if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+      return faceWidth > 0 && faceHeight > 0;
+    }
+
+    // 4) Draw the Canva overlay based on the face box
+    function drawOverlayOnFace(topLeft, bottomRight) {
+      if (!overlayReady || !isValidBox(topLeft, bottomRight)) return;
+
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+
+      // We'll center the overlay around the "eye line"
+      const centerX = x1 + faceWidth / 2;
+      const centerY = y1 + faceHeight * 0.4; // tweak this if overlay sits too high/low
+
+      // Scale overlay relative to face
+      const overlayWidth = faceWidth * 1.3; // a bit wider than face
+      const aspect = overlayImg.height / overlayImg.width;
+      const overlayHeight = overlayWidth * aspect;
+
+      const drawX = centerX - overlayWidth / 2;
+      const drawY = centerY - overlayHeight / 2;
+
+      // Clear old frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Optional: slightly darken the background for contrast
+      ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the PNG
+      ctx.drawImage(overlayImg, drawX, drawY, overlayWidth, overlayHeight);
+    }
+
+    // 5) Main AI loop
+    async function renderLoop() {
+      if (!model || !videoReady) {
+        requestAnimationFrame(renderLoop);
+        return;
+      }
+
+      let predictions = [];
+      try {
+        predictions = await model.estimateFaces(video, false);
+      } catch (e) {
+        console.error("Error running BlazeFace:", e);
+        statusEl.textContent = "Error running the AI model. Try refreshing the page.";
+        requestAnimationFrame(renderLoop);
+        return;
+      }
+
+      if (Array.isArray(predictions) && predictions.length > 0) {
+        const face = predictions[0];
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+
+        drawOverlayOnFace(topLeft, bottomRight);
+
+        statusEl.textContent =
+          "AI is running in your browser: Canva overlay is tracking your face 😎 (faces: " +
+          predictions.length +
+          ")";
+      } else {
+        // No face detected → clear overlay
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        statusEl.textContent = "Model loaded — no face detected yet. 👀";
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    // 6) Initialize everything
+    async function init() {
+      try {
+        statusEl.textContent = "Loading camera…";
+        await setupCamera();
+
+        statusEl.textContent = "Loading AI model (BlazeFace)…";
+        await getBestBackend();
+
+        model = await blazeface.load();
+        console.log("BlazeFace model loaded:", model);
+
+        statusEl.textContent =
+          "Model loaded. Move into frame and watch your Canva overlay track your face.";
+        renderLoop();
+      } catch (err) {
+        console.error("Init error:", err);
+        // status text already set in setupCamera/getBestBackend
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

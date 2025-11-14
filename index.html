@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Browser Demo</title>
+  <title>NKU Norse AI Filter Studio</title>
 
   <!-- TensorFlow.js + BlazeFace -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -14,6 +14,7 @@
       --nku-black: #111111;
       --page-bg-top: #020617;
       --page-bg-bottom: #111827;
+      --accent: #a5b4fc;
     }
 
     * {
@@ -33,7 +34,7 @@
 
     .brand-bar {
       width: 100%;
-      max-width: 840px;
+      max-width: 880px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -53,6 +54,10 @@
       font-size: 1rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
+    }
+
+    .brand-bar span.left span.bold {
+      font-weight: 800;
     }
 
     .brand-bar span.right {
@@ -101,29 +106,114 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 1; /* above the video */
+      z-index: 1;
     }
 
     #status {
       margin-top: 14px;
       font-size: 0.98rem;
-      color: #a5b4fc;
+      color: var(--accent);
       text-align: center;
     }
 
     .hint {
-      margin-top: 8px;
+      margin-top: 4px;
       font-size: 0.85rem;
       color: #9ca3af;
       text-align: center;
       max-width: 520px;
     }
 
-    code {
-      font-size: 0.88em;
-      background: rgba(15,23,42,0.8);
-      padding: 2px 6px;
+    .controls {
+      max-width: 880px;
+      width: 100%;
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-btn {
       border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.18s ease, transform 0.08s ease, border-color 0.18s ease;
+    }
+
+    .filter-btn span.emoji {
+      font-size: 1rem;
+    }
+
+    .filter-btn:hover {
+      background: rgba(31, 41, 55, 0.95);
+      transform: translateY(-1px);
+    }
+
+    .filter-btn.active {
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border-color: rgba(17, 24, 39, 0.9);
+      font-weight: 600;
+    }
+
+    .snapshot-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 18px;
+      font-size: 0.9rem;
+      background: linear-gradient(90deg, var(--nku-gold), #f97316);
+      color: var(--nku-black);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transition: transform 0.08s ease, box-shadow 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .snapshot-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7);
+    }
+
+    .snapshot-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .snapshot-btn span.icon {
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 720px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filters {
+        justify-content: center;
+      }
+      .snapshot-btn {
+        justify-content: center;
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -132,17 +222,17 @@
   <div class="brand-bar">
     <span class="left">
       NKU
-      <span style="font-weight:800;">NORSE</span>
-      <span style="font-weight:500;">AI · JS</span>
+      <span class="bold">NORSE</span>
+      <span>AI • JS</span>
     </span>
-    <span class="right">Brandi's student-facing AI browser demo · No backend · No Python</span>
+    <span class="right">Browser-only demo · No backend · Perfect for class & LinkedIn</span>
   </div>
 
-  <h1>😎 NKU Norse AI Sunglasses Filter</h1>
+  <h1>😎 NKU Norse AI Filter Studio</h1>
   <p class="subtitle">
-    A tiny experiment for my INF 286 students: JavaScript grabs the webcam, a BlazeFace model
-    runs <strong>entirely in the browser</strong>, and when it sees a face, we overlay
-    Norse-gold sunglasses on a <code>&lt;canvas&gt;</code> layer. AI as a front-end teammate!
+    JavaScript grabs the webcam, a BlazeFace model runs <strong>entirely in your browser</strong>
+    to detect faces, and when it sees you, it overlays NKU-themed filters on a
+    <code>&lt;canvas&gt;</code> layer. AI as your front-end teammate.
   </p>
 
   <div id="videoContainer">
@@ -152,24 +242,58 @@
 
   <div id="status">Loading camera…</div>
   <div class="hint">
-    Tip: move closer to the camera and face it directly so BlazeFace can lock on.
-    When it detects your face, the Norse glasses appear.
+    Tip: use Chrome, allow camera access, and face the camera directly. When the model detects your face,
+    the Norse filters turn on.
+  </div>
+
+  <div class="controls">
+    <div class="filters">
+      <button class="filter-btn active" data-filter="sunglasses">
+        <span class="emoji">😎</span> Norse Shades
+      </button>
+      <button class="filter-btn" data-filter="helmet">
+        <span class="emoji">🪖</span> Viking Helmet
+      </button>
+      <button class="filter-btn" data-filter="glow">
+        <span class="emoji">✨</span> Gold Aura
+      </button>
+      <button class="filter-btn" data-filter="none">
+        <span class="emoji">🙈</span> No Filter
+      </button>
+    </div>
+
+    <button id="snapshotBtn" class="snapshot-btn">
+      <span class="icon">📸</span>
+      <span>Save Norse AI Selfie</span>
+    </button>
   </div>
 
   <script>
+    // === Global setup ===
     const NKU_GOLD = "#f7b718";
+    const NKU_BLACK = "#111111";
 
     const video = document.getElementById("video");
     const canvas = document.getElementById("overlay");
     const ctx = canvas.getContext("2d");
     const statusEl = document.getElementById("status");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    const snapshotBtn = document.getElementById("snapshotBtn");
 
     let model = null;
     let videoReady = false;
+    let activeFilter = "sunglasses";
 
-    console.log("🔥 NKU Norse AI sunglasses script running");
+    const filterLabels = {
+      sunglasses: "Norse shades",
+      helmet: "Viking helmet",
+      glow: "gold aura",
+      none: "no filter",
+    };
 
-    // 1️⃣ Camera setup
+    console.log("🔥 NKU Norse AI Filter Studio script running");
+
+    // === Camera setup ===
     async function setupCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -193,15 +317,15 @@
       }
     }
 
-    // 2️⃣ Helper – draw a small NKU badge in the corner
+    // === Small NKU badge in corner ===
     function drawCornerBadge() {
       const padding = 10;
-      const badgeWidth = 120;
-      const badgeHeight = 30;
+      const badgeWidth = 130;
+      const badgeHeight = 32;
 
       ctx.save();
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = "rgba(17,17,17,0.85)";
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = "rgba(17,17,17,0.9)";
       ctx.fillRect(
         canvas.width - badgeWidth - padding,
         canvas.height - badgeHeight - padding,
@@ -223,7 +347,7 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
-        "NKU • AI • JS",
+        "NKU • Norse • AI",
         canvas.width - badgeWidth / 2 - padding,
         canvas.height - badgeHeight / 2 - padding
       );
@@ -231,17 +355,19 @@
       ctx.restore();
     }
 
-    // 3️⃣ Helper – draw centered glasses (fallback)
-    function drawCenteredGlasses() {
+    // === Filters (centered, stable, AI-gated) ===
+
+    function drawBaseTint() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawNorseShades() {
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
 
-      ctx.clearRect(0, 0, w, h);
-
-      // Slight dark tint
-      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-      ctx.fillRect(0, 0, w, h);
+      drawBaseTint();
 
       const centerX = w / 2;
       const centerY = h * 0.35;
@@ -281,12 +407,13 @@
         ctx.quadraticCurveTo(x, y, x + radius, y);
         ctx.closePath();
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
         ctx.fill();
         ctx.strokeStyle = NKU_GOLD;
         ctx.stroke();
       }
 
+      // Lenses
       drawLens(leftX, lensY, lensWidth, glassesHeight);
       drawLens(rightX, lensY, lensWidth, glassesHeight);
 
@@ -297,150 +424,287 @@
       ctx.strokeStyle = NKU_GOLD;
       ctx.stroke();
 
-      drawCornerBadge();
       ctx.restore();
+      drawCornerBadge();
     }
 
-    // 4️⃣ Helper – validate BlazeFace points
-    function isValidPoint(pt) {
-      return (
-        Array.isArray(pt) &&
-        pt.length >= 2 &&
-        typeof pt[0] === "number" &&
-        typeof pt[1] === "number" &&
-        Number.isFinite(pt[0]) &&
-        Number.isFinite(pt[1])
-      );
-    }
+    function drawNorseHelmet() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
 
-    // 5️⃣ Draw glasses using bounding box (tracked)
-    function drawGlassesFromBox(topLeft, bottomRight) {
-      if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) {
-        return false;
-      }
+      drawBaseTint();
 
-      const [x1, y1] = topLeft;
-      const [x2, y2] = bottomRight;
+      const faceWidth = w * 0.3;
+      const centerX = w / 2;
+      const topFaceY = h * 0.28;
 
-      const faceWidth = x2 - x1;
-      const faceHeight = y2 - y1;
-
-      if (faceWidth <= 0 || faceHeight <= 0) return false;
-
-      const centerX = x1 + faceWidth / 2;
-
-      const glassesWidth = faceWidth * 1.1;
-      const glassesHeight = faceHeight * 0.28;
-      const glassesY = y1 + faceHeight * 0.30;
-      const glassesX = centerX - glassesWidth / 2;
-
-      const bridgeWidth = glassesWidth * 0.08;
-      const lensWidth = (glassesWidth - bridgeWidth) / 2;
-
-      const lensY = glassesY;
+      const helmetWidth = faceWidth * 1.7;
+      const helmetHeight = faceWidth * 0.9;
+      const helmetTopY = topFaceY - helmetHeight * 0.6;
+      const helmetBottomY = topFaceY + helmetHeight * 0.25;
 
       ctx.save();
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      function drawLens(x, y, wLens, hLens) {
-        const radius = hLens * 0.4;
-
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + wLens - radius, y);
-        ctx.quadraticCurveTo(x + wLens, y, x + wLens, y + radius);
-        ctx.lineTo(x + wLens, y + hLens - radius);
-        ctx.quadraticCurveTo(
-          x + wLens,
-          y + hLens,
-          x + wLens - radius,
-          y + hLens
-        );
-        ctx.lineTo(x + radius, y + hLens);
-        ctx.quadraticCurveTo(x, y + hLens, x, y + hLens - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
-
-        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-        ctx.fill();
-        ctx.strokeStyle = NKU_GOLD;
-        ctx.stroke();
-      }
-
-      const leftX = glassesX;
-      const rightX = glassesX + lensWidth + bridgeWidth;
-
-      drawLens(leftX, lensY, lensWidth, glassesHeight);
-      drawLens(rightX, lensY, lensWidth, glassesHeight);
-
-      // Bridge
+      // Main helmet shape
       ctx.beginPath();
-      ctx.moveTo(leftX + lensWidth, lensY + glassesHeight * 0.45);
-      ctx.lineTo(rightX, lensY + glassesHeight * 0.45);
+      ctx.moveTo(centerX - helmetWidth * 0.5, helmetBottomY);
+      ctx.lineTo(centerX - helmetWidth * 0.55, helmetTopY + helmetHeight * 0.3);
+      ctx.quadraticCurveTo(
+        centerX,
+        helmetTopY - helmetHeight * 0.4,
+        centerX + helmetWidth * 0.55,
+        helmetTopY + helmetHeight * 0.3
+      );
+      ctx.lineTo(centerX + helmetWidth * 0.5, helmetBottomY);
+      ctx.quadraticCurveTo(
+        centerX,
+        helmetBottomY + helmetHeight * 0.15,
+        centerX - helmetWidth * 0.5,
+        helmetBottomY
+      );
+
+      ctx.fillStyle = NKU_BLACK;
       ctx.strokeStyle = NKU_GOLD;
+      ctx.fill();
       ctx.stroke();
+
+      // Center ridge
+      ctx.beginPath();
+      ctx.moveTo(centerX, helmetTopY - helmetHeight * 0.35);
+      ctx.lineTo(centerX, helmetBottomY);
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.lineWidth = 3;
+
+      // Gold band
+      const bandHeight = helmetHeight * 0.22;
+      const bandTopY = topFaceY - bandHeight * 0.4;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - helmetWidth * 0.55, bandTopY);
+      ctx.lineTo(centerX + helmetWidth * 0.55, bandTopY);
+      ctx.lineTo(centerX + helmetWidth * 0.5, bandTopY + bandHeight);
+      ctx.lineTo(centerX - helmetWidth * 0.5, bandTopY + bandHeight);
+      ctx.closePath();
+
+      ctx.fillStyle = NKU_GOLD;
+      ctx.strokeStyle = NKU_BLACK;
+      ctx.fill();
+      ctx.stroke();
+
+      // NKU plate
+      const plateWidth = helmetWidth * 0.25;
+      const plateHeight = bandHeight * 0.7;
+      const plateX = centerX - plateWidth / 2;
+      const plateY = bandTopY + (bandHeight - plateHeight) / 2;
+
+      ctx.fillStyle = NKU_BLACK;
+      ctx.fillRect(plateX, plateY, plateWidth, plateHeight);
+
+      ctx.fillStyle = NKU_GOLD;
+      ctx.font = `${Math.floor(plateHeight * 0.7)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("NKU", centerX, plateY + plateHeight / 2);
+
+      // Horns
+      ctx.strokeStyle = NKU_GOLD;
+      ctx.fillStyle = "#ffffff";
+
+      const hornBaseY = helmetTopY + helmetHeight * 0.15;
+
+      const leftBaseX = centerX - helmetWidth * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(leftBaseX, hornBaseY);
+      ctx.quadraticCurveTo(
+        leftBaseX - helmetWidth * 0.4,
+        hornBaseY - helmetHeight * 0.9,
+        leftBaseX + helmetWidth * 0.05,
+        hornBaseY - helmetHeight * 0.85
+      );
+      ctx.quadraticCurveTo(
+        leftBaseX - helmetWidth * 0.25,
+        hornBaseY - helmetHeight * 0.7,
+        leftBaseX,
+        hornBaseY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      const rightBaseX = centerX + helmetWidth * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(rightBaseX, hornBaseY);
+      ctx.quadraticCurveTo(
+        rightBaseX + helmetWidth * 0.4,
+        hornBaseY - helmetHeight * 0.9,
+        rightBaseX - helmetWidth * 0.05,
+        hornBaseY - helmetHeight * 0.85
+      );
+      ctx.quadraticCurveTo(
+        rightBaseX + helmetWidth * 0.25,
+        hornBaseY - helmetHeight * 0.7,
+        rightBaseX,
+        hornBaseY
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+      drawCornerBadge();
+    }
+
+    function drawGoldAura() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      ctx.save();
+      ctx.clearRect(0, 0, w, h);
+
+      // Darken edges
+      const gradient = ctx.createRadialGradient(
+        w / 2,
+        h * 0.4,
+        w * 0.05,
+        w / 2,
+        h * 0.4,
+        w * 0.65
+      );
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0.0)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0.7)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+
+      // Gold aura circle
+      const auraRadius = Math.min(w, h) * 0.28;
+      const auraGradient = ctx.createRadialGradient(
+        w / 2,
+        h * 0.4,
+        auraRadius * 0.2,
+        w / 2,
+        h * 0.4,
+        auraRadius
+      );
+      auraGradient.addColorStop(0, "rgba(247, 183, 24, 0.7)");
+      auraGradient.addColorStop(0.5, "rgba(247, 183, 24, 0.25)");
+      auraGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = auraGradient;
+      ctx.beginPath();
+      ctx.arc(w / 2, h * 0.4, auraRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Text
+      ctx.fillStyle = NKU_GOLD;
+      ctx.font = "bold 24px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Future Norse Coder", w / 2, h * 0.4);
 
       drawCornerBadge();
       ctx.restore();
-
-      return true;
     }
 
-    // 6️⃣ Main AI loop
+    function clearOverlay() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawActiveFilter() {
+      clearOverlay();
+
+      if (activeFilter === "sunglasses") {
+        drawNorseShades();
+      } else if (activeFilter === "helmet") {
+        drawNorseHelmet();
+      } else if (activeFilter === "glow") {
+        drawGoldAura();
+      } else if (activeFilter === "none") {
+        // no overlay
+      }
+    }
+
+    // === Main AI loop ===
     async function renderLoop() {
       if (!model || !videoReady) {
         requestAnimationFrame(renderLoop);
         return;
       }
 
-      try {
-        const predictions = await model.estimateFaces(video, false);
+      const predictions = await model.estimateFaces(video, false);
+      const hasFace = Array.isArray(predictions) && predictions.length > 0;
 
-        if (predictions && predictions.length > 0) {
-          const face = predictions[0];
-
-          if (!window._loggedOnce) {
-            console.log("Sample BlazeFace prediction:", face);
-            window._loggedOnce = true;
-          }
-
-          const topLeft = face.topLeft;
-          const bottomRight = face.bottomRight;
-
-          let usedBox = false;
-          if (topLeft && bottomRight) {
-            usedBox = drawGlassesFromBox(topLeft, bottomRight);
-          }
-
-          if (!usedBox) {
-            drawCenteredGlasses();
-          }
-
-          statusEl.textContent =
-            "AI running in browser: Norse sunglasses active 😎 (faces: " +
-            predictions.length +
-            ")";
-        } else {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          statusEl.textContent = "Model loaded — no face detected yet. 👀";
-        }
-      } catch (err) {
-        console.error("Error in renderLoop:", err);
-        statusEl.textContent = "Error in AI loop – falling back to centered glasses.";
-        drawCenteredGlasses();
+      if (hasFace && activeFilter !== "none") {
+        drawActiveFilter();
+        statusEl.textContent =
+          "AI running in browser: " +
+          filterLabels[activeFilter] +
+          " active 😎 (faces: " +
+          predictions.length +
+          ")";
+      } else if (hasFace) {
+        clearOverlay();
+        statusEl.textContent =
+          "AI running in browser: no visual filter selected (faces: " +
+          predictions.length +
+          ")";
+      } else {
+        clearOverlay();
+        statusEl.textContent = "Model loaded — no face detected yet. 👀";
       }
 
       requestAnimationFrame(renderLoop);
     }
 
-    // 7️⃣ Init
+    // === Snapshot / download ===
+    function takeSnapshot() {
+      if (!videoReady) return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      const snapCanvas = document.createElement("canvas");
+      snapCanvas.width = w;
+      snapCanvas.height = h;
+      const sctx = snapCanvas.getContext("2d");
+
+      // Draw the current video frame
+      sctx.drawImage(video, 0, 0, w, h);
+      // Draw the current overlay on top
+      sctx.drawImage(canvas, 0, 0, w, h);
+
+      const dataURL = snapCanvas.toDataURL("image/png");
+
+      const a = document.createElement("a");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      a.href = dataURL;
+      a.download = `nku-norse-ai-selfie-${timestamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      statusEl.textContent =
+        "Snapshot saved! 📸 Share your Norse AI selfie on LinkedIn or with your class.";
+    }
+
+    // === UI wiring ===
+    filterButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const filter = btn.getAttribute("data-filter");
+        activeFilter = filter;
+
+        filterButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    snapshotBtn.addEventListener("click", takeSnapshot);
+
+    // === Init ===
     async function init() {
       statusEl.textContent = "Loading camera…";
       await setupCamera();
@@ -456,7 +720,7 @@
       model = await blazeface.load();
       console.log("BlazeFace model loaded:", model);
 
-      statusEl.textContent = "Model loaded. Tracking your face…";
+      statusEl.textContent = "Model loaded. Move into frame to activate Norse AI filters.";
       renderLoop();
     }
 

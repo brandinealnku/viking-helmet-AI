@@ -242,8 +242,8 @@
 
   <div id="status">Loading camera…</div>
   <div class="hint">
-    Tip: use Chrome, allow camera access, and face the camera directly. When the model detects your face,
-    the Norse filters turn on.
+    Tip: use a modern browser (Chrome, Edge, Firefox, or Safari), allow camera access,
+    and face the camera directly. When the model detects your face, the Norse filters turn on.
   </div>
 
   <div class="controls">
@@ -293,8 +293,34 @@
 
     console.log("🔥 NKU Norse AI Filter Studio script running");
 
-    // === Camera setup ===
+    // === TFJS backend selection (webgl → wasm → cpu) ===
+    async function getBestBackend() {
+      const backendsToTry = ["webgl", "wasm", "cpu"];
+      for (const b of backendsToTry) {
+        try {
+          const ok = await tf.setBackend(b);
+          if (ok) {
+            await tf.ready();
+            console.log("Using TFJS backend:", tf.getBackend());
+            return;
+          }
+        } catch (e) {
+          console.warn("Backend not available:", b, e);
+        }
+      }
+      // If all fail, tf will fall back to whatever it can, but we log:
+      console.warn("No preferred backend available, using default:", tf.getBackend());
+    }
+
+    // === Camera setup with feature detection ===
     async function setupCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusEl.textContent =
+          "This browser doesn’t support camera access via getUserMedia. " +
+          "Try the latest Chrome, Edge, Firefox, or Safari.";
+        throw new Error("getUserMedia not supported");
+      }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480 }
@@ -313,7 +339,9 @@
         });
       } catch (err) {
         console.error("Camera error:", err);
-        statusEl.textContent = "Camera error – check permissions & HTTPS.";
+        statusEl.textContent =
+          "Camera error – make sure you allowed access and no other app is using it.";
+        throw err;
       }
     }
 
@@ -634,7 +662,17 @@
         return;
       }
 
-      const predictions = await model.estimateFaces(video, false);
+      let predictions = [];
+      try {
+        predictions = await model.estimateFaces(video, false);
+      } catch (e) {
+        console.error("Error running BlazeFace:", e);
+        statusEl.textContent =
+          "Error running AI model. Try refreshing or using a different modern browser.";
+        requestAnimationFrame(renderLoop);
+        return;
+      }
+
       const hasFace = Array.isArray(predictions) && predictions.length > 0;
 
       if (hasFace && activeFilter !== "none") {
@@ -706,22 +744,25 @@
 
     // === Init ===
     async function init() {
-      statusEl.textContent = "Loading camera…";
-      await setupCamera();
-
-      statusEl.textContent = "Loading AI model (BlazeFace)…";
       try {
-        await tf.setBackend("webgl");
-      } catch (e) {
-        console.warn("Could not set backend to webgl, using default:", e);
+        statusEl.textContent = "Loading camera…";
+        await setupCamera();
+
+        statusEl.textContent = "Loading AI model (BlazeFace)…";
+        await getBestBackend();
+
+        model = await blazeface.load();
+        console.log("BlazeFace model loaded:", model);
+
+        statusEl.textContent =
+          "Model loaded. Move into frame to activate Norse AI filters.";
+        renderLoop();
+      } catch (err) {
+        console.error("Init error:", err);
+        statusEl.textContent =
+          "This browser or device may not fully support this AI demo. " +
+          "Try the latest version of Chrome, Edge, Firefox, or Safari on desktop.";
       }
-      await tf.ready();
-
-      model = await blazeface.load();
-      console.log("BlazeFace model loaded:", model);
-
-      statusEl.textContent = "Model loaded. Move into frame to activate Norse AI filters.";
-      renderLoop();
     }
 
     init();

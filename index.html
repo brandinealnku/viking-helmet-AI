@@ -813,11 +813,85 @@
         ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
       }
 
-      async function renderLoop(timestamp) {
-        if (!faceModel || !videoReady) {
-          requestAnimationFrame(renderLoop);
-          return;
-        }
+      let frameCount = 0;
+let lastPredictionBox = null; // { topLeft, bottomRight }
+
+async function renderLoop(timestamp) {
+  if (!faceModel || !videoReady) {
+    requestAnimationFrame(renderLoop);
+    return;
+  }
+
+  const msSinceLast = timestamp - lastRenderTime;
+  if (msSinceLast < 70) {
+    requestAnimationFrame(renderLoop);
+    return;
+  }
+  lastRenderTime = timestamp;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Draw background / camera / Griffin Hall as you already do...
+  // (keep your existing Griffin Hall / BodyPix logic here)
+  // ...
+  // ctx.drawImage(video, 0, 0, w, h); or your Griffin Hall composite
+
+  frameCount++;
+
+  let predictions = [];
+
+  try {
+    // ✅ NO tf.tidy here – just call the model directly
+    if (frameCount % 3 === 0) {
+      predictions = await faceModel.estimateFaces(video, false);
+    }
+  } catch (e) {
+    console.error("Error running BlazeFace:", e);
+    setStatus("Error running the face model. Try refreshing the page.", "error");
+    requestAnimationFrame(renderLoop);
+    return;
+  }
+
+  let boxToUse = null;
+
+  if (Array.isArray(predictions) && predictions.length > 0) {
+    const face = predictions[0];
+    const rawBox = {
+      topLeft: face.topLeft,
+      bottomRight: face.bottomRight,
+    };
+
+    boxToUse = smoothBox(lastFaceBox, rawBox, SMOOTH_ALPHA);
+    lastFaceBox = boxToUse;
+    lastFaceTime = timestamp;
+    lastPredictionBox = boxToUse;
+  } else if (lastPredictionBox && timestamp - lastFaceTime < FACE_HOLD_MS) {
+    // reuse recent box for smoother experience
+    boxToUse = lastPredictionBox;
+  } else {
+    lastFaceBox = null;
+    lastPredictionBox = null;
+  }
+
+  if (boxToUse) {
+    const { topLeft, bottomRight } = boxToUse;
+
+    if (activeFilter === "glasses") {
+      drawGlassesOnFace(topLeft, bottomRight);
+      setStatus("AI is running: glasses filter on live camera.", "active");
+    } else if (activeFilter === "helmet") {
+      drawHelmetOnFace(topLeft, bottomRight);
+      setStatus("AI is running: helmet filter on live camera.", "active");
+    } else {
+      setStatus("AI is running: live camera with no filter.", "active");
+    }
+  } else {
+    setStatus("Models loaded — we don’t see a face yet.", "active");
+  }
+
+  requestAnimationFrame(renderLoop);
+}
 
         const msSinceLast = timestamp - lastRenderTime;
         if (msSinceLast < 70) {

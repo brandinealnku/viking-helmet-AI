@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – a browser-based AI face and background filter demo using JavaScript and TensorFlow.js to teach modern web and AI skills."
+    content="NKU Norse AI Filter – a browser-based AI face filter demo using JavaScript and TensorFlow.js to teach modern web and AI skills."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -609,8 +609,8 @@
       // 🔁 Face smoothing + hold
       let lastFaceBox = null;      // { topLeft: [x1,y1], bottomRight: [x2,y2] }
       let lastFaceTime = 0;        // timestamp of last detection
-      const FACE_HOLD_MS = 350;  // keep the last face longer
-      const SMOOTH_ALPHA = 0.15; // smoother movement
+      const FACE_HOLD_MS = 200;    // keep last face box for this long when detection drops
+      const SMOOTH_ALPHA = 0.25;   // 0–1; lower = smoother, higher = snappier
 
       // Load Griffin Hall background image
       const bgImage = new Image();
@@ -686,8 +686,8 @@
         const constraints = {
           audio: false,
           video: {
-            width: { ideal: 480 },
-            height: { ideal: 360 },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
             facingMode: "user"
           }
         };
@@ -813,85 +813,11 @@
         ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
       }
 
-      let frameCount = 0;
-let lastPredictionBox = null; // { topLeft, bottomRight }
-
-async function renderLoop(timestamp) {
-  if (!faceModel || !videoReady) {
-    requestAnimationFrame(renderLoop);
-    return;
-  }
-
-  const msSinceLast = timestamp - lastRenderTime;
-  if (msSinceLast < 70) {
-    requestAnimationFrame(renderLoop);
-    return;
-  }
-  lastRenderTime = timestamp;
-
-  const w = canvas.width;
-  const h = canvas.height;
-
-  // Draw background / camera / Griffin Hall as you already do...
-  // (keep your existing Griffin Hall / BodyPix logic here)
-  // ...
-  // ctx.drawImage(video, 0, 0, w, h); or your Griffin Hall composite
-
-  frameCount++;
-
-  let predictions = [];
-
-  try {
-    // ✅ NO tf.tidy here – just call the model directly
-    if (frameCount % 3 === 0) {
-      predictions = await faceModel.estimateFaces(video, false);
-    }
-  } catch (e) {
-    console.error("Error running BlazeFace:", e);
-    setStatus("Error running the face model. Try refreshing the page.", "error");
-    requestAnimationFrame(renderLoop);
-    return;
-  }
-
-  let boxToUse = null;
-
-  if (Array.isArray(predictions) && predictions.length > 0) {
-    const face = predictions[0];
-    const rawBox = {
-      topLeft: face.topLeft,
-      bottomRight: face.bottomRight,
-    };
-
-    boxToUse = smoothBox(lastFaceBox, rawBox, SMOOTH_ALPHA);
-    lastFaceBox = boxToUse;
-    lastFaceTime = timestamp;
-    lastPredictionBox = boxToUse;
-  } else if (lastPredictionBox && timestamp - lastFaceTime < FACE_HOLD_MS) {
-    // reuse recent box for smoother experience
-    boxToUse = lastPredictionBox;
-  } else {
-    lastFaceBox = null;
-    lastPredictionBox = null;
-  }
-
-  if (boxToUse) {
-    const { topLeft, bottomRight } = boxToUse;
-
-    if (activeFilter === "glasses") {
-      drawGlassesOnFace(topLeft, bottomRight);
-      setStatus("AI is running: glasses filter on live camera.", "active");
-    } else if (activeFilter === "helmet") {
-      drawHelmetOnFace(topLeft, bottomRight);
-      setStatus("AI is running: helmet filter on live camera.", "active");
-    } else {
-      setStatus("AI is running: live camera with no filter.", "active");
-    }
-  } else {
-    setStatus("Models loaded — we don’t see a face yet.", "active");
-  }
-
-  requestAnimationFrame(renderLoop);
-}
+      async function renderLoop(timestamp) {
+        if (!faceModel || !videoReady) {
+          requestAnimationFrame(renderLoop);
+          return;
+        }
 
         const msSinceLast = timestamp - lastRenderTime;
         if (msSinceLast < 70) {
@@ -952,7 +878,7 @@ async function renderLoop(timestamp) {
         // Now run face detection and use smoothed face boxes
         let predictions = [];
         try {
-          predictions = await tf.tidy(() => faceModel.estimateFaces(video, false));
+          predictions = await faceModel.estimateFaces(video, false);
         } catch (e) {
           console.error("Error running BlazeFace:", e);
           setStatus("Error running the face model. Try refreshing the page.", "error");

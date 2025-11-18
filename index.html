@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – a browser-based AI face filter demo using JavaScript and TensorFlow.js to teach modern web and AI skills."
+    content="NKU Norse AI Filter – a browser-based AI face and background filter demo using JavaScript and TensorFlow.js to teach modern web and AI skills."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -609,8 +609,8 @@
       // 🔁 Face smoothing + hold
       let lastFaceBox = null;      // { topLeft: [x1,y1], bottomRight: [x2,y2] }
       let lastFaceTime = 0;        // timestamp of last detection
-      const FACE_HOLD_MS = 200;    // keep last face box for this long when detection drops
-      const SMOOTH_ALPHA = 0.25;   // 0–1; lower = smoother, higher = snappier
+      const FACE_HOLD_MS = 350;  // keep the last face longer
+      const SMOOTH_ALPHA = 0.15; // smoother movement
 
       // Load Griffin Hall background image
       const bgImage = new Image();
@@ -686,8 +686,8 @@
         const constraints = {
           audio: false,
           video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: 480 },
+            height: { ideal: 360 },
             facingMode: "user"
           }
         };
@@ -878,7 +878,7 @@
         // Now run face detection and use smoothed face boxes
         let predictions = [];
         try {
-          predictions = await faceModel.estimateFaces(video, false);
+          predictions = await tf.tidy(() => faceModel.estimateFaces(video, false));
         } catch (e) {
           console.error("Error running BlazeFace:", e);
           setStatus("Error running the face model. Try refreshing the page.", "error");

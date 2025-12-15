@@ -247,7 +247,7 @@
     }
 
     .status-text {
-      color: var(--accent);
+      color: --accent;
       font-size: 0.88rem;
       font-weight: 500;
     }
@@ -472,8 +472,12 @@
       const FACE_HOLD_MS = 350;    // keep last face box for this long when detection drops
       const SMOOTH_ALPHA = 0.15;   // 0–1; lower = smoother, higher = snappier
 
-      // 🔤 Expression label text (updated each frame)
+      // 🔤 Expression smoothing
       let currentExpressionText = "";
+      let stableExpression = "";
+      let lastRawExpression = "";
+      let lastRawExpressionTime = 0;
+      const EXPRESSION_HOLD_MS = 250; // how long a new expression must persist before switching
 
       function setStatus(message, mode = "idle") {
         statusText.textContent = message;
@@ -589,8 +593,7 @@
         };
       }
 
-      // Use BlazeFace landmarks to guess a very rough "expression"
-      // This is intentionally simple and just for teaching/demos.
+      // Rough expression from landmarks
       function getExpressionFromFace(face) {
         if (!face || !Array.isArray(face.landmarks)) return "";
 
@@ -612,7 +615,6 @@
 
         if (!mouth || !leftEye || !rightEye) return "";
 
-        // Normalize positions within the face bounding box
         const normMouthY = (mouth[1] - y1) / faceHeight;
         const eyeDistance = Math.hypot(
           leftEye[0] - rightEye[0],
@@ -620,10 +622,6 @@
         );
         const normEyeDistance = eyeDistance / faceWidth;
 
-        // Extremely rough, playful heuristics:
-        // - Lower mouth (bigger normMouthY) ≈ open mouth / surprised
-        // - Larger eye distance (head closer) + mid mouth ≈ smiling
-        // - Otherwise, neutral
         if (normMouthY > 0.68) {
           return "😮 Surprised";
         } else if (normMouthY > 0.50 && normEyeDistance > 0.32) {
@@ -631,6 +629,41 @@
         } else {
           return "😐 Neutral";
         }
+      }
+
+      // Smooth the expression label over time
+      function updateStableExpression(rawExpression, timestamp) {
+        if (!rawExpression) {
+          return stableExpression;
+        }
+
+        // First-ever expression
+        if (!stableExpression && !lastRawExpression) {
+          stableExpression = rawExpression;
+          lastRawExpression = rawExpression;
+          lastRawExpressionTime = timestamp;
+          return stableExpression;
+        }
+
+        if (rawExpression === stableExpression) {
+          // Still matching what we show – refresh raw state
+          lastRawExpression = rawExpression;
+          lastRawExpressionTime = timestamp;
+          return stableExpression;
+        }
+
+        if (rawExpression === lastRawExpression) {
+          // Candidate matches previous raw; has it persisted long enough?
+          if (timestamp - lastRawExpressionTime > EXPRESSION_HOLD_MS) {
+            stableExpression = rawExpression;
+          }
+        } else {
+          // New candidate; start timing
+          lastRawExpression = rawExpression;
+          lastRawExpressionTime = timestamp;
+        }
+
+        return stableExpression;
       }
 
       function drawExpressionLabel(ctx, text, canvasWidth) {
@@ -642,7 +675,6 @@
         ctx.font = "600 18px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
         ctx.textBaseline = "top";
 
-        // Measure text to make a nice pill background
         const metrics = ctx.measureText(text);
         const textWidth = metrics.width;
         const boxWidth = textWidth + paddingX * 2;
@@ -651,7 +683,6 @@
         const x = 16;
         const y = 16;
 
-        // Background pill
         ctx.fillStyle = "rgba(17, 24, 39, 0.8)";
         const radius = 999;
 
@@ -673,7 +704,6 @@
         ctx.closePath();
         ctx.fill();
 
-        // Text
         ctx.fillStyle = "#f9fafb";
         ctx.fillText(text, x + paddingX, y + 7);
         ctx.restore();
@@ -694,10 +724,8 @@
         const w = canvas.width;
         const h = canvas.height;
 
-        // 1. Draw the raw camera frame
         ctx.drawImage(video, 0, 0, w, h);
 
-        // 2. Run face detection + compute expression
         let predictions = [];
         try {
           predictions = await faceModel.estimateFaces(video, false);
@@ -709,45 +737,53 @@
         }
 
         let boxToUse = null;
-        currentExpressionText = ""; // Reset each frame
+        let rawExpression = "";
 
         if (Array.isArray(predictions) && predictions.length > 0) {
           const face = predictions[0];
 
-          // Derive a text label for the current expression
-          currentExpressionText = getExpressionFromFace(face);
+          rawExpression = getExpressionFromFace(face);
 
           const rawBox = {
             topLeft: face.topLeft,
             bottomRight: face.bottomRight
           };
 
-          // Smooth with previous box
           boxToUse = smoothBox(lastFaceBox, rawBox, SMOOTH_ALPHA);
           lastFaceBox = boxToUse;
           lastFaceTime = timestamp;
         } else {
           if (lastFaceBox && timestamp - lastFaceTime < FACE_HOLD_MS) {
+            // Keep last box briefly; don't change expression yet
             boxToUse = lastFaceBox;
           } else {
+            // Face really gone – clear everything
             lastFaceBox = null;
+            stableExpression = "";
+            lastRawExpression = "";
+            lastRawExpressionTime = timestamp;
           }
         }
 
         if (boxToUse) {
           setStatus("AI is running: updating your expression label.", "active");
         } else {
-          setStatus("AI is running: we don’t see a face yet. Try moving closer or checking lighting.", "active");
+          setStatus("AI is running: try facing the camera with good lighting.", "active");
         }
 
-        // 3. Draw the expression label on top of everything
+        // Smooth expression only when we have a new rawExpression
+        if (rawExpression) {
+          stableExpression = updateStableExpression(rawExpression, timestamp);
+        }
+        currentExpressionText = stableExpression;
+
         if (currentExpressionText) {
           drawExpressionLabel(ctx, currentExpressionText, w);
           expressionTextEl.textContent =
             "We think your expression is: " + currentExpressionText + " (rough, playful estimate)";
         } else {
           expressionTextEl.textContent =
-            "No face detected yet. Try facing the camera with good lighting.";
+            "No expression detected yet. Try facing the camera with good lighting.";
         }
 
         animationId = requestAnimationFrame(renderLoop);
@@ -766,7 +802,6 @@
           expressionTextEl.textContent = "Loading the on-device AI model…";
           await getBestBackend();
 
-          // Face detection model
           faceModel = await blazeface.load();
 
           aiRunning = true;
@@ -784,7 +819,6 @@
           console.error("Init error:", err);
           startBtn.disabled = false;
           stopBtn.disabled = true;
-          // setStatus already called in setupCamera on error
         }
       }
 
@@ -804,6 +838,8 @@
         video.srcObject = null;
         videoReady = false;
         lastFaceBox = null;
+        stableExpression = "";
+        lastRawExpression = "";
         currentExpressionText = "";
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -48,6 +48,7 @@
       background: radial-gradient(circle at top, #f9fafb 0%, #e5e7eb 40%, #f9fafb 100%);
       color: #111827;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.35s ease;
     }
 
     .nk-shell {
@@ -207,6 +208,7 @@
       color: var(--accent);
       font-size: 0.88rem;
       font-weight: 500;
+      transition: color 0.3s ease;
     }
 
     .status-hint {
@@ -357,6 +359,11 @@
             <h1 id="page-title" class="nk-title mb-2">
               Real-time mood scores,<br />right in the browser.
             </h1>
+
+            <!-- NEW: dynamic headline that responds to smile score -->
+            <p id="moodHeadline" class="nk-lead fw-semibold mb-3" style="color: var(--accent);">
+              Current customer mood: warming up.
+            </p>
 
             <p class="nk-lead mb-3">
               This prototype uses a lightweight face model in the browser to estimate rough
@@ -516,6 +523,9 @@
       const stopBtn = document.getElementById("stopBtn");
       const statusText = document.getElementById("statusText");
       const statusDot = document.getElementById("statusDot");
+      const moodHeadline = document.getElementById("moodHeadline");
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      const root = document.documentElement;
 
       // Mood UI elements
       const smileScoreEl = document.getElementById("smileScore");
@@ -759,6 +769,29 @@
             : energyScore < 70
             ? "Balanced energy – steady interaction."
             : "High-energy moment. In a real call, this might align with excitement or strong reactions.";
+
+        // NEW: change page accent color + headline text based on smile score
+        let accentColor = "#4f46e5";
+        let headlineText = "Current customer mood: warming up.";
+
+        if (smileScore < 40) {
+          accentColor = "#b91c1c"; // red-ish for low positivity
+          headlineText = "Current customer mood: looks low – something might be off.";
+        } else if (smileScore < 70) {
+          accentColor = "#f59e0b"; // amber for neutral/warm
+          headlineText = "Current customer mood: generally positive, but room to delight.";
+        } else {
+          accentColor = "#16a34a"; // green for strong smile
+          headlineText = "Current customer mood: clearly happy – this feels like a fan.";
+        }
+
+        root.style.setProperty("--accent", accentColor);
+        if (themeMeta) {
+          themeMeta.setAttribute("content", accentColor);
+        }
+        if (moodHeadline) {
+          moodHeadline.textContent = headlineText;
+        }
       }
 
       async function renderLoop(timestamp) {

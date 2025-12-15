@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse Expression AI – a browser-based AI demo using JavaScript and TensorFlow.js to detect simple facial expressions."
+    content="NKU Norse Expression AI – a browser-based AI demo using JavaScript and TensorFlow.js to detect simple facial expressions locally on your device."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -257,11 +257,17 @@
       color: var(--muted);
     }
 
-    /* Main button */
-    #startBtn {
+    /* Main buttons */
+    #startBtn,
+    #stopBtn {
       border-radius: 999px;
       font-weight: 500;
       border-width: 1px;
+    }
+
+    #stopBtn {
+      border-color: #ef4444;
+      color: #b91c1c;
     }
 
     @media (max-width: 768px) {
@@ -304,17 +310,18 @@
             <div class="nk-badge-row">
               <p class="nk-pill-badge mb-0">Client-side AI</p>
               <p class="nk-pill-badge mb-0">No backend needed</p>
-              <p class="nk-pill-badge mb-0">Built for beginners</p>
+              <p class="nk-pill-badge mb-0">On-device processing</p>
             </div>
 
-            <p class="nk-eyebrow mb-1">Real-time expression detection</p>
+            <p class="nk-eyebrow mb-1">Real-time expression label</p>
             <h1 id="page-title" class="nk-title mb-2">
               NKU Norse Expression AI
             </h1>
 
             <p class="nk-lead mb-3">
               This demo uses <strong>JavaScript</strong>, <strong>TensorFlow.js</strong>, and your browser’s camera
-              to detect a <em>very simple</em> facial expression label in real time (Neutral, Smiling, Surprised).
+              to estimate a <em>very simple, playful</em> facial expression label in real time
+              (<strong>Neutral</strong>, <strong>Smiling</strong>, or <strong>Surprised</strong>).
               Everything runs locally in your browser – no uploads, no server, no Python.
             </p>
 
@@ -323,7 +330,7 @@
               <ol class="nk-step-list list-unstyled mb-2">
                 <li>
                   <span class="nk-step-num">1.</span>
-                  <span>Click <strong>Start Camera &amp; AI</strong> and give your browser camera access.</span>
+                  <span>Click <strong>Start Camera &amp; AI</strong> and grant camera access when prompted.</span>
                 </li>
                 <li>
                   <span class="nk-step-num">2.</span>
@@ -331,9 +338,18 @@
                 </li>
                 <li>
                   <span class="nk-step-num">3.</span>
-                  <span>Watch the expression label update at the top of the video.</span>
+                  <span>Watch the label at the top of the video – and below it – update in real time.</span>
                 </li>
               </ol>
+            </section>
+
+            <section class="mb-3" aria-labelledby="privacy-heading">
+              <h2 id="privacy-heading" class="nk-subsection-title mb-2">Privacy &amp; ethics</h2>
+              <p class="nk-subsection-body mb-1">
+                • Your camera feed is processed <strong>only on your device</strong>. No images are uploaded or stored.<br />
+                • This is a rough, playful demo – not a psychological or medical tool.<br />
+                • You can stop the camera and AI at any time using the <strong>Stop</strong> button.
+              </p>
             </section>
 
             <section class="mt-3" aria-labelledby="learning-heading">
@@ -341,7 +357,7 @@
               <p class="nk-subsection-body mb-1">
                 • How websites safely request camera access using <code>getUserMedia</code>.<br />
                 • How <code>&lt;canvas&gt;</code> lets us draw graphics and overlays on top of live video.<br />
-                • How a lightweight model like BlazeFace (TensorFlow.js) can track faces and power simple AI UX patterns – all without sending any data anywhere.
+                • How a lightweight model like BlazeFace (TensorFlow.js) can power simple, on-device AI user experiences.
               </p>
             </section>
           </section>
@@ -380,15 +396,39 @@
                   </span>
                 </div>
                 <p class="status-hint text-md-end mb-0">
-                  Best results: Google Chrome or Microsoft Edge, HTTPS, and bright lighting.
+                  Best results: Google Chrome or Microsoft Edge, HTTPS, and bright, even lighting.
                 </p>
               </div>
 
-              <!-- Main control -->
+              <!-- Main controls -->
               <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-2">
-                <button id="startBtn" type="button" class="btn btn-outline-secondary px-4">
+                <button
+                  id="startBtn"
+                  type="button"
+                  class="btn btn-outline-secondary px-4"
+                  aria-label="Start camera and AI expression detection"
+                >
                   🚀 Start Camera &amp; AI
                 </button>
+                <button
+                  id="stopBtn"
+                  type="button"
+                  class="btn btn-outline-danger px-4"
+                  aria-label="Stop camera and AI expression detection"
+                  disabled
+                >
+                  ⏹ Stop Camera &amp; AI
+                </button>
+              </div>
+
+              <!-- Expression text (redundant to overlay) -->
+              <div class="mt-2" aria-live="polite">
+                <p id="expressionText" class="mb-1 small text-muted">
+                  Waiting for camera and face detection to start…
+                </p>
+                <p class="mb-0 small text-muted">
+                  Legend: 😐 Neutral &nbsp;·&nbsp; 😄 Smiling &nbsp;·&nbsp; 😮 Surprised
+                </p>
               </div>
             </section>
           </section>
@@ -398,7 +438,7 @@
         <footer class="mt-4 pt-3 border-top" style="border-color: #e5e7eb;">
           <p class="nk-subsection-body mb-0">
             Your data stays entirely on your device – nothing is uploaded or stored.
-            This is a hands-on, low-pressure way to explore modern AI user experiences in the browser. Enjoy!
+            This is a hands-on, low-pressure way to explore modern Web AI user experiences. Enjoy!
           </p>
         </footer>
       </div>
@@ -415,12 +455,16 @@
       const statusText = document.getElementById("statusText");
       const statusDot = document.getElementById("statusDot");
       const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
+      const expressionTextEl = document.getElementById("expressionText");
 
       let faceModel = null;      // BlazeFace
       let videoReady = false;
       let aiRunning = false;
       let lastRenderTime = 0;
+      let animationId = null;
+      let mediaStream = null;
 
       // 🔁 Face smoothing + hold
       let lastFaceBox = null;      // { topLeft: [x1,y1], bottomRight: [x2,y2] }
@@ -463,7 +507,7 @@
       async function setupCamera() {
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus(
-            "This browser does not support getUserMedia. Try a recent version of Chrome, Edge, Firefox, or Safari.",
+            "This browser does not support camera access. Try a recent version of Chrome, Edge, Firefox, or Safari.",
             "error"
           );
           throw new Error("getUserMedia not supported");
@@ -480,6 +524,7 @@
 
         try {
           const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          mediaStream = stream;
           video.srcObject = stream;
 
           return new Promise((resolve) => {
@@ -497,7 +542,7 @@
         } catch (err) {
           console.error("Camera error:", err);
           setStatus(
-            "Camera error – check permissions and make sure no other app is using the camera.",
+            "We couldn’t access your camera. Check permissions and make sure no other app is using it.",
             "error"
           );
           throw err;
@@ -592,7 +637,6 @@
         if (!text) return;
 
         const paddingX = 16;
-        const paddingY = 12;
 
         ctx.save();
         ctx.font = "600 18px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
@@ -636,14 +680,13 @@
       }
 
       async function renderLoop(timestamp) {
-        if (!faceModel || !videoReady) {
-          requestAnimationFrame(renderLoop);
+        if (!aiRunning || !faceModel || !videoReady) {
           return;
         }
 
         const msSinceLast = timestamp - lastRenderTime;
         if (msSinceLast < 70) {
-          requestAnimationFrame(renderLoop);
+          animationId = requestAnimationFrame(renderLoop);
           return;
         }
         lastRenderTime = timestamp;
@@ -661,7 +704,7 @@
         } catch (e) {
           console.error("Error running BlazeFace:", e);
           setStatus("Error running the face model. Try refreshing the page.", "error");
-          requestAnimationFrame(renderLoop);
+          aiRunning = false;
           return;
         }
 
@@ -692,49 +735,89 @@
         }
 
         if (boxToUse) {
-          setStatus("AI is running: expression label updating on live camera.", "active");
+          setStatus("AI is running: updating your expression label.", "active");
         } else {
-          setStatus("Models loaded — we don’t see a face yet.", "active");
+          setStatus("AI is running: we don’t see a face yet. Try moving closer or checking lighting.", "active");
         }
 
         // 3. Draw the expression label on top of everything
-        drawExpressionLabel(ctx, currentExpressionText, w);
+        if (currentExpressionText) {
+          drawExpressionLabel(ctx, currentExpressionText, w);
+          expressionTextEl.textContent =
+            "We think your expression is: " + currentExpressionText + " (rough, playful estimate)";
+        } else {
+          expressionTextEl.textContent =
+            "No face detected yet. Try facing the camera with good lighting.";
+        }
 
-        requestAnimationFrame(renderLoop);
+        animationId = requestAnimationFrame(renderLoop);
       }
 
       async function startExperience() {
         try {
           startBtn.disabled = true;
+          stopBtn.disabled = true;
           setStatus("Requesting camera access…", "idle");
+          expressionTextEl.textContent = "Requesting access to your camera…";
 
           await setupCamera();
 
           setStatus("Loading AI model…", "idle");
+          expressionTextEl.textContent = "Loading the on-device AI model…";
           await getBestBackend();
 
           // Face detection model
           faceModel = await blazeface.load();
 
           aiRunning = true;
+          stopBtn.disabled = false;
 
           setStatus(
             "AI is ready. Look at the camera and try different expressions.",
             "active"
           );
+          expressionTextEl.textContent =
+            "AI is ready. We’ll show a rough label for Neutral, Smiling, or Surprised.";
 
-          requestAnimationFrame(renderLoop);
+          animationId = requestAnimationFrame(renderLoop);
         } catch (err) {
           console.error("Init error:", err);
           startBtn.disabled = false;
-          setStatus(
-            "This device or browser may not fully support this demo. Try a recent version of Chrome, Edge, Firefox, or Safari over HTTPS.",
-            "error"
-          );
+          stopBtn.disabled = true;
+          // setStatus already called in setupCamera on error
         }
       }
 
+      function stopExperience() {
+        aiRunning = false;
+
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        video.srcObject = null;
+        videoReady = false;
+        lastFaceBox = null;
+        currentExpressionText = "";
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        setStatus("Camera is off. You can restart AI at any time.", "idle");
+        expressionTextEl.textContent =
+          "Camera and AI are stopped. Tap Start again to restart the demo.";
+      }
+
       startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", stopExperience);
     })();
   </script>
 </body>

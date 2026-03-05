@@ -3,42 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viking Helmet AI</title>
+    <title>Multi-Person Detection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Add your CSS styling here */
+        /* Additional custom styles can be added here */
+        body {
+            background-color: #f8f9fa;
+        }
+        .video-container {
+            position: relative;
+        }
+        .filter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
     </style>
 </head>
 <body>
-    <div id="status">
-        <h1>Person Detection</h1>
-        <p id="personCountDisplay">People Count: 0</p>
+    <div class="container">
+        <h1 class="text-center">NKU Norse AI Filter</h1>
+        <div class="video-container">
+            <video id="video" width="640" height="480" autoplay></video>
+            <button class="filter" id="glasses">Add Glasses</button>
+            <button class="filter" id="helmet">Add Helmet</button>
+            <button class="filter" id="griffinHall">Add Griffin Hall Filter</button>
+            <p id="status" class="text-center"></p>
+            <p id="personCount" class="text-center">Persons Detected: <span id="count">0</span></p>
+        </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-models@latest/dist/bundle.js"></script>
     <script>
-        let personCount = 0;
+        const video = document.getElementById('video');
+        const personCountDisplay = document.getElementById('count');
+        let glassesModel, helmetModel, griffinModel;
 
-        function renderLoop(predictions) {
-            personCount = predictions.length; // Count of detected faces
-            document.getElementById('personCountDisplay').innerText = 'People Count: ' + personCount;
-
-            predictions.forEach(prediction => {
-                // Apply filters and rendering logic for each detected person
-                applyFilters(prediction);
+        async function setupCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            return new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    resolve(video);
+                };
             });
-
-            updateStatusMessage();
         }
 
-        function applyFilters(prediction) {
-            // Filters application logic goes here
+        async function loadModels() {
+            glassesModel = await loadGlassesModel();
+            helmetModel = await loadHelmetModel();
+            griffinModel = await loadGriffinModel();
+            updateStatus('Models Loaded!');
         }
 
-        function updateStatusMessage() {
-            // Update status message logic based on detection
-            // Example: document.getElementById('statusMessage').innerText = 'Detected ' + personCount + ' people.';
+        async function detectPersons() {
+            const net = await bodyPix.load();
+            const pose = await net.estimateSinglePose(video, { flipHorizontal: false });
+            const count = pose.numKeypoints;
+            personCountDisplay.innerText = count;
+            // Apply filters to each detected person
+            applyFiltersToDetectedPersons(pose);
+            requestAnimationFrame(detectPersons);
         }
 
-        // Additional necessary functions and logic for face detection
+        function applyFiltersToDetectedPersons(pose) {
+            // Logic for applying filters for each detected person
+            // For each detected person, apply the filters (glasses, helmet, etc.)
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').innerText = message;
+        }
+
+        async function init() {
+            await setupCamera();
+            await loadModels();
+            detectPersons();
+        }
+
+        init();
     </script>
 </body>
 </html>

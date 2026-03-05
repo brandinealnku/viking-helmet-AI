@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Customer Mood Panel – Browser-Based Web AI Demo</title>
+
+  <!-- Meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="AI Customer Mood Panel – a browser-based Web AI demo that estimates simple, on-device customer mood scores from live video using JavaScript and TensorFlow.js."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <!-- TensorFlow.js + BlazeFace -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --accent: #4f46e5;
+      --muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --shadow-soft: 0 18px 60px rgba(15, 23, 42, 0.04),
+                     0 2px 8px rgba(15, 23, 42, 0.04);
+
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #f9fafb 0%, #e5e7eb 40%, #f9fafb 100%);
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.35s ease;
+    }
+
+    .nk-shell {
+      max-width: 1120px;
+    }
+
+    .nk-brand-bar {
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+    }
+
+    .nk-brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-weight: 600;
+    }
+
+    .nk-brand-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .nk-card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nk-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nk-title {
+      font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    .nk-lead {
+      font-size: 0.98rem;
+      color: #4b5563;
+    }
+
+    .nk-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .nk-pill-badge {
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      background: #eef2ff;
+      color: #312e81;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .nk-subsection-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nk-subsection-body {
+      font-size: 0.86rem;
+      color: #4b5563;
+    }
+
+    /* Video container – clean, no overlay */
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        #f3f4f6 0%,
+        #f3f4f6 24%,
+        #e5e7eb 42%,
+        #f3f4f6 60%,
+        #f3f4f6 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .video-skeleton { animation: none; }
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+      background: #d1d5db;
+      transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.15);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .status-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    #startBtn,
+    #stopBtn {
+      border-radius: 999px;
+      font-weight: 500;
+      border-width: 1px;
+    }
+
+    #stopBtn {
+      border-color: #ef4444;
+      color: #b91c1c;
+    }
+
+    /* Mood cards */
+    .mood-card {
+      border-radius: 1rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.9rem 1rem;
+      background: #f9fafb;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .mood-title {
+      font-size: 0.84rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #6b7280;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .mood-main-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .mood-score {
+      font-size: 1.7rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .mood-score span.unit {
+      font-size: 0.9rem;
+      color: #6b7280;
+      font-weight: 500;
+      margin-left: 0.25rem;
+    }
+
+    .mood-tag {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: #e5f3ff;
+      color: #1d4ed8;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .mood-bar-outer {
+      width: 100%;
+      height: 0.5rem;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e5e7eb;
+      margin-bottom: 0.3rem;
+    }
+
+    .mood-bar-inner {
+      height: 100%;
+      width: 40%;
+      border-radius: 999px;
+      transition: width 0.2s ease-out, background-color 0.2s ease-out;
+    }
+
+    .mood-caption {
+      font-size: 0.78rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    /* Bar colors based on mood classes */
+    .mood-bar-inner.low {
+      background: #f97373;
+    }
+
+    .mood-bar-inner.med {
+      background: #facc15;
+    }
+
+    .mood-bar-inner.high {
+      background: #22c55e;
+    }
+
+    @media (max-width: 768px) {
+      .nk-shell {
+        padding-inline: 0.75rem;
+      }
+
+      .nk-brand-bar {
+        border-radius: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container py-4 py-lg-5 nk-shell">
+    <!-- Brand bar -->
+    <header
+      class="nk-brand-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"
+      aria-label="AI Customer Mood Panel header"
+    >
+      <div class="d-flex align-items-center gap-2">
+        <div class="nk-brand-pill">
+          <span>Web</span>
+          <span>AI</span>
+        </div>
+        <span class="nk-brand-sub">On-device Customer Insights · JavaScript × TensorFlow.js</span>
+      </div>
+      <p class="nk-brand-sub text-end mb-0">
+        Prototype – all AI runs in the browser, no data leaves this page.
+      </p>
+    </header>
+
+    <!-- Main card -->
+    <main class="card nk-card border-0" aria-labelledby="page-title">
+      <div class="card-body p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <!-- Left: description -->
+          <section class="col-lg-4" aria-label="Demo description and learning outcomes">
+            <div class="nk-badge-row">
+              <p class="nk-pill-badge mb-0">Client-side AI</p>
+              <p class="nk-pill-badge mb-0">No backend</p>
+              <p class="nk-pill-badge mb-0">Prototype analytics</p>
+            </div>
+
+            <p class="nk-eyebrow mb-1">AI customer mood panel</p>
+            <h1 id="page-title" class="nk-title mb-2">
+              Real-time mood scores,<br />right in the browser.
+            </h1>
+
+            <!-- NEW: dynamic headline that responds to smile score -->
+            <p id="moodHeadline" class="nk-lead fw-semibold mb-3" style="color: var(--accent);">
+              Current customer mood: warming up.
+            </p>
+
+            <p class="nk-lead mb-3">
+              This prototype uses a lightweight face model in the browser to estimate rough
+              <strong>customer mood scores</strong> – positivity, focus, and energy – from live video.
+              All AI runs locally; only numeric scores are computed. No images are uploaded or stored.
+            </p>
+
+            <section class="mb-3" aria-labelledby="try-it-out-heading">
+              <h2 id="try-it-out-heading" class="nk-subsection-title mb-2">Try it out</h2>
+              <ol class="nk-subsection-body ps-3 mb-2">
+                <li>Click <strong>Start Camera &amp; AI</strong> and grant camera access.</li>
+                <li>Look at the camera, smile, lean in, or move around a bit.</li>
+                <li>Watch the <strong>Customer Mood Panel</strong> react in real time.</li>
+              </ol>
+            </section>
+
+            <section class="mb-3" aria-labelledby="notes-heading">
+              <h2 id="notes-heading" class="nk-subsection-title mb-2">Important notes</h2>
+              <p class="nk-subsection-body mb-1">
+                • Scores are <strong>illustrative only</strong> – this is a design prototype, not a scientific tool.<br />
+                • Uses a face detection model (BlazeFace) plus simple heuristics and smoothing.<br />
+                • In a production system, these scores would feed a customer analytics dashboard
+                  (NPS trends, session replay, A/B tests, etc.) without storing raw video.
+              </p>
+            </section>
+          </section>
+
+          <!-- Right: video + dashboard -->
+          <section class="col-lg-8" aria-label="Live Web AI demo">
+            <section class="bg-light border rounded-4 p-3 p-lg-3" style="border-color: #e5e7eb;">
+              <!-- Video -->
+              <div class="mb-3 position-relative">
+                <div id="videoContainer" aria-label="Live camera preview area">
+                  <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+                  <video
+                    id="video"
+                    autoplay
+                    playsinline
+                    muted
+                  ></video>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2"
+                aria-live="polite"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                  <span id="statusText" class="status-text">
+                    Tap “Start Camera &amp; AI” to launch the demo.
+                  </span>
+                </div>
+                <p class="status-hint text-md-end mb-0">
+                  Best results: Chrome or Edge, HTTPS, and bright, even lighting.
+                </p>
+              </div>
+
+              <!-- Controls -->
+              <div class="d-flex flex-column flex-md-row justify-content-start gap-2 mb-4">
+                <button
+                  id="startBtn"
+                  type="button"
+                  class="btn btn-outline-secondary px-4"
+                >
+                  🚀 Start Camera &amp; AI
+                </button>
+                <button
+                  id="stopBtn"
+                  type="button"
+                  class="btn btn-outline-danger px-4"
+                  disabled
+                >
+                  ⏹ Stop
+                </button>
+              </div>
+
+              <!-- Dashboard cards -->
+              <div class="row g-3" aria-label="Customer mood dashboard">
+                <!-- Positivity -->
+                <div class="col-md-4">
+                  <article class="mood-card">
+                    <h3 class="mood-title">Customer Positivity</h3>
+                    <div class="mood-main-row">
+                      <div class="mood-score">
+                        <span id="smileScore">50</span><span class="unit">/100</span>
+                      </div>
+                      <div id="smileTag" class="mood-tag">Warming up</div>
+                    </div>
+                    <div class="mood-bar-outer">
+                      <div id="smileBar" class="mood-bar-inner med"></div>
+                    </div>
+                    <p id="smileCaption" class="mood-caption">
+                      Smile or relax your face to see how the positivity score responds.
+                    </p>
+                  </article>
+                </div>
+
+                <!-- Focus -->
+                <div class="col-md-4">
+                  <article class="mood-card">
+                    <h3 class="mood-title">Customer Focus</h3>
+                    <div class="mood-main-row">
+                      <div class="mood-score">
+                        <span id="focusScore">50</span><span class="unit">/100</span>
+                      </div>
+                      <div id="focusTag" class="mood-tag">Moderate</div>
+                    </div>
+                    <div class="mood-bar-outer">
+                      <div id="focusBar" class="mood-bar-inner med"></div>
+                    </div>
+                    <p id="focusCaption" class="mood-caption">
+                      Lean closer to the camera to simulate a more “engaged” customer.
+                    </p>
+                  </article>
+                </div>
+
+                <!-- Energy -->
+                <div class="col-md-4">
+                  <article class="mood-card">
+                    <h3 class="mood-title">Customer Energy</h3>
+                    <div class="mood-main-row">
+                      <div class="mood-score">
+                        <span id="energyScore">50</span><span class="unit">/100</span>
+                      </div>
+                      <div id="energyTag" class="mood-tag">Balanced</div>
+                    </div>
+                    <div class="mood-bar-outer">
+                      <div id="energyBar" class="mood-bar-inner med"></div>
+                    </div>
+                    <p id="energyCaption" class="mood-caption">
+                      Move, talk, or nod to push energy up. Staying still will bring it down.
+                    </p>
+                  </article>
+                </div>
+              </div>
+
+              <p class="mt-3 mb-0 small text-muted">
+                Prototype only. Scores are derived from simple heuristics on face size and landmark movement –
+                in production, these would be replaced with properly validated models tuned to your customer journey.
+              </p>
+            </section>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const video = document.getElementById("video");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const moodHeadline = document.getElementById("moodHeadline");
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      const root = document.documentElement;
+
+      // Mood UI elements
+      const smileScoreEl = document.getElementById("smileScore");
+      const focusScoreEl = document.getElementById("focusScore");
+      const energyScoreEl = document.getElementById("energyScore");
+
+      const smileBar = document.getElementById("smileBar");
+      const focusBar = document.getElementById("focusBar");
+      const energyBar = document.getElementById("energyBar");
+
+      const smileTag = document.getElementById("smileTag");
+      const focusTag = document.getElementById("focusTag");
+      const energyTag = document.getElementById("energyTag");
+
+      const smileCaption = document.getElementById("smileCaption");
+      const focusCaption = document.getElementById("focusCaption");
+      const energyCaption = document.getElementById("energyCaption");
+
+      let faceModel = null;
+      let mediaStream = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let animationId = null;
+      let lastRenderTime = 0;
+
+      // Mood scores (0–100) with smoothing
+      let smileScore = 50;
+      let focusScore = 50;
+      let energyScore = 50;
+
+      const SMOOTH_ALPHA = 0.15;
+      const BASELINE = 45;
+
+      // Track previous mouth position for energy
+      let lastMouthYNorm = null;
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      async function getBestBackend() {
+        if (!window.tf) return;
+        const backendsToTry = ["webgl", "wasm", "cpu"];
+        for (const b of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(b);
+            if (ok) {
+              await tf.ready();
+              console.log("✅ Using TFJS backend:", tf.getBackend());
+              return;
+            }
+          } catch (e) {
+            console.warn("Backend not available:", b, e);
+          }
+        }
+        console.warn("Using default TFJS backend:", tf.getBackend());
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus(
+            "This browser does not support camera access. Try a recent version of Chrome, Edge, Firefox, or Safari.",
+            "error"
+          );
+          throw new Error("getUserMedia not supported");
+        }
+
+        const constraints = {
+          audio: false,
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: "user"
+          }
+        };
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          mediaStream = stream;
+          video.srcObject = stream;
+
+          return new Promise((resolve) => {
+            video.onloadedmetadata = () => {
+              video.play();
+              videoSkeleton.style.display = "none";
+              videoReady = true;
+              console.log("🎥 Video ready:", video.videoWidth, video.videoHeight);
+              resolve();
+            };
+          });
+        } catch (err) {
+          console.error("Camera error:", err);
+          setStatus(
+            "We couldn’t access your camera. Check permissions and make sure no other app is using it.",
+            "error"
+          );
+          throw err;
+        }
+      }
+
+      function clamp(val, min, max) {
+        return Math.max(min, Math.min(max, val));
+      }
+
+      function lerp(current, target, alpha) {
+        return current + alpha * (target - current);
+      }
+
+      function getMoodFromFace(face, videoWidth, videoHeight) {
+        if (!face || !Array.isArray(face.landmarks)) {
+          return { smile: BASELINE, focus: BASELINE, energy: BASELINE };
+        }
+
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+        if (!Array.isArray(topLeft) || !Array.isArray(bottomRight)) {
+          return { smile: BASELINE, focus: BASELINE, energy: BASELINE };
+        }
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        if (faceWidth <= 0 || faceHeight <= 0) {
+          return { smile: BASELINE, focus: BASELINE, energy: BASELINE };
+        }
+
+        const faceAreaNorm = clamp(
+          (faceWidth * faceHeight) / (videoWidth * videoHeight),
+          0,
+          0.35
+        );
+        const focusRaw = clamp(faceAreaNorm / 0.35 * 100, 15, 100);
+
+        const mouth = face.landmarks[3];
+        const leftEye = face.landmarks[1];
+        const rightEye = face.landmarks[0];
+
+        if (!mouth || !leftEye || !rightEye) {
+          return { smile: BASELINE, focus: focusRaw, energy: BASELINE };
+        }
+
+        const normMouthY = (mouth[1] - y1) / faceHeight;
+        // Map mouth vertical position (roughly mouth openness) to 0–100
+        const mouthScaled = clamp((normMouthY - 0.45) / 0.35, 0, 1); // typical range ~0.45–0.8
+        const smileRaw = clamp(20 + mouthScaled * 80, 10, 100);
+
+        // Energy: based on mouth movement between frames
+        let energyRaw = BASELINE;
+        if (lastMouthYNorm != null) {
+          const delta = Math.abs(normMouthY - lastMouthYNorm);
+          // Amplify delta into a 0–100-ish scale
+          const energyScaled = clamp(delta / 0.06, 0, 1); // 0.0–0.06 is typical per frame
+          energyRaw = clamp(25 + energyScaled * 75, 10, 100);
+        }
+        lastMouthYNorm = normMouthY;
+
+        return {
+          smile: smileRaw,
+          focus: focusRaw,
+          energy: energyRaw
+        };
+      }
+
+      function updateMoodUI() {
+        // Helper to set bar class
+        function setBar(el, score) {
+          el.classList.remove("low", "med", "high");
+          if (score < 40) {
+            el.classList.add("low");
+          } else if (score < 70) {
+            el.classList.add("med");
+          } else {
+            el.classList.add("high");
+          }
+          el.style.width = score + "%";
+        }
+
+        smileScoreEl.textContent = Math.round(smileScore);
+        focusScoreEl.textContent = Math.round(focusScore);
+        energyScoreEl.textContent = Math.round(energyScore);
+
+        setBar(smileBar, smileScore);
+        setBar(focusBar, focusScore);
+        setBar(energyBar, energyScore);
+
+        // Tags + captions
+        function describeScore(score, lowText, medText, highText) {
+          if (score < 40) return lowText;
+          if (score < 70) return medText;
+          return highText;
+        }
+
+        const smileLabel = describeScore(
+          smileScore,
+          "Low",
+          "Warm",
+          "Very positive"
+        );
+        const focusLabel = describeScore(
+          focusScore,
+          "Distracted",
+          "Moderate",
+          "Highly focused"
+        );
+        const energyLabel = describeScore(
+          energyScore,
+          "Calm",
+          "Balanced",
+          "High energy"
+        );
+
+        smileTag.textContent = smileLabel;
+        focusTag.textContent = focusLabel;
+        energyTag.textContent = energyLabel;
+
+        smileCaption.textContent =
+          smileScore < 40
+            ? "Positivity looks lower right now. A genuine smile pushes this up."
+            : smileScore < 70
+            ? "Positivity is trending warm. Think of this as a satisfied customer."
+            : "Very positive – this is what a delighted customer might look like.";
+
+        focusCaption.textContent =
+          focusScore < 40
+            ? "Focus is low. In a real session, this might signal distraction."
+            : focusScore < 70
+            ? "Moderate focus. The customer is engaged but not fully locked in."
+            : "High focus – the customer is leaning in and actively engaged.";
+
+        energyCaption.textContent =
+          energyScore < 40
+            ? "Calm, low-energy state. Good for listening-heavy moments."
+            : energyScore < 70
+            ? "Balanced energy – steady interaction."
+            : "High-energy moment. In a real call, this might align with excitement or strong reactions.";
+
+        // NEW: change page accent color + headline text based on smile score
+        let accentColor = "#4f46e5";
+        let headlineText = "Current customer mood: warming up.";
+
+        if (smileScore < 40) {
+          accentColor = "#b91c1c"; // red-ish for low positivity
+          headlineText = "Current customer mood: looks low – something might be off.";
+        } else if (smileScore < 70) {
+          accentColor = "#f59e0b"; // amber for neutral/warm
+          headlineText = "Current customer mood: generally positive, but room to delight.";
+        } else {
+          accentColor = "#16a34a"; // green for strong smile
+          headlineText = "Current customer mood: clearly happy – this feels like a fan.";
+        }
+
+        root.style.setProperty("--accent", accentColor);
+        if (themeMeta) {
+          themeMeta.setAttribute("content", accentColor);
+        }
+        if (moodHeadline) {
+          moodHeadline.textContent = headlineText;
+        }
+      }
+
+      async function renderLoop(timestamp) {
+        if (!aiRunning || !faceModel || !videoReady) return;
+
+        if (
+          !mediaStream ||
+          !mediaStream.active ||
+          video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+        ) {
+          setStatus("Camera feed stopped. Restart the demo to continue.", "error");
+          stopExperience(true);
+          return;
+        }
+
+        const msSinceLast = timestamp - lastRenderTime;
+        if (msSinceLast < 80) {
+          animationId = requestAnimationFrame(renderLoop);
+          return;
+        }
+        lastRenderTime = timestamp;
+
+        let predictions = [];
+        try {
+          predictions = await faceModel.estimateFaces(video, false);
+        } catch (e) {
+          console.error("Error running BlazeFace:", e);
+          setStatus("Error running the face model. Try refreshing the page.", "error");
+          aiRunning = false;
+          return;
+        }
+
+        if (Array.isArray(predictions) && predictions.length > 0) {
+          const face = predictions[0];
+          const moodRaw = getMoodFromFace(
+            face,
+            video.videoWidth || 640,
+            video.videoHeight || 480
+          );
+
+          smileScore = lerp(smileScore, moodRaw.smile, SMOOTH_ALPHA);
+          focusScore = lerp(focusScore, moodRaw.focus, SMOOTH_ALPHA);
+          energyScore = lerp(energyScore, moodRaw.energy, SMOOTH_ALPHA);
+
+          setStatus("AI is running: streaming customer mood scores.", "active");
+        } else {
+          // No face – gently decay toward baseline
+          smileScore = lerp(smileScore, BASELINE, SMOOTH_ALPHA);
+          focusScore = lerp(focusScore, BASELINE, SMOOTH_ALPHA);
+          energyScore = lerp(energyScore, BASELINE, SMOOTH_ALPHA);
+          setStatus("AI is running: waiting for a face in frame.", "active");
+        }
+
+        updateMoodUI();
+        animationId = requestAnimationFrame(renderLoop);
+      }
+
+      async function startExperience() {
+        try {
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+          setStatus("Requesting camera access…", "idle");
+
+          await setupCamera();
+
+          setStatus("Loading AI model…", "idle");
+          await getBestBackend();
+
+          faceModel = await blazeface.load();
+          aiRunning = true;
+          stopBtn.disabled = false;
+
+          setStatus(
+            "AI is ready. Look at the camera and watch the mood panel respond.",
+            "active"
+          );
+
+          animationId = requestAnimationFrame(renderLoop);
+        } catch (err) {
+          console.error("Init error:", err);
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
+      }
+
+      function stopExperience(fromLoop = false) {
+        aiRunning = false;
+
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        video.srcObject = null;
+        videoReady = false;
+
+        // Reset scores toward baseline
+        smileScore = BASELINE;
+        focusScore = BASELINE;
+        energyScore = BASELINE;
+        lastMouthYNorm = null;
+        updateMoodUI();
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        if (!fromLoop) {
+          setStatus("Camera is off. You can restart AI at any time.", "idle");
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", () => stopExperience(false));
+    })();
+  </script>
+</body>
+</html>

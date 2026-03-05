@@ -3,66 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiple People Detection</title>
+    <title>Viking Helmet AI</title>
     <style>
-        #video {
-            width: 100%;
-            max-width: 600px;
-        }
-        #person-count {
-            font-size: 24px;
-            margin-top: 10px;
-        }
+        /* Add your CSS styling here */
     </style>
 </head>
 <body>
-    <h1>Real-time Multiple People Detection</h1>
-    <video id="video" autoplay muted></video>
-    <div id="person-count">People detected: 0</div>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <div id="status">
+        <h1>Person Detection</h1>
+        <p id="personCountDisplay">People Count: 0</p>
+    </div>
+
     <script>
-        const video = document.getElementById('video');
-        const personCountDisplay = document.getElementById('person-count');
-        let net;
+        let personCount = 0;
 
-        async function setupCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            return new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    resolve(video);
-                };
-            });
-        }
+        function renderLoop(predictions) {
+            personCount = predictions.length; // Count of detected faces
+            document.getElementById('personCountDisplay').innerText = 'People Count: ' + personCount;
 
-        async function detect() {
-            const ctx = video.getContext('2d');
-            const predictions = await net.detect(video);
-            ctx.clearRect(0, 0, video.width, video.height);
             predictions.forEach(prediction => {
-                if (prediction.class === 'person') {
-                    ctx.beginPath();
-                    ctx.rect(prediction.bbox[0], prediction.bbox[1], prediction.bbox[2], prediction.bbox[3]);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = 'green';
-                    ctx.fillStyle = 'green';
-                    ctx.stroke();
-                    ctx.fillText(prediction.class, prediction.bbox[0], prediction.bbox[1] > 10 ? prediction.bbox[1] - 5 : 10);
-                }
+                // Apply filters and rendering logic for each detected person
+                applyFilters(prediction);
             });
-            personCountDisplay.innerText = `People detected: ${predictions.filter(p => p.class === 'person').length}`;
-            requestAnimationFrame(detect);
+
+            updateStatusMessage();
         }
 
-        async function init() {
-            await setupCamera();
-            video.play();
-            net = await cocoSsd.load();
-            detect();
+        function applyFilters(prediction) {
+            // Filters application logic goes here
         }
 
-        init();
+        function updateStatusMessage() {
+            // Update status message logic based on detection
+            // Example: document.getElementById('statusMessage').innerText = 'Detected ' + personCount + ' people.';
+        }
+
+        // Additional necessary functions and logic for face detection
     </script>
 </body>
 </html>

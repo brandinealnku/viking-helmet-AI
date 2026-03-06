@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Laugh to Unlock — a browser-based AI Viking challenge that unlocks a cinematic helmet overlay when the user laughs."
+    content="Laugh to Unlock — a browser-based AI Viking challenge with a countdown, auto-recording, helmet overlay, and a LinkedIn-ready share workflow."
   />
   <meta name="theme-color" content="#0f172a" />
 
@@ -21,9 +21,6 @@
 
   <style>
     :root {
-      --bg: #07111f;
-      --panel: rgba(255,255,255,0.08);
-      --border: rgba(255,255,255,0.12);
       --text: #f8fafc;
       --muted: #cbd5e1;
       --gold: #f7b718;
@@ -32,34 +29,31 @@
       --red: #f87171;
       --blue: #60a5fa;
       --pink: #f472b6;
+      --border: rgba(255,255,255,0.12);
       --shadow: 0 24px 80px rgba(0,0,0,0.35);
       --ring: 0 0 0 4px rgba(247, 183, 24, 0.18);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       min-height: 100%;
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       background:
         radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 25%),
         radial-gradient(circle at top right, rgba(139,92,246,0.18), transparent 22%),
         radial-gradient(circle at bottom center, rgba(247,183,24,0.10), transparent 24%),
         linear-gradient(180deg, #0b1220 0%, #07111f 100%);
-      color: var(--text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
     }
 
-    body {
-      padding: 18px;
-    }
+    body { padding: 18px; }
 
     .shell {
-      max-width: 1260px;
+      max-width: 1280px;
       margin: 0 auto;
     }
 
@@ -124,7 +118,7 @@
     }
 
     .hero-title {
-      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      font-size: clamp(2.2rem, 4vw, 3.7rem);
       line-height: 0.97;
       letter-spacing: -0.05em;
       font-weight: 900;
@@ -133,14 +127,14 @@
 
     .hero-title .gold {
       color: var(--gold);
-      text-shadow: 0 0 24px rgba(247, 183, 24, 0.18);
+      text-shadow: 0 0 24px rgba(247,183,24,0.18);
     }
 
     .hero-lead {
       color: #dbe7f5;
       font-size: 1rem;
       line-height: 1.75;
-      max-width: 60ch;
+      max-width: 62ch;
       margin-bottom: 18px;
     }
 
@@ -267,7 +261,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      z-index: 7;
+      z-index: 8;
       pointer-events: none;
     }
 
@@ -352,7 +346,7 @@
     .flash-layer {
       position: absolute;
       inset: 0;
-      z-index: 9;
+      z-index: 10;
       pointer-events: none;
       background:
         radial-gradient(circle at center, rgba(255,255,255,0.95), rgba(247,183,24,0.65), transparent 60%);
@@ -402,7 +396,7 @@
       top: 14px;
       left: 14px;
       right: 14px;
-      z-index: 10;
+      z-index: 11;
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -433,21 +427,55 @@
       box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
     }
 
-    .hud-dot.live {
-      background: var(--green);
-    }
-
-    .hud-dot.warn {
-      background: var(--gold);
-    }
+    .hud-dot.live { background: var(--green); }
+    .hud-dot.warn { background: var(--gold); }
 
     .center-ui {
       position: absolute;
       inset: 0;
-      z-index: 11;
+      z-index: 12;
       pointer-events: none;
       display: grid;
       place-items: center;
+    }
+
+    .countdown-ring {
+      position: absolute;
+      width: min(30vw, 180px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle, rgba(255,255,255,0.08), rgba(15,23,42,0.72));
+      border: 2px solid rgba(255,255,255,0.18);
+      box-shadow: 0 0 40px rgba(247,183,24,0.16);
+      opacity: 0;
+      transform: scale(0.82);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .countdown-ring.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .countdown-number {
+      font-size: clamp(2.6rem, 8vw, 5rem);
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      color: #fff;
+      text-shadow: 0 0 24px rgba(247,183,24,0.20);
+    }
+
+    .countdown-label {
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      color: #fde68a;
+      font-weight: 900;
+      text-align: center;
     }
 
     .rune-ring {
@@ -531,9 +559,7 @@
       text-shadow: 0 0 26px rgba(247,183,24,0.16);
     }
 
-    .unlock-main .gold {
-      color: var(--gold);
-    }
+    .unlock-main .gold { color: var(--gold); }
 
     .unlock-sub {
       margin-top: 8px;
@@ -546,7 +572,7 @@
       position: absolute;
       right: 14px;
       bottom: 14px;
-      z-index: 10;
+      z-index: 11;
       pointer-events: none;
       padding: 8px 12px;
       border-radius: 999px;
@@ -560,10 +586,31 @@
       text-transform: uppercase;
     }
 
+    .recording-badge {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 11;
+      pointer-events: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(127,29,29,0.82);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #fff;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .recording-badge.show { opacity: 1; }
+
     .particles {
       position: absolute;
       inset: 0;
-      z-index: 8;
+      z-index: 9;
       pointer-events: none;
       overflow: hidden;
     }
@@ -583,17 +630,9 @@
     }
 
     @keyframes burst {
-      0% {
-        opacity: 0;
-        transform: translate(0,0) scale(0.7) rotate(0deg);
-      }
-      10% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot));
-      }
+      0% { opacity: 0; transform: translate(0,0) scale(0.7) rotate(0deg); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot)); }
     }
 
     .status-row {
@@ -661,9 +700,7 @@
       transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
     }
 
-    .btn-pill:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
+    .btn-pill:hover:not(:disabled) { transform: translateY(-1px); }
 
     .btn-pill:focus-visible {
       outline: none;
@@ -698,6 +735,12 @@
       background: rgba(244,114,182,0.14);
       color: #ffe4f3;
       border-color: rgba(244,114,182,0.24);
+    }
+
+    .btn-recording {
+      background: rgba(34,197,94,0.14);
+      color: #dcfce7;
+      border-color: rgba(34,197,94,0.24);
     }
 
     .metrics-grid {
@@ -758,16 +801,16 @@
     .bar-fill.high { background: #22c55e; }
     .bar-fill.epic { background: linear-gradient(90deg, #fde68a 0%, #f7b718 100%); }
 
-    .snapshot-area {
+    .snapshot-area, .recording-area {
       margin-top: 16px;
       display: none;
     }
 
-    .snapshot-area.show {
+    .snapshot-area.show, .recording-area.show {
       display: block;
     }
 
-    .snapshot-card {
+    .snapshot-card, .recording-card {
       border-radius: 22px;
       padding: 16px;
       border: 1px solid rgba(247,183,24,0.16);
@@ -793,7 +836,17 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
-    .share-help {
+    #recordedVideo {
+      width: 100%;
+      max-width: 540px;
+      border-radius: 18px;
+      display: block;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: #0b1220;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.24);
+    }
+
+    .share-help, .recording-help {
       margin-top: 10px;
       color: var(--muted);
       font-size: 0.82rem;
@@ -808,9 +861,7 @@
       margin-bottom: 0;
     }
 
-    .shake {
-      animation: shake 500ms ease-in-out;
-    }
+    .shake { animation: shake 500ms ease-in-out; }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -828,29 +879,10 @@
     }
 
     @media (max-width: 768px) {
-      body {
-        padding: 12px;
-      }
-
-      .hero {
-        border-radius: 24px;
-      }
-
-      .stage-card {
-        border-radius: 20px;
-      }
-
-      .stage-wrap {
-        border-radius: 20px;
-      }
-
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .unlock-title {
-        min-width: 92%;
-      }
+      body { padding: 12px; }
+      .hero, .stage-card, .stage-wrap { border-radius: 20px; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .unlock-title { min-width: 92%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -870,44 +902,44 @@
         <div class="brand-pill">Web AI</div>
         <div class="top-note">Laugh to Unlock · COI crowd edition</div>
       </div>
-      <div class="top-note">Private in-browser demo · helmet.png powered</div>
+      <div class="top-note">Countdown + auto clip + LinkedIn-ready chaos</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
           <section class="col-lg-4" aria-label="Challenge overview">
-            <div class="eyebrow">Fun, extra, and absolutely demo-worthy</div>
+            <div class="eyebrow">Fun, extra, and suspiciously postable</div>
             <h1 class="hero-title">
               Laugh hard enough to unlock your
               <span class="gold">Digital Viking</span>.
             </h1>
 
             <p class="hero-lead">
-              This is the chaotic-good version for your College of Informatics peers:
-              browser AI, glam aura, cinematic helmet overlay, and a LinkedIn-ready share card
-              that looks flattering enough that people might actually post it.
+              This version adds the full main-character treatment:
+              a dramatic 3-second countdown, a “Dean’s List of Chaos” score,
+              an auto-recorded clip, and a share card that’s way more flattering than it has any right to be.
             </p>
 
             <div class="chip-row">
-              <div class="chip">🔥 Crowd bait</div>
-              <div class="chip">🪖 Real helmet overlay</div>
-              <div class="chip">✨ Better aura</div>
-              <div class="chip">📸 LinkedIn-ready card</div>
+              <div class="chip">⏳ 3-second countdown</div>
+              <div class="chip">🎥 Auto clip capture</div>
+              <div class="chip">🪖 Helmet overlay</div>
+              <div class="chip">💼 LinkedIn-ready workflow</div>
             </div>
 
             <div class="info-card">
-              <div class="info-title">The vibe</div>
+              <div class="info-title">The energy</div>
               <p class="info-body">
-                Not clinical. Not corporate. Not “neutral dashboard energy.” This is playful,
-                buzzy, and slightly ridiculous in the best possible way.
+                This is not neutral-dashboard energy. This is “my browser AI just turned me into a Digital Viking
+                and now my coworkers are recording me” energy.
               </p>
             </div>
 
             <div class="info-card">
               <div class="info-title">Helmet setup</div>
               <p class="info-body">
-                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG is ideal.
+                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG is best.
               </p>
             </div>
 
@@ -942,11 +974,18 @@
                   </div>
                   <div class="hud-pill">
                     <span class="hud-dot warn"></span>
-                    <span id="legendText">Buzz Level: 0</span>
+                    <span id="legendText">Dean’s List of Chaos: 0</span>
                   </div>
                 </div>
 
                 <div class="center-ui">
+                  <div id="countdownRing" class="countdown-ring">
+                    <div>
+                      <div id="countdownNumber" class="countdown-number">3</div>
+                      <div class="countdown-label">main character loading</div>
+                    </div>
+                  </div>
+
                   <div id="runeRing" class="rune-ring"></div>
 
                   <div id="unlockTitle" class="unlock-title">
@@ -954,12 +993,13 @@
                     <h2 class="unlock-main">
                       <span class="gold">DIGITAL VIKING</span> UNLOCKED
                     </h2>
-                    <div class="unlock-sub">Honestly? Postable.</div>
+                    <div class="unlock-sub">Honestly? This belongs on LinkedIn.</div>
                   </div>
                 </div>
 
                 <div id="particles" class="particles" aria-hidden="true"></div>
                 <div class="challenge-tag">Laugh to Unlock</div>
+                <div id="recordingBadge" class="recording-badge">● Recording highlight</div>
               </div>
 
               <div class="status-row" role="status" aria-live="polite" aria-atomic="true">
@@ -968,7 +1008,7 @@
                   <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: one face, decent light, real laughter, and a willingness to be a little extra in front of your colleagues.
+                  Best results: one face, decent light, real laughter, and a willingness to be at least 12% unhinged in front of your peers.
                 </div>
               </div>
 
@@ -1008,6 +1048,19 @@
                 </article>
               </div>
 
+              <div id="recordingArea" class="recording-area">
+                <div class="recording-card">
+                  <div class="snapshot-title">Auto-recorded highlight clip</div>
+                  <video id="recordedVideo" controls playsinline></video>
+                  <div class="controls mt-3 mb-0">
+                    <button id="downloadVideoBtn" class="btn-pill btn-recording" type="button">🎥 Download Clip</button>
+                  </div>
+                  <div class="recording-help">
+                    This records a short highlight after the unlock if your browser supports MediaRecorder.
+                  </div>
+                </div>
+              </div>
+
               <div id="snapshotArea" class="snapshot-area">
                 <div class="snapshot-card">
                   <div class="snapshot-title">Share card</div>
@@ -1020,14 +1073,14 @@
                   </div>
 
                   <div class="share-help">
-                    This version downloads the card, copies a caption, and opens LinkedIn for posting.
-                    A true one-click image publish would require a LinkedIn app + OAuth + upload/post API flow.
+                    Static pages can’t directly publish your generated image to LinkedIn without a LinkedIn app + OAuth + backend.
+                    This workflow downloads the card, copies the caption, and opens LinkedIn.
                   </div>
                 </div>
               </div>
 
               <p class="small-note">
-                Pro move: record the live unlock, then post the video and the card together so your peers get the full absurdity.
+                Best posting combo: upload the highlight clip first, then the card, then the caption. Maximum peer chaos.
               </p>
             </div>
           </section>
@@ -1040,15 +1093,15 @@
     (function () {
       "use strict";
 
-      // Helmet tuning
       const HELMET_SCALE = 1.0;
       const HELMET_Y_OFFSET = 1.08;
       const HELMET_ROTATION_FACTOR = 0.35;
       const HELMET_SHADOW_BLUR = 18;
 
       const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode. 
-No backend. No upload. Just live in-browser interaction, a dramatic helmet reveal, and a very unserious amount of College of Informatics energy. 
-#AI #WebAI #HCI #CollegeOfInformatics #DigitalViking #CreativeTech`;
+This version adds a countdown, a highlight clip, a helmet reveal, and a share card that is somehow both ridiculous and weirdly flattering.
+No backend. No upload. Just live browser AI and College of Informatics energy.
+#AI #WebAI #HCI #CollegeOfInformatics #CreativeTech #DigitalViking`;
 
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
@@ -1063,12 +1116,17 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
       const unlockTitle = document.getElementById("unlockTitle");
       const particles = document.getElementById("particles");
 
+      const countdownRing = document.getElementById("countdownRing");
+      const countdownNumber = document.getElementById("countdownNumber");
+      const recordingBadge = document.getElementById("recordingBadge");
+
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
       const captureBtn = document.getElementById("captureBtn");
       const downloadBtn = document.getElementById("downloadBtn");
       const copyCaptionBtn = document.getElementById("copyCaptionBtn");
       const linkedinBtn = document.getElementById("linkedinBtn");
+      const downloadVideoBtn = document.getElementById("downloadVideoBtn");
 
       const statusDot = document.getElementById("statusDot");
       const statusText = document.getElementById("statusText");
@@ -1093,14 +1151,14 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
       const snapshotCanvas = document.getElementById("snapshotCanvas");
       const snapshotCtx = snapshotCanvas.getContext("2d");
 
+      const recordingArea = document.getElementById("recordingArea");
+      const recordedVideo = document.getElementById("recordedVideo");
+
       const helmetImg = new Image();
       helmetImg.src = "helmet.png";
 
       let helmetLoaded = false;
-      helmetImg.onload = () => {
-        helmetLoaded = true;
-        console.log("helmet.png loaded");
-      };
+      helmetImg.onload = () => { helmetLoaded = true; };
       helmetImg.onerror = () => {
         console.warn("Could not load helmet.png. Make sure it is in the same folder as index.html");
       };
@@ -1121,9 +1179,19 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
 
       let laughHoldFrames = 0;
       let unlocked = false;
-      let lastLegendLevel = 0;
+      let lastChaosScore = 0;
 
       let trackedFace = null;
+
+      let countdownActive = false;
+      let countdownInterval = null;
+      let countdownValue = 3;
+
+      let recorder = null;
+      let recordedChunks = [];
+      let recordedVideoBlob = null;
+      let autoRecordingSupported = false;
+      let autoRecordingStarted = false;
 
       const RENDER_INTERVAL_MS = 90;
       const SMOOTH_ALPHA = 0.18;
@@ -1171,13 +1239,9 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           return;
         }
 
-        if (v < 35) {
-          el.classList.add("low");
-        } else if (v < 70) {
-          el.classList.add("med");
-        } else {
-          el.classList.add("high");
-        }
+        if (v < 35) el.classList.add("low");
+        else if (v < 70) el.classList.add("med");
+        else el.classList.add("high");
       }
 
       function updateUI() {
@@ -1185,7 +1249,7 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         const motionRounded = Math.round(motionScore);
         const laughRounded = Math.round(laughScore);
         const progressPercent = Math.round((laughHoldFrames / HOLD_REQUIRED) * 100);
-        const buzzLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
+        const chaosScore = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
 
         mouthScoreEl.textContent = mouthRounded;
         motionScoreEl.textContent = motionRounded;
@@ -1197,20 +1261,26 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         setBar(laughBar, laughRounded);
         setBar(progressBar, progressPercent, true);
 
-        legendText.textContent = "Buzz Level: " + buzzLevel;
-        lastLegendLevel = buzzLevel;
+        legendText.textContent = "Dean’s List of Chaos: " + chaosScore;
+        lastChaosScore = chaosScore;
 
         if (unlocked) {
           resultState.textContent = "DIGITAL VIKING UNLOCKED";
           resultState.classList.add("unlocked");
           resultCopy.textContent =
-            "You sustained the laugh long enough to trigger the full glow-up, helmet overlay, and share-card moment.";
+            "You sustained the laugh long enough to trigger the countdown, the reveal, the glow-up, and the highlight-clip moment.";
           hudText.textContent = "Viking mode active";
-        } else if (laughHoldFrames > 0) {
-          resultState.textContent = "Okay wait... this is getting good";
+        } else if (countdownActive) {
+          resultState.textContent = "Okay wait... it’s happening";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system sees something. Keep going — this is not the time for a polite faculty smile.";
+            "The system thinks you’re worthy. Hold it together for the countdown.";
+          hudText.textContent = "Main character countdown";
+        } else if (laughHoldFrames > 0) {
+          resultState.textContent = "This is getting suspiciously good";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "The system sees something. Keep going — not a polite grin, an actual laugh.";
           hudText.textContent = "Tracking laugh signal";
         } else {
           resultState.textContent = "Waiting for the laugh...";
@@ -1232,12 +1302,9 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
             const ok = await tf.setBackend(backend);
             if (ok) {
               await tf.ready();
-              console.log("Using TF backend:", tf.getBackend());
               return;
             }
-          } catch (err) {
-            console.warn("Backend unavailable:", backend, err);
-          }
+          } catch {}
         }
       }
 
@@ -1399,17 +1466,13 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
 
         overlayCtx.save();
-
         overlayCtx.translate(rect.width, 0);
         overlayCtx.scale(-1, 1);
-
         overlayCtx.translate(drawX, drawY);
         overlayCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
-
         overlayCtx.shadowColor = "rgba(247,183,24,0.32)";
         overlayCtx.shadowBlur = HELMET_SHADOW_BLUR;
         overlayCtx.globalAlpha = 0.98;
-
         overlayCtx.drawImage(
           helmetImg,
           -helmetWidth / 2,
@@ -1417,20 +1480,55 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           helmetWidth,
           helmetHeight
         );
-
         overlayCtx.restore();
       }
 
       function maybeUpdateStateMachine() {
+        if (unlocked || countdownActive) return;
+
         if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
           laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
         } else {
           laughHoldFrames = Math.max(0, laughHoldFrames - 1);
         }
 
-        if (!unlocked && laughHoldFrames >= HOLD_REQUIRED) {
-          triggerUnlock();
+        if (laughHoldFrames >= HOLD_REQUIRED) {
+          startCountdown();
         }
+      }
+
+      function startCountdown() {
+        if (countdownActive || unlocked) return;
+
+        countdownActive = true;
+        countdownValue = 3;
+        countdownNumber.textContent = String(countdownValue);
+        countdownRing.classList.add("show");
+        setStatus("Countdown started. Commit to the chaos.", "active");
+        updateUI();
+
+        countdownInterval = setInterval(() => {
+          countdownValue -= 1;
+
+          if (countdownValue > 0) {
+            countdownNumber.textContent = String(countdownValue);
+          } else {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            countdownRing.classList.remove("show");
+            countdownActive = false;
+            triggerUnlock();
+          }
+        }, 1000);
+      }
+
+      function cancelCountdown() {
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+        countdownActive = false;
+        countdownRing.classList.remove("show");
       }
 
       function burstParticles(count = 32) {
@@ -1463,7 +1561,6 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
 
       function speakUnlock() {
         if (!("speechSynthesis" in window)) return;
-
         try {
           const utterance = new SpeechSynthesisUtterance("Digital Viking unlocked");
           utterance.rate = 0.96;
@@ -1471,9 +1568,7 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           utterance.volume = 0.95;
           speechSynthesis.cancel();
           speechSynthesis.speak(utterance);
-        } catch (err) {
-          console.warn("Speech synthesis unavailable:", err);
-        }
+        } catch {}
       }
 
       function playUnlockTone() {
@@ -1502,9 +1597,64 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
             osc.start(now + index * 0.05);
             osc.stop(now + 0.35 + index * 0.06);
           });
-        } catch (err) {
-          console.warn("Audio unavailable:", err);
+        } catch {}
+      }
+
+      function getBestMimeType() {
+        const candidates = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm"
+        ];
+
+        for (const type of candidates) {
+          if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+            return type;
+          }
         }
+        return "";
+      }
+
+      function startAutoRecording() {
+        if (!mediaStream || !window.MediaRecorder || autoRecordingStarted) return;
+
+        const mimeType = getBestMimeType();
+        try {
+          recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+          recordedChunks = [];
+          recordedVideoBlob = null;
+
+          recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            if (!recordedChunks.length) return;
+            recordedVideoBlob = new Blob(recordedChunks, { type: recorder.mimeType || "video/webm" });
+            const url = URL.createObjectURL(recordedVideoBlob);
+            recordedVideo.src = url;
+            recordingArea.classList.add("show");
+          };
+
+          recorder.start();
+          autoRecordingStarted = true;
+          recordingBadge.classList.add("show");
+
+          setTimeout(() => {
+            stopAutoRecording();
+          }, 5000);
+        } catch (err) {
+          console.warn("Auto recording failed:", err);
+        }
+      }
+
+      function stopAutoRecording() {
+        if (recorder && recorder.state !== "inactive") {
+          recorder.stop();
+        }
+        recordingBadge.classList.remove("show");
       }
 
       function triggerUnlock() {
@@ -1523,7 +1673,11 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         playUnlockTone();
         updateUI();
 
-        setStatus("Legendary laugh detected. This is aggressively postable.", "active");
+        setStatus("Legendary laugh detected. This is dangerously LinkedIn-ready.", "active");
+
+        if (autoRecordingSupported) {
+          startAutoRecording();
+        }
 
         setTimeout(() => {
           stageWrap.classList.remove("shake");
@@ -1568,11 +1722,14 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
             motionScore = lerp(motionScore, raw.motion, SMOOTH_ALPHA);
             laughScore = lerp(laughScore, raw.laugh, SMOOTH_ALPHA);
 
-            maybeUpdateStateMachine();
+            if (!unlocked && !countdownActive) {
+              maybeUpdateStateMachine();
+            }
+
             updateUI();
 
-            if (!unlocked) {
-              setStatus("AI is running. Give me a real laugh — not a faculty-meeting smile.", "active");
+            if (!unlocked && !countdownActive) {
+              setStatus("AI is running. Give me a real laugh — not a faculty-meeting grin.", "active");
             }
           } else {
             mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
@@ -1584,9 +1741,8 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
             trackedFace = null;
             laughHoldFrames = Math.max(0, laughHoldFrames - 1);
 
-            updateUI();
-
-            if (!unlocked) {
+            if (!unlocked && !countdownActive) {
+              updateUI();
               setStatus("AI is running. Waiting for a face in frame...", "active");
             }
           }
@@ -1615,6 +1771,7 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           await getBestBackend();
           faceModel = await blazeface.load();
 
+          autoRecordingSupported = !!window.MediaRecorder;
           aiRunning = true;
           stopBtn.disabled = false;
 
@@ -1640,6 +1797,9 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           animationId = null;
         }
 
+        cancelCountdown();
+        stopAutoRecording();
+
         if (mediaStream) {
           mediaStream.getTracks().forEach(track => track.stop());
           mediaStream = null;
@@ -1656,8 +1816,11 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         prevMouthYNorm = null;
         laughHoldFrames = 0;
         unlocked = false;
-        lastLegendLevel = 0;
+        lastChaosScore = 0;
         trackedFace = null;
+        autoRecordingStarted = false;
+        recordedChunks = [];
+        recordedVideoBlob = null;
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
@@ -1667,6 +1830,10 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         unlockTitle.classList.remove("active");
         particles.innerHTML = "";
         snapshotArea.classList.remove("show");
+        recordingArea.classList.remove("show");
+        recordingBadge.classList.remove("show");
+        recordedVideo.removeAttribute("src");
+        recordedVideo.load();
 
         updateUI();
 
@@ -1716,7 +1883,6 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
           snapshotCtx.drawImage(video, -frameX - frameW, frameY, frameW, frameH);
           snapshotCtx.restore();
 
-          // Photo-friendlier overlay
           const beauty = snapshotCtx.createRadialGradient(
             frameX + frameW / 2,
             frameY + frameH * 0.38,
@@ -1764,18 +1930,18 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
 
         snapshotCtx.fillStyle = "#dbe7f5";
         snapshotCtx.font = "600 32px Inter, sans-serif";
-        snapshotCtx.fillText("Ridiculously browser-native. Mildly unhinged. Weirdly flattering.", 90, 1265);
+        snapshotCtx.fillText("Dean’s List of Chaos certified.", 90, 1265);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
         roundRectFill(snapshotCtx, 90, 1288, w - 180, 92, 24);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("Buzz Level: " + lastLegendLevel, 126, 1346);
+        snapshotCtx.fillText("Dean’s List of Chaos: " + lastChaosScore, 126, 1346);
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("💼 LinkedIn bait, respectfully", 620, 1346);
+        snapshotCtx.fillText("💼 Weirdly LinkedIn-ready", 610, 1346);
 
         snapshotArea.classList.add("show");
       }
@@ -1800,10 +1966,8 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         ctx.save();
 
         const mirroredX = frameX + frameW - (drawX - frameX);
-
         ctx.translate(mirroredX, drawY);
         ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
-
         ctx.shadowColor = "rgba(247,183,24,0.30)";
         ctx.shadowBlur = HELMET_SHADOW_BLUR;
 
@@ -1845,22 +2009,25 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
         link.click();
       }
 
+      function downloadRecordedVideo() {
+        if (!recordedVideoBlob) return;
+        const url = URL.createObjectURL(recordedVideoBlob);
+        const link = document.createElement("a");
+        link.download = "digital-viking-highlight.webm";
+        link.href = url;
+        link.click();
+      }
+
       async function copyLinkedInCaption() {
         try {
           await navigator.clipboard.writeText(LINKEDIN_CAPTION);
-          setStatus("LinkedIn caption copied. Now go be professionally chaotic.", "active");
-        } catch (err) {
-          console.warn("Clipboard failed:", err);
+          setStatus("LinkedIn caption copied. Go forth and be professionally chaotic.", "active");
+        } catch {
           setStatus("Could not copy the caption automatically. Browser permissions may be blocking clipboard access.", "error");
         }
       }
 
       function openLinkedInWorkflow() {
-        // Static-page friendly workflow:
-        // 1) ensure card exists
-        // 2) download it
-        // 3) copy caption
-        // 4) open LinkedIn
         if (!snapshotArea.classList.contains("show")) {
           drawSnapshotCard();
         }
@@ -1879,6 +2046,7 @@ No backend. No upload. Just live in-browser interaction, a dramatic helmet revea
       downloadBtn.addEventListener("click", downloadSnapshot);
       copyCaptionBtn.addEventListener("click", copyLinkedInCaption);
       linkedinBtn.addEventListener("click", openLinkedInWorkflow);
+      downloadVideoBtn.addEventListener("click", downloadRecordedVideo);
 
       window.addEventListener("resize", resizeOverlayCanvas);
 

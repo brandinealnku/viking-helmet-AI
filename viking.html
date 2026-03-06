@@ -966,6 +966,12 @@
     (function () {
       "use strict";
 
+      // Helmet tuning controls
+      const HELMET_SCALE = 1.0;
+      const HELMET_Y_OFFSET = 1.08;
+      const HELMET_ROTATION_FACTOR = 0.35;
+      const HELMET_SHADOW_BLUR = 16;
+
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
       const overlayCtx = overlayCanvas.getContext("2d");
@@ -1314,24 +1320,23 @@
         const faceHeight = trackedFace.faceHeight * scaleY;
         const angle = trackedFace.eyeAngle;
 
-        const helmetWidth = faceWidth * 1.65;
+        const helmetWidth = faceWidth * HELMET_SCALE;
         const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
         const helmetHeight = helmetWidth * aspectRatio;
 
         const drawX = faceCenterX;
-        const drawY = eyeMidY - faceHeight * 0.72;
+        const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
 
         overlayCtx.save();
 
-        // mirror because video is mirrored
         overlayCtx.translate(rect.width, 0);
         overlayCtx.scale(-1, 1);
 
         overlayCtx.translate(drawX, drawY);
-        overlayCtx.rotate(-angle * 0.35);
+        overlayCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
 
-        overlayCtx.shadowColor = "rgba(247,183,24,0.35)";
-        overlayCtx.shadowBlur = 24;
+        overlayCtx.shadowColor = "rgba(247,183,24,0.25)";
+        overlayCtx.shadowBlur = HELMET_SHADOW_BLUR;
 
         overlayCtx.drawImage(
           helmetImg,
@@ -1698,23 +1703,22 @@
         const faceHeight = trackedFace.faceHeight * scaleY;
         const angle = trackedFace.eyeAngle;
 
-        const helmetWidth = faceWidth * 1.65;
+        const helmetWidth = faceWidth * HELMET_SCALE;
         const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
         const helmetHeight = helmetWidth * aspectRatio;
 
         const drawX = faceCenterX;
-        const drawY = eyeMidY - faceHeight * 0.72;
+        const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
 
         ctx.save();
 
-        // mirrored frame
         const mirroredX = frameX + frameW - (drawX - frameX);
 
         ctx.translate(mirroredX, drawY);
-        ctx.rotate(-angle * 0.35);
+        ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
 
-        ctx.shadowColor = "rgba(247,183,24,0.35)";
-        ctx.shadowBlur = 24;
+        ctx.shadowColor = "rgba(247,183,24,0.25)";
+        ctx.shadowBlur = HELMET_SHADOW_BLUR;
 
         ctx.drawImage(
           helmetImg,

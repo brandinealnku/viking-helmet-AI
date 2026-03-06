@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Laugh to Unlock — Digital Viking Challenge</title>
+  <title>Laugh to Unlock — Digital Viking Showcase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Laugh to Unlock — a browser-based AI Viking challenge with a countdown, auto-recording, helmet overlay, banner overlay, and a LinkedIn-ready share workflow."
+    content="A browser-based AI showcase that unlocks a Digital Viking experience with a helmet overlay, banner, share card, and animated GIF."
   />
   <meta name="theme-color" content="#0f172a" />
 
@@ -18,6 +18,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <!-- GIF generation -->
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 
   <style>
     :root {
@@ -590,7 +593,7 @@
       text-transform: uppercase;
     }
 
-    .recording-badge {
+    .gif-badge {
       position: absolute;
       left: 14px;
       bottom: 14px;
@@ -609,7 +612,7 @@
       transition: opacity 0.18s ease;
     }
 
-    .recording-badge.show { opacity: 1; }
+    .gif-badge.show { opacity: 1; }
 
     .particles {
       position: absolute;
@@ -741,7 +744,7 @@
       border-color: rgba(244,114,182,0.24);
     }
 
-    .btn-recording {
+    .btn-gif {
       background: rgba(34,197,94,0.14);
       color: #dcfce7;
       border-color: rgba(34,197,94,0.24);
@@ -805,16 +808,16 @@
     .bar-fill.high { background: #22c55e; }
     .bar-fill.epic { background: linear-gradient(90deg, #fde68a 0%, #f7b718 100%); }
 
-    .snapshot-area, .recording-area {
+    .snapshot-area, .gif-area {
       margin-top: 16px;
       display: none;
     }
 
-    .snapshot-area.show, .recording-area.show {
+    .snapshot-area.show, .gif-area.show {
       display: block;
     }
 
-    .snapshot-card, .recording-card {
+    .snapshot-card, .gif-card {
       border-radius: 22px;
       padding: 16px;
       border: 1px solid rgba(247,183,24,0.16);
@@ -840,17 +843,17 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
-    #recordedVideo {
+    #gifPreview {
       width: 100%;
       max-width: 540px;
       border-radius: 18px;
-      display: block;
+      display: none;
       border: 1px solid rgba(255,255,255,0.10);
       background: #0b1220;
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
-    .share-help, .recording-help {
+    .share-help, .gif-help {
       margin-top: 10px;
       color: var(--muted);
       font-size: 0.82rem;
@@ -903,60 +906,59 @@
   <div class="shell">
     <header class="topbar">
       <div class="brand-wrap">
-        <div class="brand-pill">Web AI</div>
-        <div class="top-note">Laugh to Unlock · COI crowd edition</div>
+        <div class="brand-pill">NKU Showcase</div>
+        <div class="top-note">Digital Viking experience for fellow faculty & staff</div>
       </div>
-      <div class="top-note">Countdown + auto clip + LinkedIn-ready chaos</div>
+      <div class="top-note">Live browser AI + GIF moment + share-ready card</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
-          <section class="col-lg-4" aria-label="Challenge overview">
-            <div class="eyebrow">Fun, extra, and suspiciously postable</div>
+          <section class="col-lg-4" aria-label="Showcase overview">
+            <div class="eyebrow">Fun, faculty-facing, and absolutely showcase-worthy</div>
             <h1 class="hero-title">
-              Laugh hard enough to unlock your
+              Laugh a little and unlock your
               <span class="gold">Digital Viking</span>.
             </h1>
 
             <p class="hero-lead">
-              This version adds the full main-character treatment:
-              a dramatic 3-second countdown, a “Dean’s List of Chaos” score,
-              an auto-recorded clip, and a share card that’s way more flattering than it has any right to be.
+              This NKU showcase version is built to be playful for fellow faculty and staff:
+              a flattering glow, a helmet reveal, a fun unlock banner, and an animated GIF that is ready to save and share.
             </p>
 
             <div class="chip-row">
-              <div class="chip">⏳ 3-second countdown</div>
-              <div class="chip">🎥 Auto clip capture</div>
+              <div class="chip">🎉 Showcase fun</div>
               <div class="chip">🪖 Helmet overlay</div>
-              <div class="chip">💼 LinkedIn-ready workflow</div>
+              <div class="chip">✨ Flattering aura</div>
+              <div class="chip">🖼️ Animated GIF</div>
             </div>
 
             <div class="info-card">
-              <div class="info-title">The energy</div>
+              <div class="info-title">Showcase vibe</div>
               <p class="info-body">
-                This is not neutral-dashboard energy. This is “my browser AI just turned me into a Digital Viking
-                and now my coworkers are recording me” energy.
+                This is meant to feel welcoming, fun, and a little over-the-top in the best way —
+                something your fellow NKU faculty and staff can enjoy, laugh at, and want to try themselves.
               </p>
             </div>
 
             <div class="info-card">
               <div class="info-title">Helmet setup</div>
               <p class="info-body">
-                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG is best.
+                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG works best.
               </p>
             </div>
 
             <div class="result-card" aria-live="polite">
-              <div class="result-label">Challenge status</div>
-              <div id="resultState" class="result-state">Waiting for the laugh...</div>
+              <div class="result-label">Showcase status</div>
+              <div id="resultState" class="result-state">Waiting for the smile and laugh...</div>
               <p id="resultCopy" class="result-copy">
-                The system is looking for a strong enough laugh pattern to trigger the glow-up.
+                The experience is waiting for a strong enough laugh moment to trigger the reveal.
               </p>
             </div>
           </section>
 
-          <section class="col-lg-8" aria-label="Live Viking challenge stage">
+          <section class="col-lg-8" aria-label="Live showcase stage">
             <div class="stage-card">
               <div id="stageWrap" class="stage-wrap">
                 <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
@@ -979,7 +981,7 @@
                   </div>
                   <div class="hud-pill">
                     <span class="hud-dot warn"></span>
-                    <span id="legendText">Dean’s List of Chaos: 0</span>
+                    <span id="legendText">Showcase fun level: 0</span>
                   </div>
                 </div>
 
@@ -987,24 +989,24 @@
                   <div id="countdownRing" class="countdown-ring">
                     <div>
                       <div id="countdownNumber" class="countdown-number">3</div>
-                      <div class="countdown-label">main character loading</div>
+                      <div class="countdown-label">showtime in 3…</div>
                     </div>
                   </div>
 
                   <div id="runeRing" class="rune-ring"></div>
 
                   <div id="unlockTitle" class="unlock-title">
-                    <div class="unlock-kicker">Peer-reviewed by chaos</div>
+                    <div class="unlock-kicker">NKU showcase moment</div>
                     <h2 class="unlock-main">
                       <span class="gold">DIGITAL VIKING</span> UNLOCKED
                     </h2>
-                    <div class="unlock-sub">Honestly? This belongs on LinkedIn.</div>
+                    <div class="unlock-sub">Now that is a fun faculty-and-staff moment.</div>
                   </div>
                 </div>
 
                 <div id="particles" class="particles" aria-hidden="true"></div>
-                <div class="challenge-tag">Laugh to Unlock</div>
-                <div id="recordingBadge" class="recording-badge">● Recording highlight</div>
+                <div class="challenge-tag">NKU Showcase</div>
+                <div id="gifBadge" class="gif-badge">● Creating GIF</div>
               </div>
 
               <div class="status-row" role="status" aria-live="polite" aria-atomic="true">
@@ -1013,7 +1015,7 @@
                   <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: one face, decent light, real laughter, and a willingness to be at least 12% unhinged in front of your peers.
+                  Best results: one face, good lighting, and a genuine laugh — this is made for a fun showcase atmosphere.
                 </div>
               </div>
 
@@ -1048,20 +1050,20 @@
                 <article class="metric">
                   <div class="metric-label">Unlock progress</div>
                   <div id="progressScore" class="metric-value">0%</div>
-                  <div class="metric-desc">You need sustained laughter, not one lucky frame.</div>
+                  <div class="metric-desc">You need a sustained laugh moment, not just one quick frame.</div>
                   <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
                 </article>
               </div>
 
-              <div id="recordingArea" class="recording-area">
-                <div class="recording-card">
-                  <div class="snapshot-title">Auto-recorded highlight clip</div>
-                  <video id="recordedVideo" controls playsinline></video>
+              <div id="gifArea" class="gif-area">
+                <div class="gif-card">
+                  <div class="snapshot-title">Animated GIF moment</div>
+                  <img id="gifPreview" alt="Animated GIF preview" />
                   <div class="controls mt-3 mb-0">
-                    <button id="downloadVideoBtn" class="btn-pill btn-recording" type="button">🎥 Download Clip</button>
+                    <button id="downloadGifBtn" class="btn-pill btn-gif" type="button">🖼️ Download GIF</button>
                   </div>
-                  <div class="recording-help">
-                    This clip now includes the helmet overlay and unlock banner.
+                  <div class="gif-help">
+                    This GIF includes the helmet overlay and the unlock banner.
                   </div>
                 </div>
               </div>
@@ -1085,7 +1087,7 @@
               </div>
 
               <p class="small-note">
-                Best posting combo: upload the highlight clip first, then the card, then the caption. Maximum peer chaos.
+                Best showcase combo: save the GIF, save the card, and let people watch the reveal and the final image together.
               </p>
             </div>
           </section>
@@ -1103,10 +1105,9 @@
       const HELMET_ROTATION_FACTOR = 0.35;
       const HELMET_SHADOW_BLUR = 18;
 
-      const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode.
-This version adds a countdown, a highlight clip, a helmet reveal, and a share card that is somehow both ridiculous and weirdly flattering.
-No backend. No upload. Just live browser AI and College of Informatics energy.
-#AI #WebAI #HCI #CollegeOfInformatics #CreativeTech #DigitalViking`;
+      const LINKEDIN_CAPTION = `Sharing a fun NKU showcase experiment: a browser-based AI experience that waits for a real laugh, then unlocks a Digital Viking moment.
+This version adds a helmet reveal, a showcase banner, a share card, and an animated GIF — all running right in the browser.
+#NKU #AI #WebAI #Showcase #CreativeTechnology #HigherEd`;
 
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
@@ -1126,7 +1127,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
       const countdownRing = document.getElementById("countdownRing");
       const countdownNumber = document.getElementById("countdownNumber");
-      const recordingBadge = document.getElementById("recordingBadge");
+      const gifBadge = document.getElementById("gifBadge");
 
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
@@ -1134,7 +1135,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       const downloadBtn = document.getElementById("downloadBtn");
       const copyCaptionBtn = document.getElementById("copyCaptionBtn");
       const linkedinBtn = document.getElementById("linkedinBtn");
-      const downloadVideoBtn = document.getElementById("downloadVideoBtn");
+      const downloadGifBtn = document.getElementById("downloadGifBtn");
 
       const statusDot = document.getElementById("statusDot");
       const statusText = document.getElementById("statusText");
@@ -1159,8 +1160,8 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       const snapshotCanvas = document.getElementById("snapshotCanvas");
       const snapshotCtx = snapshotCanvas.getContext("2d");
 
-      const recordingArea = document.getElementById("recordingArea");
-      const recordedVideo = document.getElementById("recordedVideo");
+      const gifArea = document.getElementById("gifArea");
+      const gifPreview = document.getElementById("gifPreview");
 
       const helmetImg = new Image();
       helmetImg.src = "helmet.png";
@@ -1187,7 +1188,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
       let laughHoldFrames = 0;
       let unlocked = false;
-      let lastChaosScore = 0;
+      let lastFunLevel = 0;
 
       let trackedFace = null;
 
@@ -1195,11 +1196,12 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       let countdownInterval = null;
       let countdownValue = 3;
 
-      let recorder = null;
-      let recordedChunks = [];
-      let recordedVideoBlob = null;
-      let autoRecordingSupported = false;
-      let autoRecordingStarted = false;
+      let gifInstance = null;
+      let gifBlob = null;
+      let gifCaptureActive = false;
+      let gifCaptureFrames = 0;
+      let gifCaptureMaxFrames = 18;
+      let gifCaptureDelay = 120;
 
       const RENDER_INTERVAL_MS = 90;
       const SMOOTH_ALPHA = 0.18;
@@ -1257,7 +1259,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         const motionRounded = Math.round(motionScore);
         const laughRounded = Math.round(laughScore);
         const progressPercent = Math.round((laughHoldFrames / HOLD_REQUIRED) * 100);
-        const chaosScore = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
+        const funLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
 
         mouthScoreEl.textContent = mouthRounded;
         motionScoreEl.textContent = motionRounded;
@@ -1269,33 +1271,33 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         setBar(laughBar, laughRounded);
         setBar(progressBar, progressPercent, true);
 
-        legendText.textContent = "Dean’s List of Chaos: " + chaosScore;
-        lastChaosScore = chaosScore;
+        legendText.textContent = "Showcase fun level: " + funLevel;
+        lastFunLevel = funLevel;
 
         if (unlocked) {
           resultState.textContent = "DIGITAL VIKING UNLOCKED";
           resultState.classList.add("unlocked");
           resultCopy.textContent =
-            "You sustained the laugh long enough to trigger the countdown, the reveal, the glow-up, and the highlight-clip moment.";
-          hudText.textContent = "Viking mode active";
+            "The reveal is live, the glow is on, and the showcase moment is officially happening.";
+          hudText.textContent = "Showcase moment active";
         } else if (countdownActive) {
-          resultState.textContent = "Okay wait... it’s happening";
+          resultState.textContent = "Here we go…";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system thinks you’re worthy. Hold it together for the countdown.";
-          hudText.textContent = "Main character countdown";
+            "The experience sees the moment — just hold the laugh through the countdown.";
+          hudText.textContent = "Showcase countdown";
         } else if (laughHoldFrames > 0) {
-          resultState.textContent = "This is getting suspiciously good";
+          resultState.textContent = "This is getting fun";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system sees something. Keep going — not a polite grin, an actual laugh.";
-          hudText.textContent = "Tracking laugh signal";
+            "Keep going — the system is building toward the reveal.";
+          hudText.textContent = "Tracking laugh moment";
         } else {
-          resultState.textContent = "Waiting for the laugh...";
+          resultState.textContent = "Waiting for the smile and laugh...";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system is looking for a strong enough laugh pattern to trigger the glow-up.";
-          hudText.textContent = "Awaiting laugh pattern";
+            "The experience is waiting for a strong enough laugh moment to trigger the reveal.";
+          hudText.textContent = "Awaiting showcase moment";
         }
 
         captureBtn.disabled = !unlocked;
@@ -1530,14 +1532,12 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           return;
         }
 
-        // Base mirrored video
         recordCtx.save();
         recordCtx.translate(w, 0);
         recordCtx.scale(-1, 1);
         recordCtx.drawImage(video, 0, 0, w, h);
         recordCtx.restore();
 
-        // Beauty / glam
         const beauty = recordCtx.createRadialGradient(
           w * 0.5, h * 0.38, 20,
           w * 0.5, h * 0.38, w * 0.42
@@ -1554,7 +1554,6 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         recordCtx.fillStyle = topGlow;
         recordCtx.fillRect(0, 0, w, h);
 
-        // Aura when unlocked
         if (unlocked) {
           const aura = recordCtx.createRadialGradient(
             w * 0.5, h * 0.48, 20,
@@ -1568,7 +1567,6 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           recordCtx.fillRect(0, 0, w, h);
         }
 
-        // Vignette
         const vignette = recordCtx.createRadialGradient(
           w * 0.5, h * 0.5, w * 0.18,
           w * 0.5, h * 0.5, w * 0.65
@@ -1578,12 +1576,10 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         recordCtx.fillStyle = vignette;
         recordCtx.fillRect(0, 0, w, h);
 
-        // Helmet overlay
         drawHelmetToContext(recordCtx, w, h, true);
 
-        // Top pills
         drawRoundedRectFill(recordCtx, 22, 22, 290, 44, 22, "rgba(15,23,42,0.70)");
-        drawRoundedRectFill(recordCtx, w - 350, 22, 328, 44, 22, "rgba(15,23,42,0.70)");
+        drawRoundedRectFill(recordCtx, w - 350, 22, 310, 44, 22, "rgba(15,23,42,0.70)");
 
         recordCtx.fillStyle = unlocked ? "#22c55e" : "#f7b718";
         recordCtx.beginPath();
@@ -1592,28 +1588,25 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
         recordCtx.fillStyle = "#ffffff";
         recordCtx.font = "700 18px Inter, sans-serif";
-        recordCtx.fillText(unlocked ? "Viking mode active" : "Laugh to unlock", 60, 50);
+        recordCtx.fillText(unlocked ? "Showcase reveal live" : "NKU showcase moment", 60, 50);
 
         recordCtx.fillStyle = "#ffffff";
         recordCtx.font = "700 18px Inter, sans-serif";
-        const chaosText = `Dean’s List of Chaos: ${lastChaosScore}`;
-        recordCtx.fillText(chaosText, w - 332, 50);
+        const funText = `Fun level: ${lastFunLevel}`;
+        recordCtx.fillText(funText, w - 240, 50);
 
-        // Recording badge
-        if (recorder && recorder.state !== "inactive") {
-          drawRoundedRectFill(recordCtx, 22, h - 68, 220, 42, 21, "rgba(127,29,29,0.84)");
+        if (gifCaptureActive) {
+          drawRoundedRectFill(recordCtx, 22, h - 68, 190, 42, 21, "rgba(127,29,29,0.84)");
           recordCtx.fillStyle = "#ffffff";
           recordCtx.font = "800 16px Inter, sans-serif";
-          recordCtx.fillText("● Recording highlight", 42, h - 41);
+          recordCtx.fillText("● Creating GIF", 42, h - 41);
         }
 
-        // Challenge badge
-        drawRoundedRectFill(recordCtx, w - 250, h - 68, 228, 42, 21, "rgba(15,23,42,0.72)");
+        drawRoundedRectFill(recordCtx, w - 220, h - 68, 198, 42, 21, "rgba(15,23,42,0.72)");
         recordCtx.fillStyle = "#ffffff";
         recordCtx.font = "800 16px Inter, sans-serif";
-        recordCtx.fillText("Laugh to Unlock", w - 220, h - 41);
+        recordCtx.fillText("NKU Showcase", w - 185, h - 41);
 
-        // Countdown
         if (countdownActive) {
           const cx = w / 2;
           const cy = h / 2;
@@ -1639,12 +1632,11 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
           recordCtx.fillStyle = "#fde68a";
           recordCtx.font = "800 18px Inter, sans-serif";
-          recordCtx.fillText("main character loading", cx, cy + 52);
+          recordCtx.fillText("showtime in 3…", cx, cy + 52);
           recordCtx.restore();
           recordCtx.textAlign = "start";
         }
 
-        // Unlock banner
         if (unlocked) {
           const bannerW = Math.min(760, w * 0.82);
           const bannerH = 120;
@@ -1669,7 +1661,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           recordCtx.textAlign = "center";
           recordCtx.fillStyle = "#fde68a";
           recordCtx.font = "900 16px Inter, sans-serif";
-          recordCtx.fillText("Peer-reviewed by chaos", w / 2, bannerY + 28);
+          recordCtx.fillText("NKU showcase moment", w / 2, bannerY + 28);
 
           recordCtx.font = "1000 42px Inter, sans-serif";
           recordCtx.fillStyle = "#ffffff";
@@ -1703,7 +1695,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         countdownValue = 3;
         countdownNumber.textContent = String(countdownValue);
         countdownRing.classList.add("show");
-        setStatus("Countdown started. Commit to the chaos.", "active");
+        setStatus("Countdown started — showcase moment incoming.", "active");
         updateUI();
 
         countdownInterval = setInterval(() => {
@@ -1799,63 +1791,52 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         } catch {}
       }
 
-      function getBestMimeType() {
-        const candidates = [
-          "video/webm;codecs=vp9,opus",
-          "video/webm;codecs=vp8,opus",
-          "video/webm"
-        ];
+      function startGifCapture() {
+        if (gifCaptureActive) return;
 
-        for (const type of candidates) {
-          if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
-            return type;
-          }
-        }
-        return "";
+        gifCaptureActive = true;
+        gifCaptureFrames = 0;
+        gifBlob = null;
+        gifPreview.style.display = "none";
+        gifArea.classList.remove("show");
+        gifBadge.classList.add("show");
+
+        gifInstance = new GIF({
+          workers: 2,
+          quality: 10,
+          workerScript: "https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js",
+          width: recordCanvas.width,
+          height: recordCanvas.height
+        });
+
+        gifInstance.on("finished", function(blob) {
+          gifBlob = blob;
+          const url = URL.createObjectURL(blob);
+          gifPreview.src = url;
+          gifPreview.style.display = "block";
+          gifArea.classList.add("show");
+          gifBadge.classList.remove("show");
+          gifCaptureActive = false;
+          setStatus("Animated GIF ready to save.", "active");
+        });
       }
 
-      function startAutoRecording() {
-        if (!window.MediaRecorder || autoRecordingStarted) return;
+      function addGifFrameIfNeeded() {
+        if (!gifCaptureActive || !gifInstance) return;
 
-        const recordedStream = recordCanvas.captureStream(30);
-        const mimeType = getBestMimeType();
+        gifInstance.addFrame(recordCanvas, {
+          copy: true,
+          delay: gifCaptureDelay
+        });
 
-        try {
-          recorder = new MediaRecorder(recordedStream, mimeType ? { mimeType } : undefined);
-          recordedChunks = [];
-          recordedVideoBlob = null;
+        gifCaptureFrames += 1;
 
-          recorder.ondataavailable = (event) => {
-            if (event.data && event.data.size > 0) {
-              recordedChunks.push(event.data);
-            }
-          };
-
-          recorder.onstop = () => {
-            if (!recordedChunks.length) return;
-            recordedVideoBlob = new Blob(recordedChunks, { type: recorder.mimeType || "video/webm" });
-            const url = URL.createObjectURL(recordedVideoBlob);
-            recordedVideo.src = url;
-            recordingArea.classList.add("show");
-          };
-
-          recorder.start();
-          autoRecordingStarted = true;
-          recordingBadge.classList.add("show");
-
-          setTimeout(() => {
-            stopAutoRecording();
-          }, 5000);
-        } catch (err) {
-          console.warn("Auto recording failed:", err);
+        if (gifCaptureFrames >= gifCaptureMaxFrames) {
+          gifCaptureActive = false;
+          gifBadge.classList.remove("show");
+          setStatus("Rendering animated GIF…", "active");
+          gifInstance.render();
         }
-      }
-
-      function stopAutoRecording() {
-        if (recorder && recorder.state !== "inactive") {
-          recorder.stop();
-        }
-        recordingBadge.classList.remove("show");
       }
 
       function triggerUnlock() {
@@ -1874,11 +1855,8 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         playUnlockTone();
         updateUI();
 
-        setStatus("Legendary laugh detected. This is dangerously LinkedIn-ready.", "active");
-
-        if (autoRecordingSupported) {
-          startAutoRecording();
-        }
+        setStatus("Reveal unlocked — this is a great NKU showcase moment.", "active");
+        startGifCapture();
 
         setTimeout(() => {
           stageWrap.classList.remove("shake");
@@ -1902,6 +1880,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         if (elapsed < RENDER_INTERVAL_MS) {
           drawHelmetOverlay();
           drawCompositedRecordFrame();
+          addGifFrameIfNeeded();
           animationId = requestAnimationFrame(renderLoop);
           return;
         }
@@ -1931,7 +1910,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
             updateUI();
 
             if (!unlocked && !countdownActive) {
-              setStatus("AI is running. Give me a real laugh — not a faculty-meeting grin.", "active");
+              setStatus("AI is running. Give me a real laugh — this is a showcase, after all.", "active");
             }
           } else {
             mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
@@ -1951,6 +1930,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
           drawHelmetOverlay();
           drawCompositedRecordFrame();
+          addGifFrameIfNeeded();
         } catch (err) {
           console.error("Inference error:", err);
           setStatus("There was an error running the face model. Try refreshing the page.", "error");
@@ -1974,7 +1954,6 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           await getBestBackend();
           faceModel = await blazeface.load();
 
-          autoRecordingSupported = !!window.MediaRecorder;
           aiRunning = true;
           stopBtn.disabled = false;
 
@@ -2001,7 +1980,6 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         }
 
         cancelCountdown();
-        stopAutoRecording();
 
         if (mediaStream) {
           mediaStream.getTracks().forEach(track => track.stop());
@@ -2019,11 +1997,13 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         prevMouthYNorm = null;
         laughHoldFrames = 0;
         unlocked = false;
-        lastChaosScore = 0;
+        lastFunLevel = 0;
         trackedFace = null;
-        autoRecordingStarted = false;
-        recordedChunks = [];
-        recordedVideoBlob = null;
+
+        gifInstance = null;
+        gifBlob = null;
+        gifCaptureActive = false;
+        gifCaptureFrames = 0;
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         recordCtx.clearRect(0, 0, recordCanvas.width, recordCanvas.height);
@@ -2034,10 +2014,10 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         unlockTitle.classList.remove("active");
         particles.innerHTML = "";
         snapshotArea.classList.remove("show");
-        recordingArea.classList.remove("show");
-        recordingBadge.classList.remove("show");
-        recordedVideo.removeAttribute("src");
-        recordedVideo.load();
+        gifArea.classList.remove("show");
+        gifBadge.classList.remove("show");
+        gifPreview.removeAttribute("src");
+        gifPreview.style.display = "none";
 
         updateUI();
 
@@ -2046,7 +2026,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         captureBtn.disabled = true;
 
         if (!fromLoop) {
-          setStatus("Camera is off. Restart the challenge any time.");
+          setStatus("Camera is off. Restart the showcase any time.");
           hudText.textContent = "Awaiting camera";
         }
       }
@@ -2101,38 +2081,37 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           snapshotCtx.fillStyle = beauty;
           snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
 
-          if (unlocked) {
+          if (unlocked && trackedFace && helmetLoaded) {
             const scaleX = frameW / (video.videoWidth || frameW);
             const scaleY = frameH / (video.videoHeight || frameH);
-            if (trackedFace && helmetLoaded) {
-              const faceCenterX = frameX + (trackedFace.centerX * scaleX);
-              const eyeMidY = frameY + (trackedFace.eyeMidY * scaleY);
-              const faceWidth = trackedFace.faceWidth * scaleX;
-              const faceHeight = trackedFace.faceHeight * scaleY;
-              const angle = trackedFace.eyeAngle;
 
-              const helmetWidth = faceWidth * HELMET_SCALE;
-              const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
-              const helmetHeight = helmetWidth * aspectRatio;
+            const faceCenterX = frameX + (trackedFace.centerX * scaleX);
+            const eyeMidY = frameY + (trackedFace.eyeMidY * scaleY);
+            const faceWidth = trackedFace.faceWidth * scaleX;
+            const faceHeight = trackedFace.faceHeight * scaleY;
+            const angle = trackedFace.eyeAngle;
 
-              const drawX = faceCenterX;
-              const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
+            const helmetWidth = faceWidth * HELMET_SCALE;
+            const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
+            const helmetHeight = helmetWidth * aspectRatio;
 
-              snapshotCtx.save();
-              const mirroredX = frameX + frameW - (drawX - frameX);
-              snapshotCtx.translate(mirroredX, drawY);
-              snapshotCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
-              snapshotCtx.shadowColor = "rgba(247,183,24,0.30)";
-              snapshotCtx.shadowBlur = HELMET_SHADOW_BLUR;
-              snapshotCtx.drawImage(
-                helmetImg,
-                -helmetWidth / 2,
-                -helmetHeight / 2,
-                helmetWidth,
-                helmetHeight
-              );
-              snapshotCtx.restore();
-            }
+            const drawX = faceCenterX;
+            const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
+
+            snapshotCtx.save();
+            const mirroredX = frameX + frameW - (drawX - frameX);
+            snapshotCtx.translate(mirroredX, drawY);
+            snapshotCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
+            snapshotCtx.shadowColor = "rgba(247,183,24,0.30)";
+            snapshotCtx.shadowBlur = HELMET_SHADOW_BLUR;
+            snapshotCtx.drawImage(
+              helmetImg,
+              -helmetWidth / 2,
+              -helmetHeight / 2,
+              helmetWidth,
+              helmetHeight
+            );
+            snapshotCtx.restore();
           }
         } else {
           snapshotCtx.fillStyle = "#1f2937";
@@ -2154,7 +2133,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "700 32px Inter, sans-serif";
-        snapshotCtx.fillText("LAUGH TO UNLOCK", 90, 80);
+        snapshotCtx.fillText("NKU SHOWCASE", 90, 80);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "900 84px Inter, sans-serif";
@@ -2166,7 +2145,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
         snapshotCtx.fillStyle = "#dbe7f5";
         snapshotCtx.font = "600 32px Inter, sans-serif";
-        snapshotCtx.fillText("Dean’s List of Chaos certified.", 90, 1265);
+        snapshotCtx.fillText("A fun faculty-and-staff showcase moment.", 90, 1265);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
         roundRectPath(snapshotCtx, 90, 1288, w - 180, 92, 24);
@@ -2174,27 +2153,27 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("Dean’s List of Chaos: " + lastChaosScore, 126, 1346);
+        snapshotCtx.fillText("Showcase fun level: " + lastFunLevel, 126, 1346);
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("💼 Weirdly LinkedIn-ready", 610, 1346);
+        snapshotCtx.fillText("✨ NKU showcase-ready", 640, 1346);
 
         snapshotArea.classList.add("show");
       }
 
       function downloadSnapshot() {
         const link = document.createElement("a");
-        link.download = "digital-viking-unlocked.png";
+        link.download = "digital-viking-showcase-card.png";
         link.href = snapshotCanvas.toDataURL("image/png");
         link.click();
       }
 
-      function downloadRecordedVideo() {
-        if (!recordedVideoBlob) return;
-        const url = URL.createObjectURL(recordedVideoBlob);
+      function downloadGif() {
+        if (!gifBlob) return;
+        const url = URL.createObjectURL(gifBlob);
         const link = document.createElement("a");
-        link.download = "digital-viking-highlight.webm";
+        link.download = "digital-viking-showcase.gif";
         link.href = url;
         link.click();
       }
@@ -2202,7 +2181,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       async function copyLinkedInCaption() {
         try {
           await navigator.clipboard.writeText(LINKEDIN_CAPTION);
-          setStatus("LinkedIn caption copied. Go forth and be professionally chaotic.", "active");
+          setStatus("LinkedIn caption copied. Your showcase post is halfway done.", "active");
         } catch {
           setStatus("Could not copy the caption automatically. Browser permissions may be blocking clipboard access.", "error");
         }
@@ -2227,7 +2206,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       downloadBtn.addEventListener("click", downloadSnapshot);
       copyCaptionBtn.addEventListener("click", copyLinkedInCaption);
       linkedinBtn.addEventListener("click", openLinkedInWorkflow);
-      downloadVideoBtn.addEventListener("click", downloadRecordedVideo);
+      downloadGifBtn.addEventListener("click", downloadGif);
 
       window.addEventListener("resize", resizeOverlayCanvas);
 

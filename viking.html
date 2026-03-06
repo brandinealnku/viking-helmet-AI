@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Laugh to Unlock — a browser-based AI Viking challenge with a countdown, auto-recording, helmet overlay, and a LinkedIn-ready share workflow."
+    content="Laugh to Unlock — a browser-based AI Viking challenge with a countdown, auto-recording, helmet overlay, banner overlay, and a LinkedIn-ready share workflow."
   />
   <meta name="theme-color" content="#0f172a" />
 
@@ -263,6 +263,10 @@
       height: 100%;
       z-index: 8;
       pointer-events: none;
+    }
+
+    #recordCanvas {
+      display: none;
     }
 
     .video-skeleton {
@@ -962,6 +966,7 @@
                 <div id="tintLayer" class="tint-layer"></div>
                 <div id="glamAura" class="glam-aura"></div>
                 <canvas id="overlayCanvas"></canvas>
+                <canvas id="recordCanvas" width="1280" height="960"></canvas>
 
                 <div id="flashLayer" class="flash-layer"></div>
                 <div class="scanline"></div>
@@ -1056,7 +1061,7 @@
                     <button id="downloadVideoBtn" class="btn-pill btn-recording" type="button">🎥 Download Clip</button>
                   </div>
                   <div class="recording-help">
-                    This records a short highlight after the unlock if your browser supports MediaRecorder.
+                    This clip now includes the helmet overlay and unlock banner.
                   </div>
                 </div>
               </div>
@@ -1098,7 +1103,7 @@
       const HELMET_ROTATION_FACTOR = 0.35;
       const HELMET_SHADOW_BLUR = 18;
 
-      const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode. 
+      const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode.
 This version adds a countdown, a highlight clip, a helmet reveal, and a share card that is somehow both ridiculous and weirdly flattering.
 No backend. No upload. Just live browser AI and College of Informatics energy.
 #AI #WebAI #HCI #CollegeOfInformatics #CreativeTech #DigitalViking`;
@@ -1106,6 +1111,9 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
       const overlayCtx = overlayCanvas.getContext("2d");
+
+      const recordCanvas = document.getElementById("recordCanvas");
+      const recordCtx = recordCanvas.getContext("2d");
 
       const videoSkeleton = document.getElementById("videoSkeleton");
       const stageWrap = document.getElementById("stageWrap");
@@ -1443,14 +1451,11 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         trackedFace.eyeAngle = lerp(trackedFace.eyeAngle, eyeAngle, 0.25);
       }
 
-      function drawHelmetOverlay() {
-        const rect = overlayCanvas.getBoundingClientRect();
-        overlayCtx.clearRect(0, 0, rect.width, rect.height);
-
+      function drawHelmetToContext(ctx, width, height, mirrored = true) {
         if (!unlocked || !trackedFace || !helmetLoaded) return;
 
-        const scaleX = rect.width / (video.videoWidth || rect.width);
-        const scaleY = rect.height / (video.videoHeight || rect.height);
+        const scaleX = width / (video.videoWidth || width);
+        const scaleY = height / (video.videoHeight || height);
 
         const faceCenterX = trackedFace.centerX * scaleX;
         const eyeMidY = trackedFace.eyeMidY * scaleY;
@@ -1465,22 +1470,216 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         const drawX = faceCenterX;
         const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
 
-        overlayCtx.save();
-        overlayCtx.translate(rect.width, 0);
-        overlayCtx.scale(-1, 1);
-        overlayCtx.translate(drawX, drawY);
-        overlayCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
-        overlayCtx.shadowColor = "rgba(247,183,24,0.32)";
-        overlayCtx.shadowBlur = HELMET_SHADOW_BLUR;
-        overlayCtx.globalAlpha = 0.98;
-        overlayCtx.drawImage(
+        ctx.save();
+
+        if (mirrored) {
+          ctx.translate(width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.translate(drawX, drawY);
+        ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
+        ctx.shadowColor = "rgba(247,183,24,0.32)";
+        ctx.shadowBlur = HELMET_SHADOW_BLUR;
+        ctx.globalAlpha = 0.98;
+
+        ctx.drawImage(
           helmetImg,
           -helmetWidth / 2,
           -helmetHeight / 2,
           helmetWidth,
           helmetHeight
         );
-        overlayCtx.restore();
+
+        ctx.restore();
+      }
+
+      function drawHelmetOverlay() {
+        const rect = overlayCanvas.getBoundingClientRect();
+        overlayCtx.clearRect(0, 0, rect.width, rect.height);
+        drawHelmetToContext(overlayCtx, rect.width, rect.height, true);
+      }
+
+      function roundRectPath(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radius);
+        ctx.arcTo(x + width, y + height, x, y + height, radius);
+        ctx.arcTo(x, y + height, x, y, radius);
+        ctx.arcTo(x, y, x + width, y, radius);
+        ctx.closePath();
+      }
+
+      function drawRoundedRectFill(ctx, x, y, width, height, radius, fillStyle) {
+        ctx.save();
+        ctx.fillStyle = fillStyle;
+        roundRectPath(ctx, x, y, width, height, radius);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawCompositedRecordFrame() {
+        const w = recordCanvas.width;
+        const h = recordCanvas.height;
+
+        recordCtx.clearRect(0, 0, w, h);
+
+        if (!videoReady) {
+          recordCtx.fillStyle = "#111827";
+          recordCtx.fillRect(0, 0, w, h);
+          return;
+        }
+
+        // Base mirrored video
+        recordCtx.save();
+        recordCtx.translate(w, 0);
+        recordCtx.scale(-1, 1);
+        recordCtx.drawImage(video, 0, 0, w, h);
+        recordCtx.restore();
+
+        // Beauty / glam
+        const beauty = recordCtx.createRadialGradient(
+          w * 0.5, h * 0.38, 20,
+          w * 0.5, h * 0.38, w * 0.42
+        );
+        beauty.addColorStop(0, "rgba(255,240,210,0.18)");
+        beauty.addColorStop(0.35, "rgba(247,183,24,0.10)");
+        beauty.addColorStop(1, "rgba(247,183,24,0)");
+        recordCtx.fillStyle = beauty;
+        recordCtx.fillRect(0, 0, w, h);
+
+        const topGlow = recordCtx.createLinearGradient(0, 0, 0, h);
+        topGlow.addColorStop(0, "rgba(255,255,255,0.05)");
+        topGlow.addColorStop(1, "rgba(255,228,179,0.03)");
+        recordCtx.fillStyle = topGlow;
+        recordCtx.fillRect(0, 0, w, h);
+
+        // Aura when unlocked
+        if (unlocked) {
+          const aura = recordCtx.createRadialGradient(
+            w * 0.5, h * 0.48, 20,
+            w * 0.5, h * 0.48, w * 0.36
+          );
+          aura.addColorStop(0, "rgba(255,230,180,0.20)");
+          aura.addColorStop(0.22, "rgba(247,183,24,0.14)");
+          aura.addColorStop(0.45, "rgba(247,183,24,0.05)");
+          aura.addColorStop(1, "rgba(247,183,24,0)");
+          recordCtx.fillStyle = aura;
+          recordCtx.fillRect(0, 0, w, h);
+        }
+
+        // Vignette
+        const vignette = recordCtx.createRadialGradient(
+          w * 0.5, h * 0.5, w * 0.18,
+          w * 0.5, h * 0.5, w * 0.65
+        );
+        vignette.addColorStop(0, "rgba(0,0,0,0)");
+        vignette.addColorStop(1, "rgba(0,0,0,0.42)");
+        recordCtx.fillStyle = vignette;
+        recordCtx.fillRect(0, 0, w, h);
+
+        // Helmet overlay
+        drawHelmetToContext(recordCtx, w, h, true);
+
+        // Top pills
+        drawRoundedRectFill(recordCtx, 22, 22, 290, 44, 22, "rgba(15,23,42,0.70)");
+        drawRoundedRectFill(recordCtx, w - 350, 22, 328, 44, 22, "rgba(15,23,42,0.70)");
+
+        recordCtx.fillStyle = unlocked ? "#22c55e" : "#f7b718";
+        recordCtx.beginPath();
+        recordCtx.arc(44, 44, 6, 0, Math.PI * 2);
+        recordCtx.fill();
+
+        recordCtx.fillStyle = "#ffffff";
+        recordCtx.font = "700 18px Inter, sans-serif";
+        recordCtx.fillText(unlocked ? "Viking mode active" : "Laugh to unlock", 60, 50);
+
+        recordCtx.fillStyle = "#ffffff";
+        recordCtx.font = "700 18px Inter, sans-serif";
+        const chaosText = `Dean’s List of Chaos: ${lastChaosScore}`;
+        recordCtx.fillText(chaosText, w - 332, 50);
+
+        // Recording badge
+        if (recorder && recorder.state !== "inactive") {
+          drawRoundedRectFill(recordCtx, 22, h - 68, 220, 42, 21, "rgba(127,29,29,0.84)");
+          recordCtx.fillStyle = "#ffffff";
+          recordCtx.font = "800 16px Inter, sans-serif";
+          recordCtx.fillText("● Recording highlight", 42, h - 41);
+        }
+
+        // Challenge badge
+        drawRoundedRectFill(recordCtx, w - 250, h - 68, 228, 42, 21, "rgba(15,23,42,0.72)");
+        recordCtx.fillStyle = "#ffffff";
+        recordCtx.font = "800 16px Inter, sans-serif";
+        recordCtx.fillText("Laugh to Unlock", w - 220, h - 41);
+
+        // Countdown
+        if (countdownActive) {
+          const cx = w / 2;
+          const cy = h / 2;
+          recordCtx.save();
+          recordCtx.shadowColor = "rgba(247,183,24,0.25)";
+          recordCtx.shadowBlur = 35;
+
+          recordCtx.fillStyle = "rgba(15,23,42,0.72)";
+          recordCtx.beginPath();
+          recordCtx.arc(cx, cy, 90, 0, Math.PI * 2);
+          recordCtx.fill();
+
+          recordCtx.strokeStyle = "rgba(255,255,255,0.18)";
+          recordCtx.lineWidth = 4;
+          recordCtx.beginPath();
+          recordCtx.arc(cx, cy, 90, 0, Math.PI * 2);
+          recordCtx.stroke();
+
+          recordCtx.fillStyle = "#ffffff";
+          recordCtx.font = "1000 92px Inter, sans-serif";
+          recordCtx.textAlign = "center";
+          recordCtx.fillText(String(countdownValue), cx, cy + 18);
+
+          recordCtx.fillStyle = "#fde68a";
+          recordCtx.font = "800 18px Inter, sans-serif";
+          recordCtx.fillText("main character loading", cx, cy + 52);
+          recordCtx.restore();
+          recordCtx.textAlign = "start";
+        }
+
+        // Unlock banner
+        if (unlocked) {
+          const bannerW = Math.min(760, w * 0.82);
+          const bannerH = 120;
+          const bannerX = (w - bannerW) / 2;
+          const bannerY = h - 170;
+
+          drawRoundedRectFill(
+            recordCtx,
+            bannerX,
+            bannerY,
+            bannerW,
+            bannerH,
+            24,
+            "rgba(15,23,42,0.78)"
+          );
+
+          recordCtx.strokeStyle = "rgba(255,255,255,0.14)";
+          recordCtx.lineWidth = 1.5;
+          roundRectPath(recordCtx, bannerX, bannerY, bannerW, bannerH, 24);
+          recordCtx.stroke();
+
+          recordCtx.textAlign = "center";
+          recordCtx.fillStyle = "#fde68a";
+          recordCtx.font = "900 16px Inter, sans-serif";
+          recordCtx.fillText("Peer-reviewed by chaos", w / 2, bannerY + 28);
+
+          recordCtx.font = "1000 42px Inter, sans-serif";
+          recordCtx.fillStyle = "#ffffff";
+          recordCtx.fillText("DIGITAL VIKING", w / 2, bannerY + 66);
+
+          recordCtx.fillStyle = "#f7b718";
+          recordCtx.fillText("UNLOCKED", w / 2, bannerY + 106);
+
+          recordCtx.textAlign = "start";
+        }
       }
 
       function maybeUpdateStateMachine() {
@@ -1616,11 +1815,13 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
       }
 
       function startAutoRecording() {
-        if (!mediaStream || !window.MediaRecorder || autoRecordingStarted) return;
+        if (!window.MediaRecorder || autoRecordingStarted) return;
 
+        const recordedStream = recordCanvas.captureStream(30);
         const mimeType = getBestMimeType();
+
         try {
-          recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+          recorder = new MediaRecorder(recordedStream, mimeType ? { mimeType } : undefined);
           recordedChunks = [];
           recordedVideoBlob = null;
 
@@ -1700,6 +1901,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         const elapsed = timestamp - lastRenderTime;
         if (elapsed < RENDER_INTERVAL_MS) {
           drawHelmetOverlay();
+          drawCompositedRecordFrame();
           animationId = requestAnimationFrame(renderLoop);
           return;
         }
@@ -1748,6 +1950,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           }
 
           drawHelmetOverlay();
+          drawCompositedRecordFrame();
         } catch (err) {
           console.error("Inference error:", err);
           setStatus("There was an error running the face model. Try refreshing the page.", "error");
@@ -1823,6 +2026,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         recordedVideoBlob = null;
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        recordCtx.clearRect(0, 0, recordCanvas.width, recordCanvas.height);
 
         tintLayer.classList.remove("unlocked");
         glamAura.classList.remove("active");
@@ -1873,7 +2077,7 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         const frameH = 720;
         const radius = 34;
 
-        roundRect(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        roundRectPath(snapshotCtx, frameX, frameY, frameW, frameH, radius);
         snapshotCtx.save();
         snapshotCtx.clip();
 
@@ -1897,8 +2101,38 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
           snapshotCtx.fillStyle = beauty;
           snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
 
-          if (unlocked && trackedFace && helmetLoaded) {
-            drawHelmetOnSnapshot(snapshotCtx, frameX, frameY, frameW, frameH);
+          if (unlocked) {
+            const scaleX = frameW / (video.videoWidth || frameW);
+            const scaleY = frameH / (video.videoHeight || frameH);
+            if (trackedFace && helmetLoaded) {
+              const faceCenterX = frameX + (trackedFace.centerX * scaleX);
+              const eyeMidY = frameY + (trackedFace.eyeMidY * scaleY);
+              const faceWidth = trackedFace.faceWidth * scaleX;
+              const faceHeight = trackedFace.faceHeight * scaleY;
+              const angle = trackedFace.eyeAngle;
+
+              const helmetWidth = faceWidth * HELMET_SCALE;
+              const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
+              const helmetHeight = helmetWidth * aspectRatio;
+
+              const drawX = faceCenterX;
+              const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
+
+              snapshotCtx.save();
+              const mirroredX = frameX + frameW - (drawX - frameX);
+              snapshotCtx.translate(mirroredX, drawY);
+              snapshotCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
+              snapshotCtx.shadowColor = "rgba(247,183,24,0.30)";
+              snapshotCtx.shadowBlur = HELMET_SHADOW_BLUR;
+              snapshotCtx.drawImage(
+                helmetImg,
+                -helmetWidth / 2,
+                -helmetHeight / 2,
+                helmetWidth,
+                helmetHeight
+              );
+              snapshotCtx.restore();
+            }
           }
         } else {
           snapshotCtx.fillStyle = "#1f2937";
@@ -1910,11 +2144,13 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         overlayGrad.addColorStop(0, "rgba(255,255,255,0.03)");
         overlayGrad.addColorStop(1, "rgba(247,183,24,0.12)");
         snapshotCtx.fillStyle = overlayGrad;
-        roundRectFill(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        roundRectPath(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.fill();
 
         snapshotCtx.lineWidth = 3;
         snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
-        roundRectStroke(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        roundRectPath(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.stroke();
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "700 32px Inter, sans-serif";
@@ -1933,7 +2169,8 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         snapshotCtx.fillText("Dean’s List of Chaos certified.", 90, 1265);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
-        roundRectFill(snapshotCtx, 90, 1288, w - 180, 92, 24);
+        roundRectPath(snapshotCtx, 90, 1288, w - 180, 92, 24);
+        snapshotCtx.fill();
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 30px Inter, sans-serif";
@@ -1944,62 +2181,6 @@ No backend. No upload. Just live browser AI and College of Informatics energy.
         snapshotCtx.fillText("💼 Weirdly LinkedIn-ready", 610, 1346);
 
         snapshotArea.classList.add("show");
-      }
-
-      function drawHelmetOnSnapshot(ctx, frameX, frameY, frameW, frameH) {
-        const scaleX = frameW / (video.videoWidth || frameW);
-        const scaleY = frameH / (video.videoHeight || frameH);
-
-        const faceCenterX = frameX + (trackedFace.centerX * scaleX);
-        const eyeMidY = frameY + (trackedFace.eyeMidY * scaleY);
-        const faceWidth = trackedFace.faceWidth * scaleX;
-        const faceHeight = trackedFace.faceHeight * scaleY;
-        const angle = trackedFace.eyeAngle;
-
-        const helmetWidth = faceWidth * HELMET_SCALE;
-        const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
-        const helmetHeight = helmetWidth * aspectRatio;
-
-        const drawX = faceCenterX;
-        const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
-
-        ctx.save();
-
-        const mirroredX = frameX + frameW - (drawX - frameX);
-        ctx.translate(mirroredX, drawY);
-        ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
-        ctx.shadowColor = "rgba(247,183,24,0.30)";
-        ctx.shadowBlur = HELMET_SHADOW_BLUR;
-
-        ctx.drawImage(
-          helmetImg,
-          -helmetWidth / 2,
-          -helmetHeight / 2,
-          helmetWidth,
-          helmetHeight
-        );
-
-        ctx.restore();
-      }
-
-      function roundRect(ctx, x, y, width, height, radius) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.arcTo(x + width, y, x + width, y + height, radius);
-        ctx.arcTo(x + width, y + height, x, y + height, radius);
-        ctx.arcTo(x, y + height, x, y, radius);
-        ctx.arcTo(x, y, x + width, y, radius);
-        ctx.closePath();
-      }
-
-      function roundRectFill(ctx, x, y, width, height, radius) {
-        roundRect(ctx, x, y, width, height, radius);
-        ctx.fill();
-      }
-
-      function roundRectStroke(ctx, x, y, width, height, radius) {
-        roundRect(ctx, x, y, width, height, radius);
-        ctx.stroke();
       }
 
       function downloadSnapshot() {

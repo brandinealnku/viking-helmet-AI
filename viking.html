@@ -31,6 +31,7 @@
       --green: #22c55e;
       --red: #f87171;
       --blue: #60a5fa;
+      --pink: #f472b6;
       --shadow: 0 24px 80px rgba(0,0,0,0.35);
       --ring: 0 0 0 4px rgba(247, 183, 24, 0.18);
     }
@@ -58,7 +59,7 @@
     }
 
     .shell {
-      max-width: 1240px;
+      max-width: 1260px;
       margin: 0 auto;
     }
 
@@ -193,7 +194,7 @@
       padding: 16px;
       border: 1px solid rgba(247,183,24,0.16);
       background:
-        linear-gradient(180deg, rgba(247,183,24,0.12) 0%, rgba(255,255,255,0.05) 100%);
+        linear-gradient(180deg, rgba(247,183,24,0.14) 0%, rgba(255,255,255,0.05) 100%);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
@@ -258,7 +259,7 @@
       transform: scaleX(-1);
       display: block;
       z-index: 1;
-      filter: saturate(1.02) contrast(1.02);
+      filter: saturate(1.06) contrast(1.04) brightness(1.03);
     }
 
     #overlayCanvas {
@@ -266,7 +267,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      z-index: 6;
+      z-index: 7;
       pointer-events: none;
     }
 
@@ -291,14 +292,38 @@
       100% { background-position: 120% 0; }
     }
 
-    .tint-layer {
+    .beauty-layer {
       position: absolute;
       inset: 0;
       z-index: 2;
       pointer-events: none;
       background:
-        radial-gradient(circle at center, rgba(247,183,24,0.08), transparent 45%);
-      opacity: 0;
+        radial-gradient(circle at 50% 38%, rgba(255, 240, 210, 0.18), transparent 30%),
+        radial-gradient(circle at 50% 44%, rgba(247,183,24,0.10), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,228,179,0.04));
+      mix-blend-mode: screen;
+      opacity: 0.95;
+    }
+
+    .soft-focus-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      backdrop-filter: blur(1.4px) saturate(1.08);
+      -webkit-backdrop-filter: blur(1.4px) saturate(1.08);
+      mask-image: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.2) 70%, transparent 100%);
+      opacity: 0.38;
+    }
+
+    .tint-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, rgba(247,183,24,0.10), transparent 45%);
+      opacity: 0.2;
       transition: opacity 0.4s ease;
     }
 
@@ -306,10 +331,28 @@
       opacity: 1;
     }
 
+    .glam-aura {
+      position: absolute;
+      inset: -6%;
+      z-index: 5;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, rgba(255, 230, 180, 0.18) 0%, rgba(247,183,24,0.12) 22%, rgba(247,183,24,0.04) 40%, transparent 65%);
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      filter: blur(8px);
+    }
+
+    .glam-aura.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
     .flash-layer {
       position: absolute;
       inset: 0;
-      z-index: 8;
+      z-index: 9;
       pointer-events: none;
       background:
         radial-gradient(circle at center, rgba(255,255,255,0.95), rgba(247,183,24,0.65), transparent 60%);
@@ -331,27 +374,27 @@
     .scanline {
       position: absolute;
       inset: 0;
-      z-index: 3;
+      z-index: 6;
       pointer-events: none;
       background:
         repeating-linear-gradient(
           to bottom,
-          rgba(255,255,255,0.03) 0px,
-          rgba(255,255,255,0.03) 1px,
+          rgba(255,255,255,0.025) 0px,
+          rgba(255,255,255,0.025) 1px,
           transparent 2px,
           transparent 4px
         );
       mix-blend-mode: screen;
-      opacity: 0.18;
+      opacity: 0.14;
     }
 
     .vignette {
       position: absolute;
       inset: 0;
-      z-index: 4;
+      z-index: 6;
       pointer-events: none;
       background:
-        radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.55) 100%);
+        radial-gradient(circle at center, transparent 38%, rgba(0,0,0,0.42) 100%);
     }
 
     .hud-top {
@@ -359,7 +402,7 @@
       top: 14px;
       left: 14px;
       right: 14px;
-      z-index: 9;
+      z-index: 10;
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -401,7 +444,7 @@
     .center-ui {
       position: absolute;
       inset: 0;
-      z-index: 10;
+      z-index: 11;
       pointer-events: none;
       display: grid;
       place-items: center;
@@ -503,7 +546,7 @@
       position: absolute;
       right: 14px;
       bottom: 14px;
-      z-index: 9;
+      z-index: 10;
       pointer-events: none;
       padding: 8px 12px;
       border-radius: 999px;
@@ -520,7 +563,7 @@
     .particles {
       position: absolute;
       inset: 0;
-      z-index: 7;
+      z-index: 8;
       pointer-events: none;
       overflow: hidden;
     }
@@ -598,7 +641,7 @@
     .status-note {
       color: var(--muted);
       font-size: 0.84rem;
-      max-width: 420px;
+      max-width: 440px;
       line-height: 1.6;
     }
 
@@ -643,6 +686,18 @@
       background: rgba(96,165,250,0.14);
       color: #dbeafe;
       border-color: rgba(96,165,250,0.18);
+    }
+
+    .btn-linkedin {
+      background: rgba(10,102,194,0.18);
+      color: #dbeafe;
+      border-color: rgba(10,102,194,0.28);
+    }
+
+    .btn-copy {
+      background: rgba(244,114,182,0.14);
+      color: #ffe4f3;
+      border-color: rgba(244,114,182,0.24);
     }
 
     .metrics-grid {
@@ -738,6 +793,13 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
+    .share-help {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
     .small-note {
       color: var(--muted);
       font-size: 0.82rem;
@@ -806,45 +868,46 @@
     <header class="topbar">
       <div class="brand-wrap">
         <div class="brand-pill">Web AI</div>
-        <div class="top-note">Laugh to Unlock · Digital Viking Challenge</div>
+        <div class="top-note">Laugh to Unlock · COI crowd edition</div>
       </div>
-      <div class="top-note">Runs privately in your browser · uses helmet.png</div>
+      <div class="top-note">Private in-browser demo · helmet.png powered</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
           <section class="col-lg-4" aria-label="Challenge overview">
-            <div class="eyebrow">Mind-blowing viral prototype</div>
+            <div class="eyebrow">Fun, extra, and absolutely demo-worthy</div>
             <h1 class="hero-title">
               Laugh hard enough to unlock your
               <span class="gold">Digital Viking</span>.
             </h1>
 
             <p class="hero-lead">
-              This experience watches for a sustained laugh pattern and then triggers a cinematic
-              transformation: glow, particles, title reveal, and your real Viking helmet overlay.
+              This is the chaotic-good version for your College of Informatics peers:
+              browser AI, glam aura, cinematic helmet overlay, and a LinkedIn-ready share card
+              that looks flattering enough that people might actually post it.
             </p>
 
             <div class="chip-row">
-              <div class="chip">🔥 Viral challenge format</div>
+              <div class="chip">🔥 Crowd bait</div>
               <div class="chip">🪖 Real helmet overlay</div>
-              <div class="chip">⚡ Cinematic unlock</div>
-              <div class="chip">📸 Shareable snapshot</div>
+              <div class="chip">✨ Better aura</div>
+              <div class="chip">📸 LinkedIn-ready card</div>
             </div>
 
             <div class="info-card">
-              <div class="info-title">How to win</div>
+              <div class="info-title">The vibe</div>
               <p class="info-body">
-                Click start, look at the camera, and laugh naturally. Once the system sees enough
-                laugh energy, Viking mode activates and places your helmet on your head live.
+                Not clinical. Not corporate. Not “neutral dashboard energy.” This is playful,
+                buzzy, and slightly ridiculous in the best possible way.
               </p>
             </div>
 
             <div class="info-card">
               <div class="info-title">Helmet setup</div>
               <p class="info-body">
-                Put <strong>helmet.png</strong> in the same folder as this file. A transparent PNG works best.
+                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG is ideal.
               </p>
             </div>
 
@@ -852,7 +915,7 @@
               <div class="result-label">Challenge status</div>
               <div id="resultState" class="result-state">Waiting for the laugh...</div>
               <p id="resultCopy" class="result-copy">
-                The system is looking for a strong enough laugh pattern to trigger the transformation.
+                The system is looking for a strong enough laugh pattern to trigger the glow-up.
               </p>
             </div>
           </section>
@@ -862,9 +925,12 @@
               <div id="stageWrap" class="stage-wrap">
                 <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
                 <video id="video" autoplay playsinline muted aria-label="Live camera"></video>
+                <div class="beauty-layer"></div>
+                <div class="soft-focus-layer"></div>
+                <div id="tintLayer" class="tint-layer"></div>
+                <div id="glamAura" class="glam-aura"></div>
                 <canvas id="overlayCanvas"></canvas>
 
-                <div id="tintLayer" class="tint-layer"></div>
                 <div id="flashLayer" class="flash-layer"></div>
                 <div class="scanline"></div>
                 <div class="vignette"></div>
@@ -876,7 +942,7 @@
                   </div>
                   <div class="hud-pill">
                     <span class="hud-dot warn"></span>
-                    <span id="legendText">Legend Level: 0</span>
+                    <span id="legendText">Buzz Level: 0</span>
                   </div>
                 </div>
 
@@ -884,11 +950,11 @@
                   <div id="runeRing" class="rune-ring"></div>
 
                   <div id="unlockTitle" class="unlock-title">
-                    <div class="unlock-kicker">Challenge complete</div>
+                    <div class="unlock-kicker">Peer-reviewed by chaos</div>
                     <h2 class="unlock-main">
                       <span class="gold">DIGITAL VIKING</span> UNLOCKED
                     </h2>
-                    <div class="unlock-sub">Worthy of the helmet. Ready for the internet.</div>
+                    <div class="unlock-sub">Honestly? Postable.</div>
                   </div>
                 </div>
 
@@ -902,7 +968,7 @@
                   <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: one face in frame, decent lighting, and a real laugh instead of a tiny smile.
+                  Best results: one face, decent light, real laughter, and a willingness to be a little extra in front of your colleagues.
                 </div>
               </div>
 
@@ -937,7 +1003,7 @@
                 <article class="metric">
                   <div class="metric-label">Unlock progress</div>
                   <div id="progressScore" class="metric-value">0%</div>
-                  <div class="metric-desc">You need sustained laughter, not just one lucky frame.</div>
+                  <div class="metric-desc">You need sustained laughter, not one lucky frame.</div>
                   <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
                 </article>
               </div>
@@ -946,14 +1012,22 @@
                 <div class="snapshot-card">
                   <div class="snapshot-title">Share card</div>
                   <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
+
                   <div class="controls mt-3 mb-0">
-                    <button id="downloadBtn" class="btn-pill btn-start" type="button">⬇️ Download Snapshot</button>
+                    <button id="downloadBtn" class="btn-pill btn-start" type="button">⬇️ Download Card</button>
+                    <button id="copyCaptionBtn" class="btn-pill btn-copy" type="button">📝 Copy LinkedIn Caption</button>
+                    <button id="linkedinBtn" class="btn-pill btn-linkedin" type="button">💼 Open LinkedIn</button>
+                  </div>
+
+                  <div class="share-help">
+                    This version downloads the card, copies a caption, and opens LinkedIn for posting.
+                    A true one-click image publish would require a LinkedIn app + OAuth + upload/post API flow.
                   </div>
                 </div>
               </div>
 
               <p class="small-note">
-                Tip: for maximum buzz, record yourself laughing, let the unlock hit, then post the live clip and the share image together.
+                Pro move: record the live unlock, then post the video and the card together so your peers get the full absurdity.
               </p>
             </div>
           </section>
@@ -966,11 +1040,15 @@
     (function () {
       "use strict";
 
-      // Helmet tuning controls
+      // Helmet tuning
       const HELMET_SCALE = 1.0;
       const HELMET_Y_OFFSET = 1.08;
       const HELMET_ROTATION_FACTOR = 0.35;
-      const HELMET_SHADOW_BLUR = 16;
+      const HELMET_SHADOW_BLUR = 18;
+
+      const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode. 
+No backend. No upload. Just live in-browser interaction, a dramatic helmet reveal, and a very unserious amount of College of Informatics energy. 
+#AI #WebAI #HCI #CollegeOfInformatics #DigitalViking #CreativeTech`;
 
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
@@ -979,6 +1057,7 @@
       const videoSkeleton = document.getElementById("videoSkeleton");
       const stageWrap = document.getElementById("stageWrap");
       const tintLayer = document.getElementById("tintLayer");
+      const glamAura = document.getElementById("glamAura");
       const flashLayer = document.getElementById("flashLayer");
       const runeRing = document.getElementById("runeRing");
       const unlockTitle = document.getElementById("unlockTitle");
@@ -988,6 +1067,8 @@
       const stopBtn = document.getElementById("stopBtn");
       const captureBtn = document.getElementById("captureBtn");
       const downloadBtn = document.getElementById("downloadBtn");
+      const copyCaptionBtn = document.getElementById("copyCaptionBtn");
+      const linkedinBtn = document.getElementById("linkedinBtn");
 
       const statusDot = document.getElementById("statusDot");
       const statusText = document.getElementById("statusText");
@@ -1039,7 +1120,6 @@
       let prevMouthYNorm = null;
 
       let laughHoldFrames = 0;
-      let calmFrames = 0;
       let unlocked = false;
       let lastLegendLevel = 0;
 
@@ -1105,7 +1185,7 @@
         const motionRounded = Math.round(motionScore);
         const laughRounded = Math.round(laughScore);
         const progressPercent = Math.round((laughHoldFrames / HOLD_REQUIRED) * 100);
-        const legendLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
+        const buzzLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
 
         mouthScoreEl.textContent = mouthRounded;
         motionScoreEl.textContent = motionRounded;
@@ -1117,26 +1197,26 @@
         setBar(laughBar, laughRounded);
         setBar(progressBar, progressPercent, true);
 
-        legendText.textContent = "Legend Level: " + legendLevel;
-        lastLegendLevel = legendLevel;
+        legendText.textContent = "Buzz Level: " + buzzLevel;
+        lastLegendLevel = buzzLevel;
 
         if (unlocked) {
           resultState.textContent = "DIGITAL VIKING UNLOCKED";
           resultState.classList.add("unlocked");
           resultCopy.textContent =
-            "You sustained the laugh long enough to trigger the full transformation and helmet overlay.";
+            "You sustained the laugh long enough to trigger the full glow-up, helmet overlay, and share-card moment.";
           hudText.textContent = "Viking mode active";
         } else if (laughHoldFrames > 0) {
-          resultState.textContent = "Building toward unlock...";
+          resultState.textContent = "Okay wait... this is getting good";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system sees something. Keep going — you need sustained laugh energy, not just a quick smile.";
+            "The system sees something. Keep going — this is not the time for a polite faculty smile.";
           hudText.textContent = "Tracking laugh signal";
         } else {
           resultState.textContent = "Waiting for the laugh...";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system is looking for a strong enough laugh pattern to trigger the transformation.";
+            "The system is looking for a strong enough laugh pattern to trigger the glow-up.";
           hudText.textContent = "Awaiting laugh pattern";
         }
 
@@ -1282,18 +1362,10 @@
         const faceHeight = y2 - y1;
         const centerX = (x1 + x2) / 2;
         const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
-        const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
         const eyeAngle = Math.atan2(leftEye[1] - rightEye[1], leftEye[0] - rightEye[0]);
 
         if (!trackedFace) {
-          trackedFace = {
-            centerX,
-            eyeMidY,
-            faceWidth,
-            faceHeight,
-            eyeDistance,
-            eyeAngle
-          };
+          trackedFace = { centerX, eyeMidY, faceWidth, faceHeight, eyeAngle };
           return;
         }
 
@@ -1301,7 +1373,6 @@
         trackedFace.eyeMidY = lerp(trackedFace.eyeMidY, eyeMidY, 0.35);
         trackedFace.faceWidth = lerp(trackedFace.faceWidth, faceWidth, 0.35);
         trackedFace.faceHeight = lerp(trackedFace.faceHeight, faceHeight, 0.35);
-        trackedFace.eyeDistance = lerp(trackedFace.eyeDistance, eyeDistance, 0.35);
         trackedFace.eyeAngle = lerp(trackedFace.eyeAngle, eyeAngle, 0.25);
       }
 
@@ -1335,8 +1406,9 @@
         overlayCtx.translate(drawX, drawY);
         overlayCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
 
-        overlayCtx.shadowColor = "rgba(247,183,24,0.25)";
+        overlayCtx.shadowColor = "rgba(247,183,24,0.32)";
         overlayCtx.shadowBlur = HELMET_SHADOW_BLUR;
+        overlayCtx.globalAlpha = 0.98;
 
         overlayCtx.drawImage(
           helmetImg,
@@ -1352,9 +1424,7 @@
       function maybeUpdateStateMachine() {
         if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
           laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
-          calmFrames = 0;
         } else {
-          calmFrames += 1;
           laughHoldFrames = Math.max(0, laughHoldFrames - 1);
         }
 
@@ -1382,7 +1452,7 @@
           p.style.setProperty("--dy", dy);
           p.style.setProperty("--rot", rot);
 
-          const hueVariants = ["#f7b718", "#fde68a", "#ffffff", "#ffd86b"];
+          const hueVariants = ["#f7b718", "#fde68a", "#ffffff", "#ffd86b", "#ffe4f3"];
           const color = hueVariants[Math.floor(Math.random() * hueVariants.length)];
           p.style.background = `linear-gradient(180deg, #ffffff 0%, ${color} 100%)`;
 
@@ -1396,9 +1466,9 @@
 
         try {
           const utterance = new SpeechSynthesisUtterance("Digital Viking unlocked");
-          utterance.rate = 0.95;
-          utterance.pitch = 0.9;
-          utterance.volume = 0.9;
+          utterance.rate = 0.96;
+          utterance.pitch = 0.94;
+          utterance.volume = 0.95;
           speechSynthesis.cancel();
           speechSynthesis.speak(utterance);
         } catch (err) {
@@ -1440,6 +1510,7 @@
       function triggerUnlock() {
         unlocked = true;
         tintLayer.classList.add("unlocked");
+        glamAura.classList.add("active");
         runeRing.classList.add("active");
         unlockTitle.classList.add("active");
         stageWrap.classList.add("shake");
@@ -1452,7 +1523,7 @@
         playUnlockTone();
         updateUI();
 
-        setStatus("Legendary laugh detected. Digital Viking unlocked.", "active");
+        setStatus("Legendary laugh detected. This is aggressively postable.", "active");
 
         setTimeout(() => {
           stageWrap.classList.remove("shake");
@@ -1501,7 +1572,7 @@
             updateUI();
 
             if (!unlocked) {
-              setStatus("AI is running. Give me a real laugh to unlock Viking mode...", "active");
+              setStatus("AI is running. Give me a real laugh — not a faculty-meeting smile.", "active");
             }
           } else {
             mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
@@ -1584,7 +1655,6 @@
         prevFaceCenterYNorm = null;
         prevMouthYNorm = null;
         laughHoldFrames = 0;
-        calmFrames = 0;
         unlocked = false;
         lastLegendLevel = 0;
         trackedFace = null;
@@ -1592,6 +1662,7 @@
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
         tintLayer.classList.remove("unlocked");
+        glamAura.classList.remove("active");
         runeRing.classList.remove("active");
         unlockTitle.classList.remove("active");
         particles.innerHTML = "";
@@ -1621,9 +1692,10 @@
         snapshotCtx.fillStyle = bg;
         snapshotCtx.fillRect(0, 0, w, h);
 
-        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.32, 20, w * 0.5, h * 0.32, 420);
-        glow.addColorStop(0, "rgba(247,183,24,0.42)");
-        glow.addColorStop(0.4, "rgba(247,183,24,0.16)");
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.30, 20, w * 0.5, h * 0.30, 460);
+        glow.addColorStop(0, "rgba(255, 240, 210, 0.36)");
+        glow.addColorStop(0.25, "rgba(247,183,24,0.22)");
+        glow.addColorStop(0.55, "rgba(247,183,24,0.10)");
         glow.addColorStop(1, "rgba(247,183,24,0)");
         snapshotCtx.fillStyle = glow;
         snapshotCtx.fillRect(0, 0, w, h);
@@ -1644,6 +1716,21 @@
           snapshotCtx.drawImage(video, -frameX - frameW, frameY, frameW, frameH);
           snapshotCtx.restore();
 
+          // Photo-friendlier overlay
+          const beauty = snapshotCtx.createRadialGradient(
+            frameX + frameW / 2,
+            frameY + frameH * 0.38,
+            30,
+            frameX + frameW / 2,
+            frameY + frameH * 0.38,
+            frameW * 0.48
+          );
+          beauty.addColorStop(0, "rgba(255,235,205,0.18)");
+          beauty.addColorStop(0.38, "rgba(247,183,24,0.10)");
+          beauty.addColorStop(1, "rgba(247,183,24,0)");
+          snapshotCtx.fillStyle = beauty;
+          snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
+
           if (unlocked && trackedFace && helmetLoaded) {
             drawHelmetOnSnapshot(snapshotCtx, frameX, frameY, frameW, frameH);
           }
@@ -1654,8 +1741,8 @@
         snapshotCtx.restore();
 
         const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
-        overlayGrad.addColorStop(0, "rgba(255,255,255,0.02)");
-        overlayGrad.addColorStop(1, "rgba(247,183,24,0.10)");
+        overlayGrad.addColorStop(0, "rgba(255,255,255,0.03)");
+        overlayGrad.addColorStop(1, "rgba(247,183,24,0.12)");
         snapshotCtx.fillStyle = overlayGrad;
         roundRectFill(snapshotCtx, frameX, frameY, frameW, frameH, radius);
 
@@ -1677,18 +1764,18 @@
 
         snapshotCtx.fillStyle = "#dbe7f5";
         snapshotCtx.font = "600 32px Inter, sans-serif";
-        snapshotCtx.fillText("Worthy of the helmet. Ready for the internet.", 90, 1265);
+        snapshotCtx.fillText("Ridiculously browser-native. Mildly unhinged. Weirdly flattering.", 90, 1265);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
         roundRectFill(snapshotCtx, 90, 1288, w - 180, 92, 24);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("Legend Level: " + lastLegendLevel, 126, 1346);
+        snapshotCtx.fillText("Buzz Level: " + lastLegendLevel, 126, 1346);
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("🪖 Challenge complete", 640, 1346);
+        snapshotCtx.fillText("💼 LinkedIn bait, respectfully", 620, 1346);
 
         snapshotArea.classList.add("show");
       }
@@ -1717,7 +1804,7 @@
         ctx.translate(mirroredX, drawY);
         ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
 
-        ctx.shadowColor = "rgba(247,183,24,0.25)";
+        ctx.shadowColor = "rgba(247,183,24,0.30)";
         ctx.shadowBlur = HELMET_SHADOW_BLUR;
 
         ctx.drawImage(
@@ -1758,14 +1845,40 @@
         link.click();
       }
 
+      async function copyLinkedInCaption() {
+        try {
+          await navigator.clipboard.writeText(LINKEDIN_CAPTION);
+          setStatus("LinkedIn caption copied. Now go be professionally chaotic.", "active");
+        } catch (err) {
+          console.warn("Clipboard failed:", err);
+          setStatus("Could not copy the caption automatically. Browser permissions may be blocking clipboard access.", "error");
+        }
+      }
+
+      function openLinkedInWorkflow() {
+        // Static-page friendly workflow:
+        // 1) ensure card exists
+        // 2) download it
+        // 3) copy caption
+        // 4) open LinkedIn
+        if (!snapshotArea.classList.contains("show")) {
+          drawSnapshotCard();
+        }
+
+        downloadSnapshot();
+        copyLinkedInCaption();
+
+        setTimeout(() => {
+          window.open("https://www.linkedin.com/feed/", "_blank", "noopener,noreferrer");
+        }, 250);
+      }
+
       startBtn.addEventListener("click", startExperience);
       stopBtn.addEventListener("click", () => stopExperience(false));
-
-      captureBtn.addEventListener("click", () => {
-        drawSnapshotCard();
-      });
-
+      captureBtn.addEventListener("click", drawSnapshotCard);
       downloadBtn.addEventListener("click", downloadSnapshot);
+      copyCaptionBtn.addEventListener("click", copyLinkedInCaption);
+      linkedinBtn.addEventListener("click", openLinkedInWorkflow);
 
       window.addEventListener("resize", resizeOverlayCanvas);
 

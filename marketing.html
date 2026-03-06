@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Showcase — Unlock Your Digital Viking</title>
+  <title>Laugh to Unlock — Digital Viking Challenge</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="A playful NKU showcase experience that turns a live laugh into a Digital Viking reveal with a helmet overlay, GIF moment, and share-ready card."
+    content="Laugh to Unlock — a browser-based AI Viking challenge with a countdown, auto-recording, helmet overlay, and a LinkedIn-ready share workflow."
   />
   <meta name="theme-color" content="#0f172a" />
 
@@ -18,7 +18,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
 
   <style>
     :root {
@@ -264,10 +263,6 @@
       height: 100%;
       z-index: 8;
       pointer-events: none;
-    }
-
-    #recordCanvas {
-      display: none;
     }
 
     .video-skeleton {
@@ -591,7 +586,7 @@
       text-transform: uppercase;
     }
 
-    .gif-badge {
+    .recording-badge {
       position: absolute;
       left: 14px;
       bottom: 14px;
@@ -610,7 +605,7 @@
       transition: opacity 0.18s ease;
     }
 
-    .gif-badge.show { opacity: 1; }
+    .recording-badge.show { opacity: 1; }
 
     .particles {
       position: absolute;
@@ -742,7 +737,7 @@
       border-color: rgba(244,114,182,0.24);
     }
 
-    .btn-gif {
+    .btn-recording {
       background: rgba(34,197,94,0.14);
       color: #dcfce7;
       border-color: rgba(34,197,94,0.24);
@@ -806,16 +801,16 @@
     .bar-fill.high { background: #22c55e; }
     .bar-fill.epic { background: linear-gradient(90deg, #fde68a 0%, #f7b718 100%); }
 
-    .snapshot-area, .gif-area {
+    .snapshot-area, .recording-area {
       margin-top: 16px;
       display: none;
     }
 
-    .snapshot-area.show, .gif-area.show {
+    .snapshot-area.show, .recording-area.show {
       display: block;
     }
 
-    .snapshot-card, .gif-card {
+    .snapshot-card, .recording-card {
       border-radius: 22px;
       padding: 16px;
       border: 1px solid rgba(247,183,24,0.16);
@@ -841,17 +836,17 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
-    #gifPreview {
+    #recordedVideo {
       width: 100%;
       max-width: 540px;
       border-radius: 18px;
-      display: none;
+      display: block;
       border: 1px solid rgba(255,255,255,0.10);
       background: #0b1220;
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
-    .share-help, .gif-help {
+    .share-help, .recording-help {
       margin-top: 10px;
       color: var(--muted);
       font-size: 0.82rem;
@@ -889,66 +884,75 @@
       .metrics-grid { grid-template-columns: 1fr; }
       .unlock-title { min-width: 92%; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
       <div class="brand-wrap">
-        <div class="brand-pill">NKU Showcase</div>
-        <div class="top-note">A playful campus moment for fellow faculty & staff</div>
+        <div class="brand-pill">Web AI</div>
+        <div class="top-note">Laugh to Unlock · COI crowd edition</div>
       </div>
-      <div class="top-note">Live browser AI + animated GIF + share-ready card</div>
+      <div class="top-note">Countdown + auto clip + LinkedIn-ready chaos</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
-          <section class="col-lg-4" aria-label="Showcase overview">
-            <div class="eyebrow">Campus fun meets browser AI</div>
+          <section class="col-lg-4" aria-label="Challenge overview">
+            <div class="eyebrow">Fun, extra, and suspiciously postable</div>
             <h1 class="hero-title">
-              Unlock your
-              <span class="gold">Digital Viking</span>
-              moment.
+              Laugh hard enough to unlock your
+              <span class="gold">Digital Viking</span>.
             </h1>
 
             <p class="hero-lead">
-              Built for an NKU showcase audience, this experience turns a quick laugh into a fun reveal:
-              flattering glow, Viking helmet overlay, celebratory banner, downloadable GIF, and a polished share card.
+              This version adds the full main-character treatment:
+              a dramatic 3-second countdown, a “Dean’s List of Chaos” score,
+              an auto-recorded clip, and a share card that’s way more flattering than it has any right to be.
             </p>
 
             <div class="chip-row">
-              <div class="chip">🎉 Faculty & staff friendly</div>
-              <div class="chip">🪖 Helmet reveal</div>
-              <div class="chip">✨ Showcase glow-up</div>
-              <div class="chip">🖼️ Downloadable GIF</div>
+              <div class="chip">⏳ 3-second countdown</div>
+              <div class="chip">🎥 Auto clip capture</div>
+              <div class="chip">🪖 Helmet overlay</div>
+              <div class="chip">💼 LinkedIn-ready workflow</div>
             </div>
 
             <div class="info-card">
-              <div class="info-title">Why it works</div>
+              <div class="info-title">The energy</div>
               <p class="info-body">
-                It is quick to understand, easy to try, visually rewarding, and fun to share —
-                exactly what you want in a live showcase moment.
+                This is not neutral-dashboard energy. This is “my browser AI just turned me into a Digital Viking
+                and now my coworkers are recording me” energy.
               </p>
             </div>
 
             <div class="info-card">
-              <div class="info-title">Quick setup</div>
+              <div class="info-title">Helmet setup</div>
               <p class="info-body">
-                Place <strong>helmet.png</strong> in the same folder as this file. A transparent PNG works best.
+                Put <strong>helmet.png</strong> in the same folder as this file. Transparent PNG is best.
               </p>
             </div>
 
             <div class="result-card" aria-live="polite">
-              <div class="result-label">Live showcase status</div>
-              <div id="resultState" class="result-state">Ready when you are</div>
+              <div class="result-label">Challenge status</div>
+              <div id="resultState" class="result-state">Waiting for the laugh...</div>
               <p id="resultCopy" class="result-copy">
-                Start the experience, smile, laugh, and let the reveal do the rest.
+                The system is looking for a strong enough laugh pattern to trigger the glow-up.
               </p>
             </div>
           </section>
 
-          <section class="col-lg-8" aria-label="Live showcase stage">
+          <section class="col-lg-8" aria-label="Live Viking challenge stage">
             <div class="stage-card">
               <div id="stageWrap" class="stage-wrap">
                 <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
@@ -958,7 +962,6 @@
                 <div id="tintLayer" class="tint-layer"></div>
                 <div id="glamAura" class="glam-aura"></div>
                 <canvas id="overlayCanvas"></canvas>
-                <canvas id="recordCanvas" width="1280" height="960"></canvas>
 
                 <div id="flashLayer" class="flash-layer"></div>
                 <div class="scanline"></div>
@@ -967,11 +970,11 @@
                 <div class="hud-top">
                   <div class="hud-pill">
                     <span id="hudDot" class="hud-dot"></span>
-                    <span id="hudText">Showcase standby</span>
+                    <span id="hudText">Awaiting camera</span>
                   </div>
                   <div class="hud-pill">
                     <span class="hud-dot warn"></span>
-                    <span id="legendText">Audience delight level: 0</span>
+                    <span id="legendText">Dean’s List of Chaos: 0</span>
                   </div>
                 </div>
 
@@ -979,88 +982,88 @@
                   <div id="countdownRing" class="countdown-ring">
                     <div>
                       <div id="countdownNumber" class="countdown-number">3</div>
-                      <div class="countdown-label">showtime in 3…</div>
+                      <div class="countdown-label">main character loading</div>
                     </div>
                   </div>
 
                   <div id="runeRing" class="rune-ring"></div>
 
                   <div id="unlockTitle" class="unlock-title">
-                    <div class="unlock-kicker">NKU showcase highlight</div>
+                    <div class="unlock-kicker">Peer-reviewed by chaos</div>
                     <h2 class="unlock-main">
                       <span class="gold">DIGITAL VIKING</span> UNLOCKED
                     </h2>
-                    <div class="unlock-sub">Now that is a memorable faculty-and-staff moment.</div>
+                    <div class="unlock-sub">Honestly? This belongs on LinkedIn.</div>
                   </div>
                 </div>
 
                 <div id="particles" class="particles" aria-hidden="true"></div>
-                <div class="challenge-tag">NKU Showcase</div>
-                <div id="gifBadge" class="gif-badge">● Creating GIF</div>
+                <div class="challenge-tag">Laugh to Unlock</div>
+                <div id="recordingBadge" class="recording-badge">● Recording highlight</div>
               </div>
 
               <div class="status-row" role="status" aria-live="polite" aria-atomic="true">
                 <div class="status-left">
                   <span id="statusDot" class="status-dot"></span>
-                  <span id="statusText" class="status-text">Click “Start the Showcase” to begin.</span>
+                  <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: one face, even lighting, and a real laugh. This is built to be quick, warm, and fun in a live showcase setting.
+                  Best results: one face, decent light, real laughter, and a willingness to be at least 12% unhinged in front of your peers.
                 </div>
               </div>
 
               <div class="controls">
-                <button id="startBtn" class="btn-pill btn-start" type="button">🚀 Start the Showcase</button>
+                <button id="startBtn" class="btn-pill btn-start" type="button">🚀 Start Camera &amp; AI</button>
                 <button id="stopBtn" class="btn-pill btn-stop" type="button" disabled>⏹ Stop</button>
-                <button id="captureBtn" class="btn-pill btn-capture" type="button" disabled>📸 Create Share Card</button>
+                <button id="captureBtn" class="btn-pill btn-capture" type="button" disabled>📸 Capture Share Card</button>
               </div>
 
               <div class="metrics-grid">
                 <article class="metric">
-                  <div class="metric-label">Smile/laugh openness</div>
+                  <div class="metric-label">Mouth openness</div>
                   <div id="mouthScore" class="metric-value">0</div>
                   <div class="metric-desc">How open the mouth appears relative to the face.</div>
                   <div class="bar-track"><div id="mouthBar" class="bar-fill low"></div></div>
                 </article>
 
                 <article class="metric">
-                  <div class="metric-label">Live motion signal</div>
+                  <div class="metric-label">Motion signal</div>
                   <div id="motionScore" class="metric-value">0</div>
-                  <div class="metric-desc">Repeated movement across recent frames.</div>
+                  <div class="metric-desc">Repeated mouth and face movement across recent frames.</div>
                   <div class="bar-track"><div id="motionBar" class="bar-fill low"></div></div>
                 </article>
 
                 <article class="metric">
-                  <div class="metric-label">Reveal score</div>
+                  <div class="metric-label">Laugh score</div>
                   <div id="laughScore" class="metric-value">0</div>
-                  <div class="metric-desc">Combined score used to decide when to trigger the reveal.</div>
+                  <div class="metric-desc">Combined score used to decide whether to unlock the reveal.</div>
                   <div class="bar-track"><div id="laughBar" class="bar-fill low"></div></div>
                 </article>
 
                 <article class="metric">
-                  <div class="metric-label">Moment readiness</div>
+                  <div class="metric-label">Unlock progress</div>
                   <div id="progressScore" class="metric-value">0%</div>
-                  <div class="metric-desc">You need a sustained laugh moment, not just one quick frame.</div>
+                  <div class="metric-desc">You need sustained laughter, not one lucky frame.</div>
                   <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
                 </article>
               </div>
 
-              <div id="gifArea" class="gif-area">
-                <div class="gif-card">
-                  <div class="snapshot-title">Animated GIF moment</div>
-                  <img id="gifPreview" alt="Animated GIF preview" />
+              <div id="recordingArea" class="recording-area">
+                <div class="recording-card">
+                  <div class="snapshot-title">Auto-recorded highlight clip</div>
+                  <video id="recordedVideo" controls playsinline></video>
                   <div class="controls mt-3 mb-0">
-                    <button id="downloadGifBtn" class="btn-pill btn-gif" type="button">🖼️ Download GIF</button>
+                    <button id="downloadVideoBtn" class="btn-pill btn-recording" type="button">🎥 Download Clip</button>
                   </div>
-                  <div class="gif-help">
-                    Your GIF includes the helmet overlay and the celebration banner.
+                  <div class="recording-help">
+                    This records a short highlight after the unlock if your browser supports MediaRecorder.
                   </div>
                 </div>
               </div>
 
               <div id="snapshotArea" class="snapshot-area">
                 <div class="snapshot-card">
-                  <div class="snapshot-title">Showcase share card</div>
+                  <div class="snapshot-title">Share card</div>
                   <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
 
                   <div class="controls mt-3 mb-0">
@@ -1070,13 +1073,14 @@
                   </div>
 
                   <div class="share-help">
-                    Download the card, copy the caption, and post it as part of your NKU showcase story.
+                    Static pages can’t directly publish your generated image to LinkedIn without a LinkedIn app + OAuth + backend.
+                    This workflow downloads the card, copies the caption, and opens LinkedIn.
                   </div>
                 </div>
               </div>
 
               <p class="small-note">
-                Best showcase combo: save the GIF, save the card, and share both so people see the reveal and the final moment.
+                Best posting combo: upload the highlight clip first, then the card, then the caption. Maximum peer chaos.
               </p>
             </div>
           </section>
@@ -1094,18 +1098,17 @@
       const HELMET_ROTATION_FACTOR = 0.35;
       const HELMET_SHADOW_BLUR = 18;
 
-      const LINKEDIN_CAPTION = `Sharing a fun NKU showcase experiment: a browser-based AI experience that turns a real laugh into a Digital Viking reveal.
-This version includes a helmet overlay, a celebratory banner, a downloadable share card, and an animated GIF — all running in the browser.
-#NKU #AI #Showcase #CreativeTechnology #HigherEd`;
+      const LINKEDIN_CAPTION = `I built a browser-based AI challenge that waits for a real laugh, then unlocks Digital Viking mode. 
+This version adds a countdown, a highlight clip, a helmet reveal, and a share card that is somehow both ridiculous and weirdly flattering.
+No backend. No upload. Just live browser AI and College of Informatics energy.
+#AI #WebAI #HCI #CollegeOfInformatics #CreativeTech #DigitalViking`;
 
       const video = document.getElementById("video");
       const overlayCanvas = document.getElementById("overlayCanvas");
       const overlayCtx = overlayCanvas.getContext("2d");
 
-      const recordCanvas = document.getElementById("recordCanvas");
-      const recordCtx = recordCanvas.getContext("2d");
-
       const videoSkeleton = document.getElementById("videoSkeleton");
+      const stageWrap = document.getElementById("stageWrap");
       const tintLayer = document.getElementById("tintLayer");
       const glamAura = document.getElementById("glamAura");
       const flashLayer = document.getElementById("flashLayer");
@@ -1115,7 +1118,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
       const countdownRing = document.getElementById("countdownRing");
       const countdownNumber = document.getElementById("countdownNumber");
-      const gifBadge = document.getElementById("gifBadge");
+      const recordingBadge = document.getElementById("recordingBadge");
 
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
@@ -1123,7 +1126,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
       const downloadBtn = document.getElementById("downloadBtn");
       const copyCaptionBtn = document.getElementById("copyCaptionBtn");
       const linkedinBtn = document.getElementById("linkedinBtn");
-      const downloadGifBtn = document.getElementById("downloadGifBtn");
+      const downloadVideoBtn = document.getElementById("downloadVideoBtn");
 
       const statusDot = document.getElementById("statusDot");
       const statusText = document.getElementById("statusText");
@@ -1148,14 +1151,17 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
       const snapshotCanvas = document.getElementById("snapshotCanvas");
       const snapshotCtx = snapshotCanvas.getContext("2d");
 
-      const gifArea = document.getElementById("gifArea");
-      const gifPreview = document.getElementById("gifPreview");
+      const recordingArea = document.getElementById("recordingArea");
+      const recordedVideo = document.getElementById("recordedVideo");
 
       const helmetImg = new Image();
       helmetImg.src = "helmet.png";
 
       let helmetLoaded = false;
       helmetImg.onload = () => { helmetLoaded = true; };
+      helmetImg.onerror = () => {
+        console.warn("Could not load helmet.png. Make sure it is in the same folder as index.html");
+      };
 
       let faceModel = null;
       let mediaStream = null;
@@ -1173,7 +1179,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
       let laughHoldFrames = 0;
       let unlocked = false;
-      let lastFunLevel = 0;
+      let lastChaosScore = 0;
 
       let trackedFace = null;
 
@@ -1181,12 +1187,11 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
       let countdownInterval = null;
       let countdownValue = 3;
 
-      let gifInstance = null;
-      let gifBlob = null;
-      let gifCaptureActive = false;
-      let gifCaptureFrames = 0;
-      let gifCaptureMaxFrames = 18;
-      let gifCaptureDelay = 120;
+      let recorder = null;
+      let recordedChunks = [];
+      let recordedVideoBlob = null;
+      let autoRecordingSupported = false;
+      let autoRecordingStarted = false;
 
       const RENDER_INTERVAL_MS = 90;
       const SMOOTH_ALPHA = 0.18;
@@ -1228,10 +1233,12 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const v = clamp(Math.round(value), 0, 100);
         el.style.width = v + "%";
         el.classList.remove("low", "med", "high", "epic");
+
         if (epic) {
           el.classList.add("epic");
           return;
         }
+
         if (v < 35) el.classList.add("low");
         else if (v < 70) el.classList.add("med");
         else el.classList.add("high");
@@ -1242,7 +1249,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const motionRounded = Math.round(motionScore);
         const laughRounded = Math.round(laughScore);
         const progressPercent = Math.round((laughHoldFrames / HOLD_REQUIRED) * 100);
-        const funLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
+        const chaosScore = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
 
         mouthScoreEl.textContent = mouthRounded;
         motionScoreEl.textContent = motionRounded;
@@ -1254,33 +1261,33 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         setBar(laughBar, laughRounded);
         setBar(progressBar, progressPercent, true);
 
-        legendText.textContent = "Audience delight level: " + funLevel;
-        lastFunLevel = funLevel;
+        legendText.textContent = "Dean’s List of Chaos: " + chaosScore;
+        lastChaosScore = chaosScore;
 
         if (unlocked) {
-          resultState.textContent = "Digital Viking unlocked";
+          resultState.textContent = "DIGITAL VIKING UNLOCKED";
           resultState.classList.add("unlocked");
           resultCopy.textContent =
-            "The reveal is live, the GIF is being created, and the showcase moment is officially here.";
-          hudText.textContent = "Showcase moment active";
+            "You sustained the laugh long enough to trigger the countdown, the reveal, the glow-up, and the highlight-clip moment.";
+          hudText.textContent = "Viking mode active";
         } else if (countdownActive) {
-          resultState.textContent = "Reveal in progress";
+          resultState.textContent = "Okay wait... it’s happening";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The experience sees the moment — hold the laugh through the countdown.";
-          hudText.textContent = "Countdown in progress";
+            "The system thinks you’re worthy. Hold it together for the countdown.";
+          hudText.textContent = "Main character countdown";
         } else if (laughHoldFrames > 0) {
-          resultState.textContent = "Getting close";
+          resultState.textContent = "This is getting suspiciously good";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "Keep going — the experience is building toward the reveal.";
-          hudText.textContent = "Tracking the moment";
+            "The system sees something. Keep going — not a polite grin, an actual laugh.";
+          hudText.textContent = "Tracking laugh signal";
         } else {
-          resultState.textContent = "Ready when you are";
+          resultState.textContent = "Waiting for the laugh...";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "Start the experience, smile, laugh, and let the reveal do the rest.";
-          hudText.textContent = "Showcase standby";
+            "The system is looking for a strong enough laugh pattern to trigger the glow-up.";
+          hudText.textContent = "Awaiting laugh pattern";
         }
 
         captureBtn.disabled = !unlocked;
@@ -1288,7 +1295,9 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
       async function getBestBackend() {
         if (!window.tf) return;
-        for (const backend of ["webgl", "wasm", "cpu"]) {
+        const backends = ["webgl", "wasm", "cpu"];
+
+        for (const backend of backends) {
           try {
             const ok = await tf.setBackend(backend);
             if (ok) {
@@ -1300,15 +1309,21 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
       }
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("This browser does not support camera access.", "error");
+          throw new Error("getUserMedia not supported");
+        }
+
+        const constraints = {
           audio: false,
           video: {
             width: { ideal: 720 },
             height: { ideal: 540 },
             facingMode: "user"
           }
-        });
+        };
 
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         mediaStream = stream;
         video.srcObject = stream;
 
@@ -1333,6 +1348,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const rightEye = face.landmarks[0];
         const leftEye = face.landmarks[1];
         const mouth = face.landmarks[3];
+
         if (!topLeft || !bottomRight || !rightEye || !leftEye || !mouth) {
           return { mouth: 0, motion: 0, laugh: 0 };
         }
@@ -1341,6 +1357,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const [x2, y2] = bottomRight;
         const faceWidth = x2 - x1;
         const faceHeight = y2 - y1;
+
         if (faceWidth <= 0 || faceHeight <= 0) {
           return { mouth: 0, motion: 0, laugh: 0 };
         }
@@ -1348,6 +1365,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
         const mouthDrop = mouth[1] - eyeMidY;
         const mouthDropNorm = mouthDrop / faceHeight;
+
         const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
 
         const faceCenterYNorm = ((y1 + y2) / 2) / videoHeight;
@@ -1357,24 +1375,38 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         let mouthMovementScore = 0;
 
         if (prevFaceCenterYNorm !== null) {
-          faceBounceScore = clamp(Math.abs(faceCenterYNorm - prevFaceCenterYNorm) / 0.014, 0, 1) * 100;
+          const faceDelta = Math.abs(faceCenterYNorm - prevFaceCenterYNorm);
+          faceBounceScore = clamp(faceDelta / 0.014, 0, 1) * 100;
         }
 
         if (prevMouthYNorm !== null) {
-          mouthMovementScore = clamp(Math.abs(mouthYNorm - prevMouthYNorm) / 0.020, 0, 1) * 100;
+          const mouthDelta = Math.abs(mouthYNorm - prevMouthYNorm);
+          mouthMovementScore = clamp(mouthDelta / 0.020, 0, 1) * 100;
         }
 
         prevFaceCenterYNorm = faceCenterYNorm;
         prevMouthYNorm = mouthYNorm;
 
-        const motionRaw = clamp(mouthMovementScore * 0.68 + faceBounceScore * 0.32, 0, 100);
-        let laughRaw = mouthOpenRaw > 35
-          ? mouthOpenRaw * 0.56 + motionRaw * 0.44
-          : mouthOpenRaw * 0.74 + motionRaw * 0.16;
+        const motionRaw = clamp(
+          mouthMovementScore * 0.68 + faceBounceScore * 0.32,
+          0,
+          100
+        );
+
+        let laughRaw = 0;
+        if (mouthOpenRaw > 35) {
+          laughRaw = mouthOpenRaw * 0.56 + motionRaw * 0.44;
+        } else {
+          laughRaw = mouthOpenRaw * 0.74 + motionRaw * 0.16;
+        }
 
         laughRaw = clamp(laughRaw, 0, 100);
 
-        return { mouth: mouthOpenRaw, motion: motionRaw, laugh: laughRaw };
+        return {
+          mouth: mouthOpenRaw,
+          motion: motionRaw,
+          laugh: laughRaw
+        };
       }
 
       function updateTrackedFace(face) {
@@ -1387,6 +1419,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const [x2, y2] = face.bottomRight;
         const rightEye = face.landmarks[0];
         const leftEye = face.landmarks[1];
+
         if (!rightEye || !leftEye) {
           trackedFace = null;
           return;
@@ -1410,11 +1443,14 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         trackedFace.eyeAngle = lerp(trackedFace.eyeAngle, eyeAngle, 0.25);
       }
 
-      function drawHelmetToContext(ctx, width, height, mirrored = true) {
+      function drawHelmetOverlay() {
+        const rect = overlayCanvas.getBoundingClientRect();
+        overlayCtx.clearRect(0, 0, rect.width, rect.height);
+
         if (!unlocked || !trackedFace || !helmetLoaded) return;
 
-        const scaleX = width / (video.videoWidth || width);
-        const scaleY = height / (video.videoHeight || height);
+        const scaleX = rect.width / (video.videoWidth || rect.width);
+        const scaleY = rect.height / (video.videoHeight || rect.height);
 
         const faceCenterX = trackedFace.centerX * scaleX;
         const eyeMidY = trackedFace.eyeMidY * scaleY;
@@ -1429,178 +1465,22 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         const drawX = faceCenterX;
         const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
 
-        ctx.save();
-        if (mirrored) {
-          ctx.translate(width, 0);
-          ctx.scale(-1, 1);
-        }
-        ctx.translate(drawX, drawY);
-        ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
-        ctx.shadowColor = "rgba(247,183,24,0.32)";
-        ctx.shadowBlur = HELMET_SHADOW_BLUR;
-        ctx.globalAlpha = 0.98;
-        ctx.drawImage(
+        overlayCtx.save();
+        overlayCtx.translate(rect.width, 0);
+        overlayCtx.scale(-1, 1);
+        overlayCtx.translate(drawX, drawY);
+        overlayCtx.rotate(-angle * HELMET_ROTATION_FACTOR);
+        overlayCtx.shadowColor = "rgba(247,183,24,0.32)";
+        overlayCtx.shadowBlur = HELMET_SHADOW_BLUR;
+        overlayCtx.globalAlpha = 0.98;
+        overlayCtx.drawImage(
           helmetImg,
           -helmetWidth / 2,
           -helmetHeight / 2,
           helmetWidth,
           helmetHeight
         );
-        ctx.restore();
-      }
-
-      function drawHelmetOverlay() {
-        const rect = overlayCanvas.getBoundingClientRect();
-        overlayCtx.clearRect(0, 0, rect.width, rect.height);
-        drawHelmetToContext(overlayCtx, rect.width, rect.height, true);
-      }
-
-      function roundRectPath(ctx, x, y, width, height, radius) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.arcTo(x + width, y, x + width, y + height, radius);
-        ctx.arcTo(x + width, y + height, x, y + height, radius);
-        ctx.arcTo(x, y + height, x, y, radius);
-        ctx.arcTo(x, y, x + width, y, radius);
-        ctx.closePath();
-      }
-
-      function drawRoundedRectFill(ctx, x, y, width, height, radius, fillStyle) {
-        ctx.save();
-        ctx.fillStyle = fillStyle;
-        roundRectPath(ctx, x, y, width, height, radius);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      function drawCompositedRecordFrame() {
-        const w = recordCanvas.width;
-        const h = recordCanvas.height;
-        recordCtx.clearRect(0, 0, w, h);
-
-        if (!videoReady) {
-          recordCtx.fillStyle = "#111827";
-          recordCtx.fillRect(0, 0, w, h);
-          return;
-        }
-
-        recordCtx.save();
-        recordCtx.translate(w, 0);
-        recordCtx.scale(-1, 1);
-        recordCtx.drawImage(video, 0, 0, w, h);
-        recordCtx.restore();
-
-        const beauty = recordCtx.createRadialGradient(
-          w * 0.5, h * 0.38, 20,
-          w * 0.5, h * 0.38, w * 0.42
-        );
-        beauty.addColorStop(0, "rgba(255,240,210,0.18)");
-        beauty.addColorStop(0.35, "rgba(247,183,24,0.10)");
-        beauty.addColorStop(1, "rgba(247,183,24,0)");
-        recordCtx.fillStyle = beauty;
-        recordCtx.fillRect(0, 0, w, h);
-
-        if (unlocked) {
-          const aura = recordCtx.createRadialGradient(
-            w * 0.5, h * 0.48, 20,
-            w * 0.5, h * 0.48, w * 0.36
-          );
-          aura.addColorStop(0, "rgba(255,230,180,0.20)");
-          aura.addColorStop(0.22, "rgba(247,183,24,0.14)");
-          aura.addColorStop(0.45, "rgba(247,183,24,0.05)");
-          aura.addColorStop(1, "rgba(247,183,24,0)");
-          recordCtx.fillStyle = aura;
-          recordCtx.fillRect(0, 0, w, h);
-        }
-
-        const vignette = recordCtx.createRadialGradient(
-          w * 0.5, h * 0.5, w * 0.18,
-          w * 0.5, h * 0.5, w * 0.65
-        );
-        vignette.addColorStop(0, "rgba(0,0,0,0)");
-        vignette.addColorStop(1, "rgba(0,0,0,0.42)");
-        recordCtx.fillStyle = vignette;
-        recordCtx.fillRect(0, 0, w, h);
-
-        drawHelmetToContext(recordCtx, w, h, true);
-
-        drawRoundedRectFill(recordCtx, 22, 22, 320, 44, 22, "rgba(15,23,42,0.70)");
-        drawRoundedRectFill(recordCtx, w - 320, 22, 290, 44, 22, "rgba(15,23,42,0.70)");
-
-        recordCtx.fillStyle = unlocked ? "#22c55e" : "#f7b718";
-        recordCtx.beginPath();
-        recordCtx.arc(44, 44, 6, 0, Math.PI * 2);
-        recordCtx.fill();
-
-        recordCtx.fillStyle = "#ffffff";
-        recordCtx.font = "700 18px Inter, sans-serif";
-        recordCtx.fillText(unlocked ? "Showcase reveal live" : "NKU faculty & staff showcase", 60, 50);
-
-        recordCtx.fillText(`Delight level: ${lastFunLevel}`, w - 200, 50);
-
-        if (gifCaptureActive) {
-          drawRoundedRectFill(recordCtx, 22, h - 68, 190, 42, 21, "rgba(127,29,29,0.84)");
-          recordCtx.fillStyle = "#ffffff";
-          recordCtx.font = "800 16px Inter, sans-serif";
-          recordCtx.fillText("● Creating GIF", 42, h - 41);
-        }
-
-        drawRoundedRectFill(recordCtx, w - 210, h - 68, 188, 42, 21, "rgba(15,23,42,0.72)");
-        recordCtx.fillStyle = "#ffffff";
-        recordCtx.font = "800 16px Inter, sans-serif";
-        recordCtx.fillText("NKU Showcase", w - 175, h - 41);
-
-        if (countdownActive) {
-          const cx = w / 2;
-          const cy = h / 2;
-          recordCtx.save();
-          recordCtx.shadowColor = "rgba(247,183,24,0.25)";
-          recordCtx.shadowBlur = 35;
-          recordCtx.fillStyle = "rgba(15,23,42,0.72)";
-          recordCtx.beginPath();
-          recordCtx.arc(cx, cy, 90, 0, Math.PI * 2);
-          recordCtx.fill();
-          recordCtx.strokeStyle = "rgba(255,255,255,0.18)";
-          recordCtx.lineWidth = 4;
-          recordCtx.beginPath();
-          recordCtx.arc(cx, cy, 90, 0, Math.PI * 2);
-          recordCtx.stroke();
-          recordCtx.fillStyle = "#ffffff";
-          recordCtx.font = "1000 92px Inter, sans-serif";
-          recordCtx.textAlign = "center";
-          recordCtx.fillText(String(countdownValue), cx, cy + 18);
-          recordCtx.fillStyle = "#fde68a";
-          recordCtx.font = "800 18px Inter, sans-serif";
-          recordCtx.fillText("showtime in 3…", cx, cy + 52);
-          recordCtx.restore();
-          recordCtx.textAlign = "start";
-        }
-
-        if (unlocked) {
-          const bannerW = Math.min(760, w * 0.82);
-          const bannerH = 120;
-          const bannerX = (w - bannerW) / 2;
-          const bannerY = h - 170;
-
-          drawRoundedRectFill(recordCtx, bannerX, bannerY, bannerW, bannerH, 24, "rgba(15,23,42,0.78)");
-          recordCtx.strokeStyle = "rgba(255,255,255,0.14)";
-          recordCtx.lineWidth = 1.5;
-          roundRectPath(recordCtx, bannerX, bannerY, bannerW, bannerH, 24);
-          recordCtx.stroke();
-
-          recordCtx.textAlign = "center";
-          recordCtx.fillStyle = "#fde68a";
-          recordCtx.font = "900 16px Inter, sans-serif";
-          recordCtx.fillText("NKU showcase highlight", w / 2, bannerY + 28);
-
-          recordCtx.font = "1000 42px Inter, sans-serif";
-          recordCtx.fillStyle = "#ffffff";
-          recordCtx.fillText("DIGITAL VIKING", w / 2, bannerY + 66);
-
-          recordCtx.fillStyle = "#f7b718";
-          recordCtx.fillText("UNLOCKED", w / 2, bannerY + 106);
-          recordCtx.textAlign = "start";
-        }
+        overlayCtx.restore();
       }
 
       function maybeUpdateStateMachine() {
@@ -1619,15 +1499,17 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
       function startCountdown() {
         if (countdownActive || unlocked) return;
+
         countdownActive = true;
         countdownValue = 3;
         countdownNumber.textContent = String(countdownValue);
         countdownRing.classList.add("show");
-        setStatus("Countdown started — showcase moment incoming.", "active");
+        setStatus("Countdown started. Commit to the chaos.", "active");
         updateUI();
 
         countdownInterval = setInterval(() => {
           countdownValue -= 1;
+
           if (countdownValue > 0) {
             countdownNumber.textContent = String(countdownValue);
           } else {
@@ -1651,19 +1533,27 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
       function burstParticles(count = 32) {
         particles.innerHTML = "";
+
         for (let i = 0; i < count; i++) {
           const p = document.createElement("span");
           p.className = "particle";
+
           const centerX = 50 + (Math.random() * 12 - 6);
           const centerY = 50 + (Math.random() * 12 - 6);
           const dx = (Math.random() * 380 - 190).toFixed(0) + "px";
           const dy = (Math.random() * 260 - 200).toFixed(0) + "px";
           const rot = (Math.random() * 540 - 270).toFixed(0) + "deg";
+
           p.style.left = centerX + "%";
           p.style.top = centerY + "%";
           p.style.setProperty("--dx", dx);
           p.style.setProperty("--dy", dy);
           p.style.setProperty("--rot", rot);
+
+          const hueVariants = ["#f7b718", "#fde68a", "#ffffff", "#ffd86b", "#ffe4f3"];
+          const color = hueVariants[Math.floor(Math.random() * hueVariants.length)];
+          p.style.background = `linear-gradient(180deg, #ffffff 0%, ${color} 100%)`;
+
           particles.appendChild(p);
           requestAnimationFrame(() => p.classList.add("burst"));
         }
@@ -1685,64 +1575,86 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         try {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (!AudioContextClass) return;
+
           const ctx = new AudioContextClass();
           const now = ctx.currentTime;
           const notes = [220, 330, 440, 660];
+
           notes.forEach((freq, index) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
+
             osc.type = index < 2 ? "triangle" : "sine";
             osc.frequency.value = freq;
+
             gain.gain.setValueAtTime(0.0001, now);
             gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03 + index * 0.05);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25 + index * 0.06);
+
             osc.connect(gain);
             gain.connect(ctx.destination);
+
             osc.start(now + index * 0.05);
             osc.stop(now + 0.35 + index * 0.06);
           });
         } catch {}
       }
 
-      function startGifCapture() {
-        if (gifCaptureActive) return;
-        gifCaptureActive = true;
-        gifCaptureFrames = 0;
-        gifBlob = null;
-        gifPreview.style.display = "none";
-        gifArea.classList.remove("show");
-        gifBadge.classList.add("show");
+      function getBestMimeType() {
+        const candidates = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm"
+        ];
 
-        gifInstance = new GIF({
-          workers: 2,
-          quality: 10,
-          workerScript: "https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js",
-          width: recordCanvas.width,
-          height: recordCanvas.height
-        });
-
-        gifInstance.on("finished", function(blob) {
-          gifBlob = blob;
-          const url = URL.createObjectURL(blob);
-          gifPreview.src = url;
-          gifPreview.style.display = "block";
-          gifArea.classList.add("show");
-          gifBadge.classList.remove("show");
-          gifCaptureActive = false;
-          setStatus("Animated GIF ready to save.", "active");
-        });
+        for (const type of candidates) {
+          if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+            return type;
+          }
+        }
+        return "";
       }
 
-      function addGifFrameIfNeeded() {
-        if (!gifCaptureActive || !gifInstance) return;
-        gifInstance.addFrame(recordCanvas, { copy: true, delay: gifCaptureDelay });
-        gifCaptureFrames += 1;
-        if (gifCaptureFrames >= gifCaptureMaxFrames) {
-          gifCaptureActive = false;
-          gifBadge.classList.remove("show");
-          setStatus("Rendering animated GIF…", "active");
-          gifInstance.render();
+      function startAutoRecording() {
+        if (!mediaStream || !window.MediaRecorder || autoRecordingStarted) return;
+
+        const mimeType = getBestMimeType();
+        try {
+          recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+          recordedChunks = [];
+          recordedVideoBlob = null;
+
+          recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            if (!recordedChunks.length) return;
+            recordedVideoBlob = new Blob(recordedChunks, { type: recorder.mimeType || "video/webm" });
+            const url = URL.createObjectURL(recordedVideoBlob);
+            recordedVideo.src = url;
+            recordingArea.classList.add("show");
+          };
+
+          recorder.start();
+          autoRecordingStarted = true;
+          recordingBadge.classList.add("show");
+
+          setTimeout(() => {
+            stopAutoRecording();
+          }, 5000);
+        } catch (err) {
+          console.warn("Auto recording failed:", err);
         }
+      }
+
+      function stopAutoRecording() {
+        if (recorder && recorder.state !== "inactive") {
+          recorder.stop();
+        }
+        recordingBadge.classList.remove("show");
       }
 
       function triggerUnlock() {
@@ -1751,25 +1663,43 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         glamAura.classList.add("active");
         runeRing.classList.add("active");
         unlockTitle.classList.add("active");
+        stageWrap.classList.add("shake");
         flashLayer.classList.remove("boom");
         void flashLayer.offsetWidth;
         flashLayer.classList.add("boom");
+
         burstParticles(40);
         speakUnlock();
         playUnlockTone();
         updateUI();
-        setStatus("Reveal unlocked — the GIF is on its way.", "active");
-        startGifCapture();
+
+        setStatus("Legendary laugh detected. This is dangerously LinkedIn-ready.", "active");
+
+        if (autoRecordingSupported) {
+          startAutoRecording();
+        }
+
+        setTimeout(() => {
+          stageWrap.classList.remove("shake");
+        }, 650);
       }
 
       async function renderLoop(timestamp) {
         if (!aiRunning || !faceModel || !videoReady) return;
 
+        if (
+          !mediaStream ||
+          !mediaStream.active ||
+          video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+        ) {
+          setStatus("Camera feed stopped. Restart the demo to continue.", "error");
+          stopExperience(true);
+          return;
+        }
+
         const elapsed = timestamp - lastRenderTime;
         if (elapsed < RENDER_INTERVAL_MS) {
           drawHelmetOverlay();
-          drawCompositedRecordFrame();
-          addGifFrameIfNeeded();
           animationId = requestAnimationFrame(renderLoop);
           return;
         }
@@ -1781,6 +1711,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
           if (Array.isArray(predictions) && predictions.length > 0) {
             const face = predictions[0];
             updateTrackedFace(face);
+
             const raw = calculateSignals(
               face,
               video.videoWidth || 720,
@@ -1798,12 +1729,13 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
             updateUI();
 
             if (!unlocked && !countdownActive) {
-              setStatus("AI is running. Give it a real laugh — this is a showcase moment.", "active");
+              setStatus("AI is running. Give me a real laugh — not a faculty-meeting grin.", "active");
             }
           } else {
             mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
             motionScore = lerp(motionScore, 0, SMOOTH_ALPHA);
             laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
+
             prevFaceCenterYNorm = null;
             prevMouthYNorm = null;
             trackedFace = null;
@@ -1816,11 +1748,9 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
           }
 
           drawHelmetOverlay();
-          drawCompositedRecordFrame();
-          addGifFrameIfNeeded();
         } catch (err) {
-          console.error(err);
-          setStatus("There was an error running the model. Try refreshing the page.", "error");
+          console.error("Inference error:", err);
+          setStatus("There was an error running the face model. Try refreshing the page.", "error");
           aiRunning = false;
           return;
         }
@@ -1836,23 +1766,30 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
           setStatus("Requesting camera access...");
 
           await setupCamera();
+
           setStatus("Loading AI model...");
           await getBestBackend();
           faceModel = await blazeface.load();
 
+          autoRecordingSupported = !!window.MediaRecorder;
           aiRunning = true;
           stopBtn.disabled = false;
-          setStatus("AI is ready. Start smiling and laughing to trigger the reveal.", "active");
+
+          setStatus("AI is ready. Laugh naturally to unlock the Digital Viking.", "active");
           animationId = requestAnimationFrame(renderLoop);
         } catch (err) {
-          console.error(err);
-          setStatus("Could not start the camera or AI model. Check permissions and HTTPS.", "error");
+          console.error("Initialization error:", err);
+          setStatus(
+            "Could not start the camera or AI model. Check permissions and make sure the page is served over HTTPS.",
+            "error"
+          );
           startBtn.disabled = false;
           stopBtn.disabled = true;
+          captureBtn.disabled = true;
         }
       }
 
-      function stopExperience() {
+      function stopExperience(fromLoop = false) {
         aiRunning = false;
 
         if (animationId !== null) {
@@ -1861,6 +1798,7 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         }
 
         cancelCountdown();
+        stopAutoRecording();
 
         if (mediaStream) {
           mediaStream.getTracks().forEach(track => track.stop());
@@ -1878,15 +1816,13 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         prevMouthYNorm = null;
         laughHoldFrames = 0;
         unlocked = false;
-        lastFunLevel = 0;
+        lastChaosScore = 0;
         trackedFace = null;
-        gifInstance = null;
-        gifBlob = null;
-        gifCaptureActive = false;
-        gifCaptureFrames = 0;
+        autoRecordingStarted = false;
+        recordedChunks = [];
+        recordedVideoBlob = null;
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-        recordCtx.clearRect(0, 0, recordCanvas.width, recordCanvas.height);
 
         tintLayer.classList.remove("unlocked");
         glamAura.classList.remove("active");
@@ -1894,23 +1830,27 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         unlockTitle.classList.remove("active");
         particles.innerHTML = "";
         snapshotArea.classList.remove("show");
-        gifArea.classList.remove("show");
-        gifBadge.classList.remove("show");
-        gifPreview.removeAttribute("src");
-        gifPreview.style.display = "none";
+        recordingArea.classList.remove("show");
+        recordingBadge.classList.remove("show");
+        recordedVideo.removeAttribute("src");
+        recordedVideo.load();
 
         updateUI();
 
         startBtn.disabled = false;
         stopBtn.disabled = true;
         captureBtn.disabled = true;
-        setStatus("Camera is off. Restart the showcase any time.");
-        hudText.textContent = "Showcase standby";
+
+        if (!fromLoop) {
+          setStatus("Camera is off. Restart the challenge any time.");
+          hudText.textContent = "Awaiting camera";
+        }
       }
 
       function drawSnapshotCard() {
         const w = snapshotCanvas.width;
         const h = snapshotCanvas.height;
+
         snapshotCtx.clearRect(0, 0, w, h);
 
         const bg = snapshotCtx.createLinearGradient(0, 0, 0, h);
@@ -1919,9 +1859,66 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         snapshotCtx.fillStyle = bg;
         snapshotCtx.fillRect(0, 0, w, h);
 
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.30, 20, w * 0.5, h * 0.30, 460);
+        glow.addColorStop(0, "rgba(255, 240, 210, 0.36)");
+        glow.addColorStop(0.25, "rgba(247,183,24,0.22)");
+        glow.addColorStop(0.55, "rgba(247,183,24,0.10)");
+        glow.addColorStop(1, "rgba(247,183,24,0)");
+        snapshotCtx.fillStyle = glow;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const frameX = 90;
+        const frameY = 160;
+        const frameW = w - 180;
+        const frameH = 720;
+        const radius = 34;
+
+        roundRect(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.save();
+        snapshotCtx.clip();
+
+        if (videoReady) {
+          snapshotCtx.save();
+          snapshotCtx.scale(-1, 1);
+          snapshotCtx.drawImage(video, -frameX - frameW, frameY, frameW, frameH);
+          snapshotCtx.restore();
+
+          const beauty = snapshotCtx.createRadialGradient(
+            frameX + frameW / 2,
+            frameY + frameH * 0.38,
+            30,
+            frameX + frameW / 2,
+            frameY + frameH * 0.38,
+            frameW * 0.48
+          );
+          beauty.addColorStop(0, "rgba(255,235,205,0.18)");
+          beauty.addColorStop(0.38, "rgba(247,183,24,0.10)");
+          beauty.addColorStop(1, "rgba(247,183,24,0)");
+          snapshotCtx.fillStyle = beauty;
+          snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
+
+          if (unlocked && trackedFace && helmetLoaded) {
+            drawHelmetOnSnapshot(snapshotCtx, frameX, frameY, frameW, frameH);
+          }
+        } else {
+          snapshotCtx.fillStyle = "#1f2937";
+          snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
+        }
+        snapshotCtx.restore();
+
+        const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
+        overlayGrad.addColorStop(0, "rgba(255,255,255,0.03)");
+        overlayGrad.addColorStop(1, "rgba(247,183,24,0.12)");
+        snapshotCtx.fillStyle = overlayGrad;
+        roundRectFill(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.lineWidth = 3;
+        snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
+        roundRectStroke(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "700 32px Inter, sans-serif";
-        snapshotCtx.fillText("NKU SHOWCASE", 90, 80);
+        snapshotCtx.fillText("LAUGH TO UNLOCK", 90, 80);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "900 84px Inter, sans-serif";
@@ -1933,35 +1930,90 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
 
         snapshotCtx.fillStyle = "#dbe7f5";
         snapshotCtx.font = "600 32px Inter, sans-serif";
-        snapshotCtx.fillText("A fun faculty-and-staff showcase moment.", 90, 1265);
+        snapshotCtx.fillText("Dean’s List of Chaos certified.", 90, 1265);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
-        roundRectPath(snapshotCtx, 90, 1288, w - 180, 92, 24);
-        snapshotCtx.fill();
+        roundRectFill(snapshotCtx, 90, 1288, w - 180, 92, 24);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("Audience delight level: " + lastFunLevel, 126, 1346);
+        snapshotCtx.fillText("Dean’s List of Chaos: " + lastChaosScore, 126, 1346);
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("✨ NKU showcase-ready", 640, 1346);
+        snapshotCtx.fillText("💼 Weirdly LinkedIn-ready", 610, 1346);
 
         snapshotArea.classList.add("show");
       }
 
+      function drawHelmetOnSnapshot(ctx, frameX, frameY, frameW, frameH) {
+        const scaleX = frameW / (video.videoWidth || frameW);
+        const scaleY = frameH / (video.videoHeight || frameH);
+
+        const faceCenterX = frameX + (trackedFace.centerX * scaleX);
+        const eyeMidY = frameY + (trackedFace.eyeMidY * scaleY);
+        const faceWidth = trackedFace.faceWidth * scaleX;
+        const faceHeight = trackedFace.faceHeight * scaleY;
+        const angle = trackedFace.eyeAngle;
+
+        const helmetWidth = faceWidth * HELMET_SCALE;
+        const aspectRatio = helmetImg.naturalHeight / helmetImg.naturalWidth || 1;
+        const helmetHeight = helmetWidth * aspectRatio;
+
+        const drawX = faceCenterX;
+        const drawY = eyeMidY - faceHeight * HELMET_Y_OFFSET;
+
+        ctx.save();
+
+        const mirroredX = frameX + frameW - (drawX - frameX);
+        ctx.translate(mirroredX, drawY);
+        ctx.rotate(-angle * HELMET_ROTATION_FACTOR);
+        ctx.shadowColor = "rgba(247,183,24,0.30)";
+        ctx.shadowBlur = HELMET_SHADOW_BLUR;
+
+        ctx.drawImage(
+          helmetImg,
+          -helmetWidth / 2,
+          -helmetHeight / 2,
+          helmetWidth,
+          helmetHeight
+        );
+
+        ctx.restore();
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radius);
+        ctx.arcTo(x + width, y + height, x, y + height, radius);
+        ctx.arcTo(x, y + height, x, y, radius);
+        ctx.arcTo(x, y, x + width, y, radius);
+        ctx.closePath();
+      }
+
+      function roundRectFill(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.fill();
+      }
+
+      function roundRectStroke(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.stroke();
+      }
+
       function downloadSnapshot() {
         const link = document.createElement("a");
-        link.download = "digital-viking-showcase-card.png";
+        link.download = "digital-viking-unlocked.png";
         link.href = snapshotCanvas.toDataURL("image/png");
         link.click();
       }
 
-      function downloadGif() {
-        if (!gifBlob) return;
-        const url = URL.createObjectURL(gifBlob);
+      function downloadRecordedVideo() {
+        if (!recordedVideoBlob) return;
+        const url = URL.createObjectURL(recordedVideoBlob);
         const link = document.createElement("a");
-        link.download = "digital-viking-showcase.gif";
+        link.download = "digital-viking-highlight.webm";
         link.href = url;
         link.click();
       }
@@ -1969,9 +2021,9 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
       async function copyLinkedInCaption() {
         try {
           await navigator.clipboard.writeText(LINKEDIN_CAPTION);
-          setStatus("LinkedIn caption copied.", "active");
+          setStatus("LinkedIn caption copied. Go forth and be professionally chaotic.", "active");
         } catch {
-          setStatus("Clipboard access was blocked.", "error");
+          setStatus("Could not copy the caption automatically. Browser permissions may be blocking clipboard access.", "error");
         }
       }
 
@@ -1979,20 +2031,23 @@ This version includes a helmet overlay, a celebratory banner, a downloadable sha
         if (!snapshotArea.classList.contains("show")) {
           drawSnapshotCard();
         }
+
         downloadSnapshot();
         copyLinkedInCaption();
+
         setTimeout(() => {
           window.open("https://www.linkedin.com/feed/", "_blank", "noopener,noreferrer");
         }, 250);
       }
 
       startBtn.addEventListener("click", startExperience);
-      stopBtn.addEventListener("click", stopExperience);
+      stopBtn.addEventListener("click", () => stopExperience(false));
       captureBtn.addEventListener("click", drawSnapshotCard);
       downloadBtn.addEventListener("click", downloadSnapshot);
       copyCaptionBtn.addEventListener("click", copyLinkedInCaption);
       linkedinBtn.addEventListener("click", openLinkedInWorkflow);
-      downloadGifBtn.addEventListener("click", downloadGif);
+      downloadVideoBtn.addEventListener("click", downloadRecordedVideo);
+
       window.addEventListener("resize", resizeOverlayCanvas);
 
       updateUI();

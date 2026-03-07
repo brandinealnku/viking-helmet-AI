@@ -482,7 +482,7 @@
               </div>
 
               <p class="small-note mt-3 mb-0">
-                Place <code>griffin-hall.png</code> in the same folder as this HTML file. This uses on-device models and is a creative demo, not a scientific emotion classifier.
+                Place <code>griffin-hall.jpg</code> in the same folder as this HTML file. This uses on-device models and is a creative demo, not a scientific emotion classifier.
               </p>
             </div>
           </section>
@@ -630,8 +630,8 @@
         return new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error("Could not load griffin-hall.png"));
-          img.src = "griffin-hall.png";
+          img.onerror = () => reject(new Error("Could not load griffin-hall.jpg"));
+          img.src = "griffin-hall.jpg";
         });
       }
 
@@ -1105,7 +1105,7 @@
           animationId = requestAnimationFrame(renderLoop);
         } catch (err) {
           console.error("Initialization error:", err);
-          setStatus("Could not start camera, background, or AI. Check permissions and confirm griffin-hall.png is present.", "error");
+          setStatus("Could not start camera, background, or AI. Check permissions and confirm griffin-hall.jpg is present.", "error");
           startBtn.disabled = false;
           stopBtn.disabled = true;
           recordBtn.disabled = true;

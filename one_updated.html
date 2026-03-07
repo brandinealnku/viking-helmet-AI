@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter – Browser-Based AI Demo</title>
+  <title>NKU Norse AI Filter – Stable Overlay Edition</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – a browser-based AI face filter demo using JavaScript and TensorFlow.js to teach modern web and AI skills."
+    content="NKU Norse AI Filter – stable browser-based AI demo with glasses, helmet, Viking combo, and Griffin Hall composite background."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -32,6 +32,7 @@
       --bg-soft: #f9fafb;
       --shadow-soft: 0 18px 60px rgba(15, 23, 42, 0.04),
                      0 2px 8px rgba(15, 23, 42, 0.04);
+
       color-scheme: light;
     }
 
@@ -212,6 +213,106 @@
       }
     }
 
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.45), rgba(17,17,17,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 32%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.5), rgba(17,17,17,0));
+    }
+
+    .screen-pill {
+      position: absolute;
+      top: 0.9rem;
+      left: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.45);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .screen-status {
+      position: absolute;
+      top: 0.9rem;
+      right: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.45);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 0.9rem;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 800;
+      opacity: 0.9;
+      margin-bottom: 0.18rem;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .screen-sub {
+      font-size: 0.78rem;
+      opacity: 0.92;
+      margin-top: 0.2rem;
+    }
+
     .status-dot {
       width: 9px;
       height: 9px;
@@ -252,10 +353,10 @@
       flex-wrap: wrap;
       justify-content: center;
       border-radius: 1rem;
-      padding: 0.25rem;
+      padding: 0.15rem;
       background: #f3f4f6;
       border: 1px solid #e5e7eb;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .filter-btn {
@@ -359,7 +460,7 @@
         <span class="nk-brand-sub">AI in the Browser · JavaScript × TensorFlow.js</span>
       </div>
       <p class="nk-brand-sub text-end mb-0">
-        Griffin Hall composite version
+        Stable Griffin Hall composite version
       </p>
     </header>
 
@@ -379,8 +480,7 @@
             </h1>
 
             <p class="nk-lead mb-3">
-              This version keeps the Griffin Hall foreground/background composite logic from your working file,
-              while also adding a Viking combo asset and a camera off button.
+              This version stabilizes all overlays by separating rendering from AI detection, while keeping the Griffin Hall background composite that was already working.
             </p>
 
             <section class="mb-3" aria-labelledby="try-it-out-heading">
@@ -388,7 +488,7 @@
               <ol class="nk-step-list list-unstyled mb-2">
                 <li>
                   <span class="nk-step-num">1.</span>
-                  <span>Click <strong>Start Camera &amp; AI</strong> and allow camera access.</span>
+                  <span>Click <strong>Start Camera &amp; AI</strong>.</span>
                 </li>
                 <li>
                   <span class="nk-step-num">2.</span>
@@ -406,7 +506,7 @@
               <p class="nk-subsection-body mb-1">
                 • Camera access with <code>getUserMedia</code>.<br />
                 • Real-time AR overlays with <code>&lt;canvas&gt;</code>.<br />
-                • Background compositing with BodyPix + face tracking with BlazeFace.
+                • Background compositing with BodyPix and stable face tracking with BlazeFace.
               </p>
             </section>
           </section>
@@ -428,6 +528,24 @@
                     role="img"
                     aria-label="Live AI-filtered camera view"
                   ></canvas>
+
+                  <div class="screen-ui" aria-hidden="true">
+                    <div class="screen-gradient-top"></div>
+                    <div class="screen-gradient-bottom"></div>
+
+                    <div class="screen-pill">⚡ Making Digital Vikings</div>
+
+                    <div class="screen-status">
+                      <span id="screenStatusDot" class="screen-status-dot"></span>
+                      <span id="screenStatusText">Searching…</span>
+                    </div>
+
+                    <div class="screen-footer">
+                      <div class="screen-kicker">Live browser demo</div>
+                      <h2 class="screen-title">Norse Overlay Experience</h2>
+                      <div class="screen-sub">Client-side AI · camera + canvas + TensorFlow.js</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -569,6 +687,7 @@
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
       const ctx = canvas.getContext("2d");
+
       const statusText = document.getElementById("statusText");
       const statusDot = document.getElementById("statusDot");
       const startBtn = document.getElementById("startBtn");
@@ -576,6 +695,9 @@
       const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
       const filterButtons = document.querySelectorAll(".filter-btn");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
 
       const previewSection = document.getElementById("previewSection");
       const snapshotPreview = document.getElementById("snapshotPreview");
@@ -588,11 +710,8 @@
       let comboImgReady = false;
       let bgReady = false;
       let aiRunning = false;
-      let lastRenderTime = 0;
       let mediaStream = null;
-      let renderLoopActive = false;
 
-      // 'glasses' | 'helmet' | 'combo' | 'griffin'
       let activeFilter = "glasses";
 
       const tempCanvas = document.createElement("canvas");
@@ -601,10 +720,22 @@
       const bgCanvas = document.createElement("canvas");
       const bgCtx = bgCanvas.getContext("2d");
 
-      let lastFaceBox = null;
+      let latestFaceBox = null;
+      let smoothedFaceBox = null;
       let lastFaceTime = 0;
+      let lastSegmentation = null;
+      let lastSegmentationTime = 0;
+
+      let renderRaf = null;
+      let faceDetectTimer = null;
+      let segmentTimer = null;
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+
       const FACE_HOLD_MS = 350;
-      const SMOOTH_ALPHA = 0.15;
+      const SMOOTH_ALPHA = 0.16;
+      const FACE_DETECT_MS = 90;
+      const SEGMENT_MS = 220;
 
       const bgImage = new Image();
       bgImage.src = "griffin-hall.jpg";
@@ -642,13 +773,24 @@
       comboImg.onerror = () => console.warn("⚠️ Could not load beard.png");
 
       function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
         statusText.textContent = message;
         statusDot.classList.remove("active", "error");
+
         if (mode === "active") {
           statusDot.classList.add("active");
         } else if (mode === "error") {
           statusDot.classList.add("error");
         }
+      }
+
+      function setScreenStatus(text, locked) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!locked);
       }
 
       async function getBestBackend() {
@@ -688,38 +830,42 @@
           }
         };
 
-        try {
-          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-          video.srcObject = mediaStream;
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
 
-          return new Promise((resolve) => {
-            video.onloadedmetadata = () => {
-              video.play();
-              canvas.width = video.videoWidth || 640;
-              canvas.height = video.videoHeight || 480;
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play();
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
 
-              tempCanvas.width = canvas.width;
-              tempCanvas.height = canvas.height;
-              bgCanvas.width = canvas.width;
-              bgCanvas.height = canvas.height;
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            bgCanvas.width = canvas.width;
+            bgCanvas.height = canvas.height;
 
-              videoReady = true;
-              videoSkeleton.style.display = "none";
-              console.log("🎥 Video ready:", canvas.width, canvas.height);
-              resolve();
-            };
-          });
-        } catch (err) {
-          console.error("Camera error:", err);
-          setStatus(
-            "Camera error – check permissions and make sure no other app is using the camera.",
-            "error"
-          );
-          throw err;
-        }
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            console.log("🎥 Video ready:", canvas.width, canvas.height);
+            resolve();
+          };
+        });
+      }
+
+      function stopLoops() {
+        if (renderRaf) cancelAnimationFrame(renderRaf);
+        renderRaf = null;
+
+        if (faceDetectTimer) clearInterval(faceDetectTimer);
+        faceDetectTimer = null;
+
+        if (segmentTimer) clearInterval(segmentTimer);
+        segmentTimer = null;
       }
 
       function stopCamera() {
+        stopLoops();
+
         if (mediaStream) {
           mediaStream.getTracks().forEach((track) => track.stop());
           mediaStream = null;
@@ -731,9 +877,11 @@
 
         videoReady = false;
         aiRunning = false;
-        renderLoopActive = false;
-        lastFaceBox = null;
+        latestFaceBox = null;
+        smoothedFaceBox = null;
         lastFaceTime = 0;
+        lastSegmentation = null;
+        lastSegmentationTime = 0;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         videoSkeleton.style.display = "block";
@@ -742,6 +890,7 @@
         captureBtn.disabled = true;
         stopBtn.disabled = true;
 
+        setScreenStatus("Offline", false);
         setStatus("Camera turned off. Click Start Camera & AI to launch again.", "idle");
       }
 
@@ -772,14 +921,15 @@
         const [nx1, ny1] = newBox.topLeft;
         const [nx2, ny2] = newBox.bottomRight;
 
-        const sx1 = ox1 + alpha * (nx1 - ox1);
-        const sy1 = oy1 + alpha * (ny1 - oy1);
-        const sx2 = ox2 + alpha * (nx2 - ox2);
-        const sy2 = oy2 + alpha * (ny2 - oy2);
-
         return {
-          topLeft: [sx1, sy1],
-          bottomRight: [sx2, sy2]
+          topLeft: [
+            ox1 + alpha * (nx1 - ox1),
+            oy1 + alpha * (ny1 - oy1)
+          ],
+          bottomRight: [
+            ox2 + alpha * (nx2 - ox2),
+            oy2 + alpha * (ny2 - oy2)
+          ]
         };
       }
 
@@ -798,10 +948,13 @@
         const centerX = x1 + faceWidth / 2;
         const eyeLineY = y1 + faceHeight * 0.42;
 
-        const drawX = centerX - overlayWidth / 2;
-        const drawY = eyeLineY - overlayHeight / 2;
-
-        ctx.drawImage(glassesImg, drawX, drawY, overlayWidth, overlayHeight);
+        ctx.drawImage(
+          glassesImg,
+          centerX - overlayWidth / 2,
+          eyeLineY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
       }
 
       function drawHelmetOnFace(topLeft, bottomRight) {
@@ -817,13 +970,16 @@
         const overlayHeight = overlayWidth * aspect;
 
         const centerX = x1 + faceWidth / 2;
-        const eyebrowY = y1 + faceHeight * 0.16;
+        const eyebrowY = y1 + faceHeight * 0.18;
         const helmetBottomY = eyebrowY;
 
-        const drawX = centerX - overlayWidth / 2;
-        const drawY = helmetBottomY - overlayHeight;
-
-        ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
+        ctx.drawImage(
+          helmetImg,
+          centerX - overlayWidth / 2,
+          helmetBottomY - overlayHeight,
+          overlayWidth,
+          overlayHeight
+        );
       }
 
       function drawComboOnFace(topLeft, bottomRight) {
@@ -842,100 +998,101 @@
         const foreheadAnchorY = y1 + faceHeight * 0.05;
         const overlayCenterY = foreheadAnchorY + overlayHeight * 0.26;
 
-        const drawX = centerX - overlayWidth / 2;
-        const drawY = overlayCenterY - overlayHeight / 2;
-
-        ctx.drawImage(comboImg, drawX, drawY, overlayWidth, overlayHeight);
+        ctx.drawImage(
+          comboImg,
+          centerX - overlayWidth / 2,
+          overlayCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
       }
 
-      async function renderLoop(timestamp) {
-        if (!renderLoopActive) return;
+      async function detectFaceStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
 
-        if (!faceModel || !videoReady) {
-          requestAnimationFrame(renderLoop);
-          return;
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+            latestFaceBox = {
+              topLeft: face.topLeft,
+              bottomRight: face.bottomRight
+            };
+            lastFaceTime = performance.now();
+          } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
+            latestFaceBox = null;
+          }
+        } catch (e) {
+          console.error("Error running BlazeFace:", e);
         }
+      }
 
-        const msSinceLast = timestamp - lastRenderTime;
-        if (msSinceLast < 70) {
-          requestAnimationFrame(renderLoop);
-          return;
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel || activeFilter !== "griffin") return;
+
+        try {
+          lastSegmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: "medium",
+            segmentationThreshold: 0.7
+          });
+          lastSegmentationTime = performance.now();
+        } catch (e) {
+          console.error("BodyPix error:", e);
+          lastSegmentation = null;
         }
-        lastRenderTime = timestamp;
+      }
 
+      function drawBaseFrame() {
         const w = canvas.width;
         const h = canvas.height;
-
-        const useGriffinHall =
-          activeFilter === "griffin" && bgReady && bodyPixModel;
+        const useGriffinHall = activeFilter === "griffin" && bgReady && bodyPixModel && lastSegmentation;
 
         if (useGriffinHall) {
           tempCtx.drawImage(video, 0, 0, w, h);
 
-          try {
-            const segmentation = await bodyPixModel.segmentPerson(video, {
-              internalResolution: "medium",
-              segmentationThreshold: 0.7
-            });
+          const mask = lastSegmentation.data;
+          const frameImageData = tempCtx.getImageData(0, 0, w, h);
+          const framePixels = frameImageData.data;
 
-            const mask = segmentation.data;
+          bgCtx.drawImage(bgImage, 0, 0, w, h);
+          const bgImageData = bgCtx.getImageData(0, 0, w, h);
+          const bgPixels = bgImageData.data;
 
-            const frameImageData = tempCtx.getImageData(0, 0, w, h);
-            const framePixels = frameImageData.data;
-
-            bgCtx.drawImage(bgImage, 0, 0, w, h);
-            const bgImageData = bgCtx.getImageData(0, 0, w, h);
-            const bgPixels = bgImageData.data;
-
-            const len = mask.length;
-            for (let i = 0; i < len; i++) {
-              const isPerson = mask[i] > 0;
-              const offset = i * 4;
-              if (!isPerson) {
-                framePixels[offset] = bgPixels[offset];
-                framePixels[offset + 1] = bgPixels[offset + 1];
-                framePixels[offset + 2] = bgPixels[offset + 2];
-                framePixels[offset + 3] = bgPixels[offset + 3];
-              }
+          const len = Math.min(mask.length, framePixels.length / 4);
+          for (let i = 0; i < len; i++) {
+            const isPerson = mask[i] > 0;
+            const offset = i * 4;
+            if (!isPerson) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = bgPixels[offset + 3];
             }
-
-            ctx.putImageData(frameImageData, 0, 0);
-          } catch (e) {
-            console.error("BodyPix error, falling back to plain video:", e);
-            ctx.drawImage(video, 0, 0, w, h);
           }
+
+          ctx.putImageData(frameImageData, 0, 0);
         } else {
           ctx.drawImage(video, 0, 0, w, h);
         }
+      }
 
-        let predictions = [];
-        try {
-          predictions = await faceModel.estimateFaces(video, false);
-        } catch (e) {
-          console.error("Error running BlazeFace:", e);
-          setStatus("Error running the face model. Try refreshing the page.", "error");
-          requestAnimationFrame(renderLoop);
-          return;
-        }
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBaseFrame();
 
         let boxToUse = null;
+        const now = performance.now();
 
-        if (Array.isArray(predictions) && predictions.length > 0) {
-          const face = predictions[0];
-          const rawBox = {
-            topLeft: face.topLeft,
-            bottomRight: face.bottomRight
-          };
-
-          boxToUse = smoothBox(lastFaceBox, rawBox, SMOOTH_ALPHA);
-          lastFaceBox = boxToUse;
-          lastFaceTime = timestamp;
+        if (latestFaceBox) {
+          smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+          boxToUse = smoothedFaceBox;
+        } else if (smoothedFaceBox && now - lastFaceTime < FACE_HOLD_MS) {
+          boxToUse = smoothedFaceBox;
         } else {
-          if (lastFaceBox && timestamp - lastFaceTime < FACE_HOLD_MS) {
-            boxToUse = lastFaceBox;
-          } else {
-            lastFaceBox = null;
-          }
+          smoothedFaceBox = null;
         }
 
         if (boxToUse) {
@@ -944,29 +1101,29 @@
           if (activeFilter === "glasses") {
             drawGlassesOnFace(topLeft, bottomRight);
             setStatus("AI is running: glasses filter on live camera.", "active");
+            setScreenStatus("Face Locked", true);
           } else if (activeFilter === "helmet") {
             drawHelmetOnFace(topLeft, bottomRight);
             setStatus("AI is running: helmet filter on live camera.", "active");
+            setScreenStatus("Face Locked", true);
           } else if (activeFilter === "combo") {
             drawComboOnFace(topLeft, bottomRight);
             setStatus("AI is running: Viking combo filter on live camera.", "active");
-          } else {
-            setStatus(
-              useGriffinHall
-                ? "AI is running: Griffin Hall background mode."
-                : "AI is running: live camera.",
-              "active"
-            );
+            setScreenStatus("Face Locked", true);
+          } else if (activeFilter === "griffin") {
+            setStatus("AI is running: Griffin Hall background mode.", "active");
+            setScreenStatus("Face Locked", true);
           }
         } else {
-          if (activeFilter === "griffin" && useGriffinHall) {
+          if (activeFilter === "griffin") {
             setStatus("Griffin Hall mode is active — step into frame.", "active");
           } else {
             setStatus("Models loaded — we don’t see a face yet.", "active");
           }
+          setScreenStatus("Searching…", false);
         }
 
-        requestAnimationFrame(renderLoop);
+        renderRaf = requestAnimationFrame(renderFrame);
       }
 
       function captureSnapshot() {
@@ -1006,6 +1163,7 @@
           captureBtn.disabled = true;
           stopBtn.disabled = true;
           setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
 
           await setupCamera();
 
@@ -1028,17 +1186,25 @@
           }
 
           aiRunning = true;
-          renderLoopActive = true;
           captureBtn.disabled = false;
           stopBtn.disabled = false;
 
+          faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
+          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFaceStep();
+          if (activeFilter === "griffin") {
+            await segmentStep();
+          }
+
           setStatus("AI is ready. Choose a filter or Griffin Hall mode.", "active");
-          requestAnimationFrame(renderLoop);
+          renderRaf = requestAnimationFrame(renderFrame);
         } catch (err) {
           console.error("Init error:", err);
           startBtn.disabled = false;
           captureBtn.disabled = true;
           stopBtn.disabled = true;
+          setScreenStatus("Offline", false);
           setStatus(
             "This device or browser may not fully support this demo. Try a recent version of Chrome, Edge, Firefox, or Safari over HTTPS.",
             "error"
@@ -1047,7 +1213,7 @@
       }
 
       filterButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", async () => {
           const chosen = btn.getAttribute("data-filter");
           activeFilter = chosen;
 
@@ -1083,6 +1249,10 @@
                 : "Griffin Hall selected. Background will appear when models are ready.",
               aiRunning ? "active" : "idle"
             );
+
+            if (aiRunning) {
+              await segmentStep();
+            }
           }
         });
       });
@@ -1094,6 +1264,8 @@
       window.addEventListener("beforeunload", () => {
         stopCamera();
       });
+
+      setScreenStatus("Offline", false);
     })();
   </script>
 </body>

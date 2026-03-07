@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Laugh Recorder – Griffin Hall Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Browser-based laugh recorder with live camera, Griffin Hall background replacement, and on-device AI laughter detection."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation"></script>
+
+  <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #111827;
+      --card: rgba(255,255,255,0.9);
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: rgba(255,255,255,0.16);
+      --accent: #fbbf24;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --soft: rgba(255,255,255,0.08);
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at top left, rgba(255,199,44,0.18), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(59,130,246,0.18), transparent 25%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-shell {
+      max-width: 1180px;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 0.75rem 1rem;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      padding: 0.32rem 0.85rem;
+      background: #000;
+      color: #fff;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .subtle {
+      color: rgba(255,255,255,0.78);
+      font-size: 0.92rem;
+    }
+
+    .panel-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 1.6rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .title {
+      font-size: clamp(2rem, 3vw, 2.9rem);
+      line-height: 1.02;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.8rem;
+    }
+
+    .lead {
+      color: #dbe4f0;
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .mini-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-badge {
+      padding: 0.28rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .result-panel {
+      border-radius: 1.1rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      padding: 1rem;
+    }
+
+    .result-title {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-text {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+
+    .result-text.idle { color: #f8fafc; }
+    .result-text.laughing { color: #86efac; }
+    .result-note {
+      color: #dbe4f0;
+      font-size: 0.92rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+
+    #stageWrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 1.15rem;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: #0b1120;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    #outputCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+
+    #sourceVideo {
+      display: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        rgba(255,255,255,0.04) 0%,
+        rgba(255,255,255,0.04) 24%,
+        rgba(255,255,255,0.12) 42%,
+        rgba(255,255,255,0.04) 60%,
+        rgba(255,255,255,0.04) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.15s infinite linear;
+      z-index: 4;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    .overlay-badge {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .laugh-banner {
+      min-width: 240px;
+      text-align: center;
+      padding: 0.95rem 1.3rem;
+      border-radius: 999px;
+      font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(10px);
+      opacity: 1;
+      transform: scale(1);
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+    }
+
+    .laugh-banner.idle {
+      background: rgba(17, 24, 39, 0.72);
+      color: #ffffff;
+    }
+
+    .laugh-banner.active {
+      background: rgba(34, 197, 94, 0.92);
+      color: #ffffff;
+      transform: scale(1.03);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 280px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #94a3b8;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.15);
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.14);
+    }
+
+    .status-text {
+      color: #f8fafc;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .hint {
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      text-align: right;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      padding-inline: 1.2rem;
+      font-weight: 700;
+    }
+
+    .metric-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      border-radius: 1rem;
+      padding: 1rem;
+      height: 100%;
+    }
+
+    .metric-label {
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      margin-bottom: 0.45rem;
+    }
+
+    .metric-value {
+      font-size: 1.9rem;
+      font-weight: 850;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .metric-sub {
+      color: #dbe4f0;
+      font-size: 0.88rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .meter-track {
+      width: 100%;
+      height: 0.55rem;
+      background: rgba(255,255,255,0.12);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.15s ease;
+    }
+
+    .meter-fill.low { background: #f87171; }
+    .meter-fill.mid { background: #f59e0b; }
+    .meter-fill.high { background: #22c55e; }
+
+    .download-link {
+      display: none;
+      text-decoration: none;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+      background: #fff;
+      color: #111827;
+      border: none;
+    }
+
+    .download-link.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .small-note {
+      color: #dbe4f0;
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 768px) {
+      .topbar { border-radius: 1rem; }
+      .hint { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4 py-lg-5 app-shell">
+    <header class="topbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div class="d-flex align-items-center gap-2">
+        <div class="brand-pill">Digital Vikings</div>
+        <div class="subtle">Laugh recorder · Griffin Hall background · browser AI</div>
+      </div>
+      <div class="subtle">Runs in-browser. Recording stays on the device until you download it.</div>
+    </header>
+
+    <main class="panel-card">
+      <div class="p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <section class="col-lg-4">
+            <div class="mini-badge-row">
+              <div class="mini-badge">Camera + Mic</div>
+              <div class="mini-badge">Live Background</div>
+              <div class="mini-badge">Laugh Capture</div>
+            </div>
+
+            <div class="eyebrow mb-2">Showcase mode</div>
+            <h1 class="title">Record the laugh with Griffin Hall behind you.</h1>
+
+            <p class="lead">
+              This version turns on the camera, places you in front of <strong>Griffin Hall</strong>,
+              watches for likely laughter, and records the full composited scene with audio so the
+              moment feels polished and presentation-ready.
+            </p>
+
+            <div class="result-panel mt-4">
+              <div class="result-title">Detected state</div>
+              <p id="resultText" class="result-text idle">Not laughing</p>
+              <p id="resultNote" class="result-note">
+                Start the camera, allow mic access, then hit record and laugh for the moment you want to save.
+              </p>
+            </div>
+          </section>
+
+          <section class="col-lg-8">
+            <div class="p-3 rounded-4" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);">
+              <div id="stageWrap" class="mb-3">
+                <canvas id="outputCanvas" width="1280" height="720"></canvas>
+                <video id="sourceVideo" autoplay playsinline muted></video>
+                <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
+
+                <div class="overlay-badge">
+                  <div id="laughBanner" class="laugh-banner idle">Not laughing</div>
+                </div>
+              </div>
+
+              <div class="status-row mb-3" aria-live="polite">
+                <div class="status-left">
+                  <span id="statusDot" class="status-dot"></span>
+                  <span id="statusText" class="status-text">Click “Start Camera” to begin.</span>
+                </div>
+                <div class="hint">Best results: bright light, one face, and stay roughly centered.</div>
+              </div>
+
+              <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 mb-4">
+                <button id="startBtn" class="btn btn-light btn-pill" type="button">
+                  🚀 Start Camera
+                </button>
+                <button id="recordBtn" class="btn btn-warning btn-pill" type="button" disabled>
+                  ⏺ Start Recording
+                </button>
+                <button id="stopRecordBtn" class="btn btn-outline-light btn-pill" type="button" disabled>
+                  ⏹ Stop Recording
+                </button>
+                <button id="stopBtn" class="btn btn-outline-danger btn-pill" type="button" disabled>
+                  🛑 Stop Camera
+                </button>
+                <a id="downloadLink" class="download-link" download="griffin-hall-laugh-recording.webm">⬇ Download Recording</a>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Mouth openness</div>
+                    <div id="mouthValue" class="metric-value">0</div>
+                    <div class="metric-sub">Estimated from face landmarks.</div>
+                    <div class="meter-track">
+                      <div id="mouthBar" class="meter-fill low"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Motion / bounce</div>
+                    <div id="motionValue" class="metric-value">0</div>
+                    <div class="metric-sub">Measures face and mouth movement across frames.</div>
+                    <div class="meter-track">
+                      <div id="motionBar" class="meter-fill low"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Laugh score</div>
+                    <div id="laughValue" class="metric-value">0</div>
+                    <div class="metric-sub">Combined score used to estimate likely laughter.</div>
+                    <div class="meter-track">
+                      <div id="laughBar" class="meter-fill low"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="small-note mt-3 mb-0">
+                Place <code>griffin-hall.png</code> in the same folder as this HTML file. This uses on-device models and is a creative demo, not a scientific emotion classifier.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const sourceVideo = document.getElementById("sourceVideo");
+      const outputCanvas = document.getElementById("outputCanvas");
+      const ctx = outputCanvas.getContext("2d");
+
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const recordBtn = document.getElementById("recordBtn");
+      const stopRecordBtn = document.getElementById("stopRecordBtn");
+      const downloadLink = document.getElementById("downloadLink");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+
+      const mouthValue = document.getElementById("mouthValue");
+      const motionValue = document.getElementById("motionValue");
+      const laughValue = document.getElementById("laughValue");
+
+      const mouthBar = document.getElementById("mouthBar");
+      const motionBar = document.getElementById("motionBar");
+      const laughBar = document.getElementById("laughBar");
+
+      const resultText = document.getElementById("resultText");
+      const resultNote = document.getElementById("resultNote");
+      const laughBanner = document.getElementById("laughBanner");
+
+      let faceModel = null;
+      let segmentationModel = null;
+      let mediaStream = null;
+      let audioStream = null;
+      let bgImage = null;
+
+      let animationId = null;
+      let aiRunning = false;
+      let videoReady = false;
+
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let recordStartTime = null;
+
+      let mouthOpenScore = 0;
+      let movementScore = 0;
+      let laughScore = 0;
+
+      let prevFaceCenterY = null;
+      let prevMouthYNorm = null;
+
+      let laughFrameCounter = 0;
+      let nonLaughFrameCounter = 0;
+      let isLaughing = false;
+
+      let lastFacePrediction = null;
+      let lastSegmentation = null;
+      let lastFaceTime = 0;
+      let lastSegTime = 0;
+
+      const FACE_INTERVAL_MS = 95;
+      const SEG_INTERVAL_MS = 130;
+      const SMOOTH_ALPHA = 0.18;
+      const LAUGH_THRESHOLD = 68;
+      const LAUGH_FRAMES_REQUIRED = 5;
+      const NON_LAUGH_FRAMES_TO_RESET = 8;
+
+      function clamp(val, min, max) {
+        return Math.max(min, Math.min(max, val));
+      }
+
+      function lerp(current, target, alpha) {
+        return current + alpha * (target - current);
+      }
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+        if (mode === "active") statusDot.classList.add("active");
+        if (mode === "error") statusDot.classList.add("error");
+      }
+
+      function setMeter(el, value) {
+        const v = clamp(Math.round(value), 0, 100);
+        el.style.width = v + "%";
+        el.classList.remove("low", "mid", "high");
+        if (v < 35) el.classList.add("low");
+        else if (v < 70) el.classList.add("mid");
+        else el.classList.add("high");
+      }
+
+      function updateUI() {
+        const mouthRounded = Math.round(mouthOpenScore);
+        const motionRounded = Math.round(movementScore);
+        const laughRounded = Math.round(laughScore);
+
+        mouthValue.textContent = mouthRounded;
+        motionValue.textContent = motionRounded;
+        laughValue.textContent = laughRounded;
+
+        setMeter(mouthBar, mouthRounded);
+        setMeter(motionBar, motionRounded);
+        setMeter(laughBar, laughRounded);
+
+        if (isLaughing) {
+          resultText.textContent = "Laughing";
+          resultText.className = "result-text laughing";
+          resultNote.textContent = "The detector sees enough repeated mouth + motion activity to label this as likely laughter.";
+          laughBanner.textContent = "Laughing";
+          laughBanner.className = "laugh-banner active";
+        } else {
+          resultText.textContent = "Not laughing";
+          resultText.className = "result-text idle";
+          resultNote.textContent = "The detector is not yet confident enough to label this as laughter.";
+          laughBanner.textContent = "Not laughing";
+          laughBanner.className = "laugh-banner idle";
+        }
+      }
+
+      async function getBestBackend() {
+        const backendsToTry = ["webgl", "wasm", "cpu"];
+        for (const backend of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              console.log("Using TFJS backend:", tf.getBackend());
+              return;
+            }
+          } catch (err) {
+            console.warn("Backend unavailable:", backend, err);
+          }
+        }
+      }
+
+      async function loadBackgroundImage() {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Could not load griffin-hall.png"));
+          img.src = "griffin-hall.png";
+        });
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("getUserMedia is not supported in this browser.");
+        }
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+
+        sourceVideo.srcObject = mediaStream;
+
+        return new Promise((resolve) => {
+          sourceVideo.onloadedmetadata = async () => {
+            await sourceVideo.play();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+      }
+
+      function getLaughMetrics(face, videoWidth, videoHeight) {
+        if (!face || !Array.isArray(face.landmarks) || face.landmarks.length < 6) {
+          return { mouthOpen: 0, movement: 0, laugh: 0 };
+        }
+
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+
+        if (!Array.isArray(topLeft) || !Array.isArray(bottomRight)) {
+          return { mouthOpen: 0, movement: 0, laugh: 0 };
+        }
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        if (faceWidth <= 0 || faceHeight <= 0) {
+          return { mouthOpen: 0, movement: 0, laugh: 0 };
+        }
+
+        const rightEye = face.landmarks[0];
+        const leftEye = face.landmarks[1];
+        const nose = face.landmarks[2];
+        const mouth = face.landmarks[3];
+
+        if (!rightEye || !leftEye || !nose || !mouth) {
+          return { mouthOpen: 0, movement: 0, laugh: 0 };
+        }
+
+        const eyeMidY = (rightEye[1] + leftEye[1]) / 2;
+        const mouthDrop = mouth[1] - eyeMidY;
+        const mouthDropNorm = mouthDrop / faceHeight;
+        const mouthOpenRaw = clamp((mouthDropNorm - 0.22) / 0.22, 0, 1) * 100;
+
+        const faceCenterY = (y1 + y2) / 2;
+        const faceCenterYNorm = faceCenterY / videoHeight;
+        const mouthYNorm = mouth[1] / videoHeight;
+
+        let faceBounce = 0;
+        let mouthMovement = 0;
+
+        if (prevFaceCenterY !== null) {
+          faceBounce = Math.abs(faceCenterYNorm - prevFaceCenterY);
+        }
+        if (prevMouthYNorm !== null) {
+          mouthMovement = Math.abs(mouthYNorm - prevMouthYNorm);
+        }
+
+        prevFaceCenterY = faceCenterYNorm;
+        prevMouthYNorm = mouthYNorm;
+
+        const faceBounceScore = clamp(faceBounce / 0.015, 0, 1) * 100;
+        const mouthMovementScore = clamp(mouthMovement / 0.02, 0, 1) * 100;
+
+        const movementRaw = clamp(
+          0.35 * faceBounceScore + 0.65 * mouthMovementScore,
+          0,
+          100
+        );
+
+        let laughRaw = 0;
+        if (mouthOpenRaw > 35) {
+          laughRaw = mouthOpenRaw * 0.55 + movementRaw * 0.45;
+        } else {
+          laughRaw = mouthOpenRaw * 0.7 + movementRaw * 0.15;
+        }
+
+        laughRaw = clamp(laughRaw, 0, 100);
+
+        return {
+          mouthOpen: mouthOpenRaw,
+          movement: movementRaw,
+          laugh: laughRaw
+        };
+      }
+
+      function updateLaughState() {
+        if (laughScore >= LAUGH_THRESHOLD && mouthOpenScore >= 35) {
+          laughFrameCounter += 1;
+          nonLaughFrameCounter = 0;
+        } else {
+          nonLaughFrameCounter += 1;
+          laughFrameCounter = Math.max(0, laughFrameCounter - 1);
+        }
+
+        if (!isLaughing && laughFrameCounter >= LAUGH_FRAMES_REQUIRED) {
+          isLaughing = true;
+        }
+
+        if (isLaughing && nonLaughFrameCounter >= NON_LAUGH_FRAMES_TO_RESET) {
+          isLaughing = false;
+        }
+      }
+
+      function coverImage(img, canvas, context) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const iw = img.width;
+        const ih = img.height;
+
+        const scale = Math.max(cw / iw, ch / ih);
+        const drawW = iw * scale;
+        const drawH = ih * scale;
+        const dx = (cw - drawW) / 2;
+        const dy = (ch - drawH) / 2;
+
+        context.drawImage(img, dx, dy, drawW, drawH);
+      }
+
+      function drawVideoCoverMirrored(video, canvas, context) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+
+        if (!vw || !vh) return;
+
+        const scale = Math.max(cw / vw, ch / vh);
+        const drawW = vw * scale;
+        const drawH = vh * scale;
+        const dx = (cw - drawW) / 2;
+        const dy = (ch - drawH) / 2;
+
+        context.save();
+        context.translate(cw, 0);
+        context.scale(-1, 1);
+        context.drawImage(video, cw - dx - drawW, dy, drawW, drawH);
+        context.restore();
+      }
+
+      async function updateFacePrediction(now) {
+        if (!faceModel || !videoReady) return;
+        if (now - lastFaceTime < FACE_INTERVAL_MS) return;
+
+        lastFaceTime = now;
+        try {
+          const predictions = await faceModel.estimateFaces(sourceVideo, false);
+          lastFacePrediction = Array.isArray(predictions) && predictions.length ? predictions[0] : null;
+
+          if (lastFacePrediction) {
+            const metrics = getLaughMetrics(
+              lastFacePrediction,
+              sourceVideo.videoWidth || 640,
+              sourceVideo.videoHeight || 480
+            );
+
+            mouthOpenScore = lerp(mouthOpenScore, metrics.mouthOpen, SMOOTH_ALPHA);
+            movementScore = lerp(movementScore, metrics.movement, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, metrics.laugh, SMOOTH_ALPHA);
+
+            updateLaughState();
+            setStatus("Camera, background, and laugh detector are running.", "active");
+          } else {
+            mouthOpenScore = lerp(mouthOpenScore, 0, SMOOTH_ALPHA);
+            movementScore = lerp(movementScore, 0, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
+
+            prevFaceCenterY = null;
+            prevMouthYNorm = null;
+            laughFrameCounter = 0;
+            nonLaughFrameCounter += 1;
+
+            if (nonLaughFrameCounter >= NON_LAUGH_FRAMES_TO_RESET) {
+              isLaughing = false;
+            }
+
+            setStatus("Waiting for a face in frame…", "active");
+          }
+
+          updateUI();
+        } catch (err) {
+          console.error("Face prediction error:", err);
+        }
+      }
+
+      async function updateSegmentation(now) {
+        if (!segmentationModel || !videoReady) return;
+        if (now - lastSegTime < SEG_INTERVAL_MS) return;
+
+        lastSegTime = now;
+
+        try {
+          lastSegmentation = await segmentationModel.segmentPeople(sourceVideo, {
+            multiSegmentation: false,
+            segmentBodyParts: false,
+            flipHorizontal: true,
+            internalResolution: "medium",
+            threshold: 0.7
+          });
+        } catch (err) {
+          console.error("Segmentation error:", err);
+          lastSegmentation = null;
+        }
+      }
+
+      async function drawCompositeFrame() {
+        ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+        if (bgImage) {
+          coverImage(bgImage, outputCanvas, ctx);
+        } else {
+          ctx.fillStyle = "#111827";
+          ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+        }
+
+        if (!videoReady) return;
+
+        if (lastSegmentation && Array.isArray(lastSegmentation) && lastSegmentation.length > 0) {
+          const mask = await bodySegmentation.toBinaryMask(
+            lastSegmentation,
+            { r: 0, g: 0, b: 0, a: 0 },
+            { r: 0, g: 0, b: 0, a: 255 },
+            false,
+            0.7
+          );
+
+          const tempCanvas = document.createElement("canvas");
+          tempCanvas.width = outputCanvas.width;
+          tempCanvas.height = outputCanvas.height;
+          const tempCtx = tempCanvas.getContext("2d");
+
+          drawVideoCoverMirrored(sourceVideo, outputCanvas, tempCtx);
+
+          const blurredMask = await bodySegmentation.drawMask(
+            tempCanvas,
+            sourceVideo,
+            mask,
+            1,
+            0,
+            false
+          );
+
+          ctx.drawImage(blurredMask, 0, 0, outputCanvas.width, outputCanvas.height);
+        } else {
+          drawVideoCoverMirrored(sourceVideo, outputCanvas, ctx);
+        }
+
+        drawStageOverlay();
+      }
+
+      function drawStageOverlay() {
+        const w = outputCanvas.width;
+        const h = outputCanvas.height;
+
+        const topBarH = 92;
+
+        ctx.save();
+
+        const gradient = ctx.createLinearGradient(0, 0, w, 0);
+        gradient.addColorStop(0, "rgba(0,0,0,0.60)");
+        gradient.addColorStop(1, "rgba(0,0,0,0.18)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, topBarH);
+
+        ctx.font = "800 40px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("Making Digital Vikings", 36, 54);
+
+        ctx.font = "700 22px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillText("Griffin Hall Laugh Capture", 36, 82);
+
+        const badgeText = isLaughing ? "LAUGHING" : "NOT LAUGHING";
+        const badgeColor = isLaughing ? "#22c55e" : "rgba(15,23,42,0.88)";
+
+        const badgePaddingX = 24;
+        ctx.font = "900 22px system-ui, -apple-system, Segoe UI, sans-serif";
+        const badgeWidth = ctx.measureText(badgeText).width + badgePaddingX * 2;
+        const badgeHeight = 52;
+        const bx = w - badgeWidth - 36;
+        const by = h - badgeHeight - 30;
+
+        roundRect(ctx, bx, by, badgeWidth, badgeHeight, 999);
+        ctx.fillStyle = badgeColor;
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(badgeText, bx + badgeWidth / 2, by + badgeHeight / 2 + 1);
+
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          const elapsedMs = Date.now() - recordStartTime;
+          const totalSec = Math.floor(elapsedMs / 1000);
+          const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+          const ss = String(totalSec % 60).padStart(2, "0");
+
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
+
+          roundRect(ctx, 36, h - 80, 180, 46, 999);
+          ctx.fillStyle = "rgba(0,0,0,0.65)";
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(62, h - 57, 8, 0, Math.PI * 2);
+          ctx.fillStyle = "#ef4444";
+          ctx.fill();
+
+          ctx.font = "800 22px system-ui, -apple-system, Segoe UI, sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(`REC ${mm}:${ss}`, 82, h - 50);
+        }
+
+        ctx.restore();
+      }
+
+      function roundRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      async function renderLoop(now) {
+        if (!aiRunning) return;
+
+        if (
+          !mediaStream ||
+          !mediaStream.active ||
+          sourceVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+        ) {
+          setStatus("Camera feed stopped. Restart to continue.", "error");
+          stopExperience(true);
+          return;
+        }
+
+        await Promise.all([
+          updateFacePrediction(now),
+          updateSegmentation(now)
+        ]);
+
+        await drawCompositeFrame();
+        animationId = requestAnimationFrame(renderLoop);
+      }
+
+      function getSupportedMimeType() {
+        const candidates = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm"
+        ];
+        return candidates.find(type => MediaRecorder.isTypeSupported(type)) || "";
+      }
+
+      function startRecording() {
+        if (!outputCanvas || !mediaStream) return;
+
+        const canvasStream = outputCanvas.captureStream(30);
+        const mixedStream = new MediaStream();
+
+        canvasStream.getVideoTracks().forEach(track => mixedStream.addTrack(track));
+        mediaStream.getAudioTracks().forEach(track => mixedStream.addTrack(track));
+
+        recordedChunks = [];
+        const mimeType = getSupportedMimeType();
+
+        try {
+          mediaRecorder = new MediaRecorder(mixedStream, mimeType ? { mimeType } : undefined);
+        } catch (err) {
+          console.error("MediaRecorder error:", err);
+          setStatus("Recording is not supported in this browser.", "error");
+          return;
+        }
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "video/webm" });
+          const url = URL.createObjectURL(blob);
+          downloadLink.href = url;
+          downloadLink.classList.add("show");
+          setStatus("Recording complete. Download your Griffin Hall laugh clip.", "active");
+        };
+
+        mediaRecorder.start(250);
+        recordStartTime = Date.now();
+
+        recordBtn.disabled = true;
+        stopRecordBtn.disabled = false;
+        downloadLink.classList.remove("show");
+        setStatus("Recording in progress… laugh when you're ready.", "active");
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+        recordBtn.disabled = false;
+        stopRecordBtn.disabled = true;
+      }
+
+      async function startExperience() {
+        try {
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+          recordBtn.disabled = true;
+          stopRecordBtn.disabled = true;
+          downloadLink.classList.remove("show");
+
+          setStatus("Loading Griffin Hall background…");
+          bgImage = await loadBackgroundImage();
+
+          setStatus("Requesting camera and microphone access…");
+          await setupCamera();
+
+          setStatus("Loading AI models…");
+          await getBestBackend();
+
+          faceModel = await blazeface.load();
+
+          segmentationModel = await bodySegmentation.createSegmenter(
+            bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
+            {
+              runtime: "mediapipe",
+              modelType: "general",
+              solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"
+            }
+          );
+
+          aiRunning = true;
+          stopBtn.disabled = false;
+          recordBtn.disabled = false;
+
+          setStatus("Ready. You can record now.", "active");
+          animationId = requestAnimationFrame(renderLoop);
+        } catch (err) {
+          console.error("Initialization error:", err);
+          setStatus("Could not start camera, background, or AI. Check permissions and confirm griffin-hall.png is present.", "error");
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          recordBtn.disabled = true;
+          stopRecordBtn.disabled = true;
+        }
+      }
+
+      function resetScores() {
+        mouthOpenScore = 0;
+        movementScore = 0;
+        laughScore = 0;
+        prevFaceCenterY = null;
+        prevMouthYNorm = null;
+        laughFrameCounter = 0;
+        nonLaughFrameCounter = 0;
+        isLaughing = false;
+        lastFacePrediction = null;
+        lastSegmentation = null;
+        updateUI();
+      }
+
+      function stopExperience(fromLoop = false) {
+        aiRunning = false;
+
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+
+        if (audioStream) {
+          audioStream.getTracks().forEach(track => track.stop());
+          audioStream = null;
+        }
+
+        sourceVideo.srcObject = null;
+        videoReady = false;
+        videoSkeleton.style.display = "block";
+
+        ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+        resetScores();
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        recordBtn.disabled = true;
+        stopRecordBtn.disabled = true;
+
+        if (!fromLoop) {
+          setStatus("Camera is off. You can restart the demo any time.");
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", () => stopExperience(false));
+      recordBtn.addEventListener("click", startRecording);
+      stopRecordBtn.addEventListener("click", stopRecording);
+
+      updateUI();
+    })();
+  </script>
+</body>
+</html>

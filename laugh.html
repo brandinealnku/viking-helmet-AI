@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Screen + Camera Recorder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Record your full screen with a live camera overlay directly in the browser."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <style>
+    :root {
+      --bg1: #f8fafc;
+      --bg2: #e2e8f0;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      --accent: #4f46e5;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top, var(--bg1) 0%, var(--bg2) 55%, var(--bg1) 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-shell {
+      max-width: 1180px;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      background: #111827;
+      color: #ffffff;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .panel-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1.4rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .title {
+      font-size: clamp(1.9rem, 3vw, 2.6rem);
+      line-height: 1.05;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+
+    .lead {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .mini-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-badge {
+      padding: 0.28rem 0.75rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #312e81;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .preview-shell {
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 72%);
+      border-radius: 1rem;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    #compositeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #0f172a;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 280px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d1d5db;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.14);
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.14);
+    }
+
+    .status-dot.warn {
+      background: var(--warning);
+      box-shadow: 0 0 0 5px rgba(217, 119, 6, 0.14);
+    }
+
+    .status-text {
+      color: var(--accent);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: right;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      padding-inline: 1.2rem;
+      font-weight: 600;
+    }
+
+    .metric-card {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      border-radius: 1rem;
+      padding: 1rem;
+      height: 100%;
+    }
+
+    .metric-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+    }
+
+    .metric-value {
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.4rem;
+    }
+
+    .metric-sub {
+      color: #4b5563;
+      font-size: 0.88rem;
+      margin-bottom: 0;
+    }
+
+    .download-panel {
+      border-radius: 1rem;
+      border: 1px dashed #cbd5e1;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      padding: 1rem;
+    }
+
+    .download-link {
+      word-break: break-word;
+    }
+
+    .hidden-video {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      left: -9999px;
+      top: -9999px;
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        border-radius: 1rem;
+      }
+
+      .hint {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4 py-lg-5 app-shell">
+    <header class="topbar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div class="d-flex align-items-center gap-2">
+        <div class="brand-pill">Recorder</div>
+        <div class="subtle">Full screen + camera overlay · browser-based · no backend</div>
+      </div>
+      <div class="subtle">Your browser will ask what screen/window/tab to share.</div>
+    </header>
+
+    <main class="panel-card">
+      <div class="p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <section class="col-lg-4">
+            <div class="mini-badge-row">
+              <div class="mini-badge">Screen capture</div>
+              <div class="mini-badge">Camera overlay</div>
+              <div class="mini-badge">Downloadable video</div>
+            </div>
+
+            <div class="eyebrow mb-2">Screen recorder demo</div>
+            <h1 class="title">Record the full screen while keeping the camera on.</h1>
+
+            <p class="lead">
+              This demo combines screen share and webcam into one recording. It draws both
+              into a single canvas, then records that canvas as a downloadable video.
+            </p>
+
+            <div class="download-panel mt-4">
+              <div class="metric-label">How it works</div>
+              <p class="mb-2 text-secondary">
+                1. Start screen + camera<br>
+                2. Choose your full screen in the browser picker<br>
+                3. Click record<br>
+                4. Stop and download
+              </p>
+              <p class="small text-muted mb-0">
+                System audio support depends on the browser and which share option you choose.
+              </p>
+            </div>
+          </section>
+
+          <section class="col-lg-8">
+            <div class="bg-light border rounded-4 p-3" style="border-color:#e5e7eb;">
+              <div class="preview-shell mb-3">
+                <canvas id="compositeCanvas" width="1280" height="720" aria-label="Combined screen and camera preview"></canvas>
+              </div>
+
+              <div class="status-row mb-3" aria-live="polite">
+                <div class="status-left">
+                  <span id="statusDot" class="status-dot"></span>
+                  <span id="statusText" class="status-text">Click “Start Screen + Camera” to begin.</span>
+                </div>
+                <div class="hint">Best results: choose Entire Screen and allow camera + microphone access.</div>
+              </div>
+
+              <div class="d-flex flex-column flex-sm-row gap-2 mb-4">
+                <button id="startStreamsBtn" class="btn btn-outline-dark btn-pill" type="button">
+                  🖥️ Start Screen + Camera
+                </button>
+                <button id="startRecordBtn" class="btn btn-primary btn-pill" type="button" disabled>
+                  ⏺ Start Recording
+                </button>
+                <button id="stopRecordBtn" class="btn btn-outline-danger btn-pill" type="button" disabled>
+                  ⏹ Stop Recording
+                </button>
+                <button id="stopAllBtn" class="btn btn-outline-secondary btn-pill" type="button" disabled>
+                  ✖ Stop All
+                </button>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Screen</div>
+                    <div id="screenState" class="metric-value">Off</div>
+                    <div class="metric-sub">Whether a display stream is active.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Camera</div>
+                    <div id="cameraState" class="metric-value">Off</div>
+                    <div class="metric-sub">Whether the webcam is active.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="metric-card">
+                    <div class="metric-label">Recording</div>
+                    <div id="recordState" class="metric-value">Idle</div>
+                    <div class="metric-sub">Current recorder state.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="downloadWrap" class="download-panel d-none">
+                <div class="metric-label">Download</div>
+                <p class="mb-2">Your recording is ready.</p>
+                <a id="downloadLink" class="btn btn-success btn-pill download-link" href="#" download>
+                  ⬇ Download recording
+                </a>
+              </div>
+
+              <p class="small text-muted mt-3 mb-0">
+                This runs in modern Chromium-based browsers. Safari and Firefox may behave differently,
+                especially for system audio and codec support.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Hidden source videos -->
+  <video id="screenVideo" class="hidden-video" autoplay playsinline muted></video>
+  <video id="cameraVideo" class="hidden-video" autoplay playsinline muted></video>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const compositeCanvas = document.getElementById("compositeCanvas");
+      const ctx = compositeCanvas.getContext("2d");
+
+      const screenVideo = document.getElementById("screenVideo");
+      const cameraVideo = document.getElementById("cameraVideo");
+
+      const startStreamsBtn = document.getElementById("startStreamsBtn");
+      const startRecordBtn = document.getElementById("startRecordBtn");
+      const stopRecordBtn = document.getElementById("stopRecordBtn");
+      const stopAllBtn = document.getElementById("stopAllBtn");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+
+      const screenState = document.getElementById("screenState");
+      const cameraState = document.getElementById("cameraState");
+      const recordState = document.getElementById("recordState");
+
+      const downloadWrap = document.getElementById("downloadWrap");
+      const downloadLink = document.getElementById("downloadLink");
+
+      let screenStream = null;
+      let cameraStream = null;
+      let mixedAudioStream = null;
+      let canvasStream = null;
+      let recorder = null;
+      let recordedChunks = [];
+      let drawLoopId = null;
+      let audioContext = null;
+
+      let isDrawing = false;
+      let isRecording = false;
+
+      const CAMERA_MARGIN = 24;
+      const CAMERA_WIDTH_RATIO = 0.22;
+      const CAMERA_ASPECT_RATIO = 3 / 4;
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error", "warn");
+
+        if (mode === "active") statusDot.classList.add("active");
+        if (mode === "error") statusDot.classList.add("error");
+        if (mode === "warn") statusDot.classList.add("warn");
+      }
+
+      function updateStateCards() {
+        screenState.textContent = screenStream && screenStream.active ? "On" : "Off";
+        cameraState.textContent = cameraStream && cameraStream.active ? "On" : "Off";
+        recordState.textContent = isRecording ? "Recording" : "Idle";
+      }
+
+      function waitForVideo(videoEl) {
+        return new Promise((resolve) => {
+          if (videoEl.readyState >= 2) {
+            resolve();
+            return;
+          }
+
+          const onLoaded = () => {
+            videoEl.removeEventListener("loadedmetadata", onLoaded);
+            resolve();
+          };
+
+          videoEl.addEventListener("loadedmetadata", onLoaded);
+        });
+      }
+
+      function stopStream(stream) {
+        if (!stream) return;
+        stream.getTracks().forEach((track) => track.stop());
+      }
+
+      async function setupStreams() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("This browser does not support the required media APIs.");
+        }
+
+        setStatus("Requesting screen share…");
+
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            frameRate: { ideal: 30, max: 30 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: true
+        });
+
+        setStatus("Requesting camera and microphone…");
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: "user"
+          },
+          audio: true
+        });
+
+        screenVideo.srcObject = screenStream;
+        cameraVideo.srcObject = cameraStream;
+
+        await Promise.all([
+          waitForVideo(screenVideo),
+          waitForVideo(cameraVideo),
+          screenVideo.play(),
+          cameraVideo.play()
+        ]);
+
+        const screenTrack = screenStream.getVideoTracks()[0];
+        if (screenTrack) {
+          screenTrack.addEventListener("ended", () => {
+            setStatus("Screen sharing ended.", "warn");
+            stopAll();
+          });
+        }
+
+        updateStateCards();
+      }
+
+      function fitContain(srcW, srcH, destW, destH) {
+        const srcRatio = srcW / srcH;
+        const destRatio = destW / destH;
+
+        let drawW, drawH, offsetX, offsetY;
+
+        if (srcRatio > destRatio) {
+          drawW = destW;
+          drawH = destW / srcRatio;
+          offsetX = 0;
+          offsetY = (destH - drawH) / 2;
+        } else {
+          drawH = destH;
+          drawW = destH * srcRatio;
+          offsetY = 0;
+          offsetX = (destW - drawW) / 2;
+        }
+
+        return { drawW, drawH, offsetX, offsetY };
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      function drawCompositeFrame() {
+        const w = compositeCanvas.width;
+        const h = compositeCanvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Background
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, w, h);
+
+        // Draw shared screen
+        if (screenVideo.videoWidth > 0 && screenVideo.videoHeight > 0) {
+          const fit = fitContain(screenVideo.videoWidth, screenVideo.videoHeight, w, h);
+          ctx.drawImage(
+            screenVideo,
+            fit.offsetX,
+            fit.offsetY,
+            fit.drawW,
+            fit.drawH
+          );
+        } else {
+          ctx.fillStyle = "#111827";
+          ctx.fillRect(0, 0, w, h);
+        }
+
+        // Top label
+        ctx.save();
+        ctx.fillStyle = "rgba(15, 23, 42, 0.65)";
+        roundRect(ctx, 18, 18, 250, 48, 18);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 20px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.fillText("Screen + Camera Recorder", 34, 48);
+        ctx.restore();
+
+        // Camera overlay
+        if (cameraVideo.videoWidth > 0 && cameraVideo.videoHeight > 0) {
+          const camW = Math.round(w * CAMERA_WIDTH_RATIO);
+          const camH = Math.round(camW / CAMERA_ASPECT_RATIO);
+          const camX = w - camW - CAMERA_MARGIN;
+          const camY = h - camH - CAMERA_MARGIN;
+          const radius = 24;
+
+          // Shadow
+          ctx.save();
+          ctx.shadowColor = "rgba(0,0,0,0.35)";
+          ctx.shadowBlur = 24;
+          ctx.shadowOffsetY = 10;
+
+          roundRect(ctx, camX, camY, camW, camH, radius);
+          ctx.fillStyle = "rgba(255,255,255,0.10)";
+          ctx.fill();
+          ctx.restore();
+
+          // Clip camera
+          ctx.save();
+          roundRect(ctx, camX, camY, camW, camH, radius);
+          ctx.clip();
+
+          // Mirror the webcam so it feels natural to the user
+          ctx.translate(camX + camW, camY);
+          ctx.scale(-1, 1);
+          ctx.drawImage(cameraVideo, 0, 0, camW, camH);
+          ctx.restore();
+
+          // Border
+          ctx.save();
+          roundRect(ctx, camX, camY, camW, camH, radius);
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = "rgba(255,255,255,0.95)";
+          ctx.stroke();
+          ctx.restore();
+
+          // Camera label
+          ctx.save();
+          ctx.fillStyle = "rgba(15, 23, 42, 0.72)";
+          roundRect(ctx, camX + 12, camY + 12, 90, 32, 12);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "700 14px system-ui, -apple-system, Segoe UI, sans-serif";
+          ctx.fillText("CAMERA ON", camX + 22, camY + 33);
+          ctx.restore();
+        }
+
+        // Recording indicator
+        if (isRecording) {
+          ctx.save();
+          ctx.fillStyle = "rgba(127, 29, 29, 0.88)";
+          roundRect(ctx, w - 168, 18, 150, 48, 18);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = "#ef4444";
+          ctx.arc(w - 134, 42, 8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "700 20px system-ui, -apple-system, Segoe UI, sans-serif";
+          ctx.fillText("REC", w - 116, 49);
+          ctx.restore();
+        }
+      }
+
+      function startDrawingLoop() {
+        if (isDrawing) return;
+        isDrawing = true;
+
+        const draw = () => {
+          drawCompositeFrame();
+          drawLoopId = requestAnimationFrame(draw);
+        };
+
+        draw();
+      }
+
+      function stopDrawingLoop() {
+        isDrawing = false;
+        if (drawLoopId !== null) {
+          cancelAnimationFrame(drawLoopId);
+          drawLoopId = null;
+        }
+      }
+
+      async function buildMixedAudioStream() {
+        const destinationSupported = !!(window.AudioContext || window.webkitAudioContext);
+        if (!destinationSupported) return null;
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
+        const destination = audioContext.createMediaStreamDestination();
+
+        let hasAnyAudio = false;
+
+        const addStreamToMix = (stream, gainValue) => {
+          if (!stream) return;
+          const audioTracks = stream.getAudioTracks();
+          if (!audioTracks.length) return;
+
+          const source = audioContext.createMediaStreamSource(
+            new MediaStream(audioTracks)
+          );
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = gainValue;
+          source.connect(gainNode).connect(destination);
+          hasAnyAudio = true;
+        };
+
+        addStreamToMix(screenStream, 1.0);
+        addStreamToMix(cameraStream, 1.0);
+
+        return hasAnyAudio ? destination.stream : null;
+      }
+
+      function getSupportedMimeType() {
+        const mimeTypes = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm"
+        ];
+
+        for (const type of mimeTypes) {
+          if (MediaRecorder.isTypeSupported(type)) {
+            return type;
+          }
+        }
+
+        return "";
+      }
+
+      async function startAll() {
+        try {
+          startStreamsBtn.disabled = true;
+          startRecordBtn.disabled = true;
+          stopRecordBtn.disabled = true;
+          stopAllBtn.disabled = true;
+          downloadWrap.classList.add("d-none");
+          downloadLink.href = "#";
+
+          await setupStreams();
+          startDrawingLoop();
+
+          setStatus("Screen and camera are ready. Click Start Recording when you’re ready.", "active");
+          startRecordBtn.disabled = false;
+          stopAllBtn.disabled = false;
+        } catch (error) {
+          console.error(error);
+          setStatus("Could not start screen share and camera. Check permissions and try again.", "error");
+          startStreamsBtn.disabled = false;
+          updateStateCards();
+        }
+      }
+
+      async function startRecording() {
+        try {
+          if (!screenStream || !cameraStream) {
+            setStatus("Start the screen and camera first.", "warn");
+            return;
+          }
+
+          recordedChunks = [];
+          mixedAudioStream = await buildMixedAudioStream();
+
+          canvasStream = compositeCanvas.captureStream(30);
+
+          if (mixedAudioStream) {
+            mixedAudioStream.getAudioTracks().forEach((track) => {
+              canvasStream.addTrack(track);
+            });
+          }
+
+          const mimeType = getSupportedMimeType();
+          recorder = mimeType
+            ? new MediaRecorder(canvasStream, { mimeType })
+            : new MediaRecorder(canvasStream);
+
+          recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            const finalMime = recorder.mimeType || "video/webm";
+            const blob = new Blob(recordedChunks, { type: finalMime });
+            const url = URL.createObjectURL(blob);
+
+            downloadLink.href = url;
+            downloadLink.download = `screen-camera-recording-${Date.now()}.webm`;
+            downloadWrap.classList.remove("d-none");
+          };
+
+          recorder.start(1000);
+          isRecording = true;
+
+          startRecordBtn.disabled = true;
+          stopRecordBtn.disabled = false;
+          startStreamsBtn.disabled = true;
+          stopAllBtn.disabled = true;
+
+          updateStateCards();
+          setStatus("Recording in progress…", "active");
+        } catch (error) {
+          console.error(error);
+          setStatus("Could not start recording.", "error");
+        }
+      }
+
+      function stopRecording() {
+        if (recorder && recorder.state !== "inactive") {
+          recorder.stop();
+        }
+
+        if (canvasStream) {
+          canvasStream.getTracks().forEach((track) => track.stop());
+          canvasStream = null;
+        }
+
+        if (mixedAudioStream) {
+          mixedAudioStream.getTracks().forEach((track) => track.stop());
+          mixedAudioStream = null;
+        }
+
+        if (audioContext && audioContext.state !== "closed") {
+          audioContext.close().catch(() => {});
+          audioContext = null;
+        }
+
+        isRecording = false;
+        startRecordBtn.disabled = false;
+        stopRecordBtn.disabled = true;
+        stopAllBtn.disabled = false;
+
+        updateStateCards();
+        setStatus("Recording stopped. Download is ready below.", "active");
+      }
+
+      function stopAll() {
+        if (recorder && recorder.state !== "inactive") {
+          recorder.stop();
+        }
+
+        isRecording = false;
+        stopDrawingLoop();
+
+        stopStream(screenStream);
+        stopStream(cameraStream);
+        stopStream(canvasStream);
+        stopStream(mixedAudioStream);
+
+        screenStream = null;
+        cameraStream = null;
+        canvasStream = null;
+        mixedAudioStream = null;
+
+        if (audioContext && audioContext.state !== "closed") {
+          audioContext.close().catch(() => {});
+          audioContext = null;
+        }
+
+        screenVideo.srcObject = null;
+        cameraVideo.srcObject = null;
+
+        ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.font = "700 34px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.fillText("Preview stopped", 40, 80);
+
+        startStreamsBtn.disabled = false;
+        startRecordBtn.disabled = true;
+        stopRecordBtn.disabled = true;
+        stopAllBtn.disabled = true;
+
+        updateStateCards();
+        setStatus("All streams stopped. You can start again any time.");
+      }
+
+      startStreamsBtn.addEventListener("click", startAll);
+      startRecordBtn.addEventListener("click", startRecording);
+      stopRecordBtn.addEventListener("click", stopRecording);
+      stopAllBtn.addEventListener("click", stopAll);
+
+      updateStateCards();
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.font = "700 34px system-ui, -apple-system, Segoe UI, sans-serif";
+      ctx.fillText("Click “Start Screen + Camera”", 40, 80);
+      ctx.font = "400 22px system-ui, -apple-system, Segoe UI, sans-serif";
+      ctx.fillText("Your combined preview will appear here.", 40, 118);
+    })();
+  </script>
+</body>
+</html>

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter – Viral Demo Edition</title>
+  <title>NKU Norse AI Filter – Griffin Hall Background Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, smoother overlays, combined helmet-beard option, and polished viral demo styling."
+    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, Griffin Hall background mode, and polished viral demo styling."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -437,7 +437,7 @@
     .filter-thumb {
       width: 42px;
       height: 42px;
-      object-fit: contain;
+      object-fit: cover;
       border-radius: 10px;
       background: white;
       border: 1px solid rgba(226,232,240,0.9);
@@ -585,9 +585,9 @@
     <header class="glass-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="nk-brand-pill">NKU Norse</div>
-        <span class="nk-brand-sub">AI in the Browser · Viral Demo Edition</span>
+        <span class="nk-brand-sub">AI in the Browser · Griffin Hall Background Edition</span>
       </div>
-      <div class="nk-brand-sub">Mirrored selfie mode · combined Viking helmet + beard · stable overlay</div>
+      <div class="nk-brand-sub">Mirrored selfie mode · Griffin Hall button restored · stable overlay</div>
     </header>
 
     <main class="glass-card p-3 p-lg-4">
@@ -595,31 +595,31 @@
         <section class="col-lg-5">
           <div class="micro-pills">
             <span class="micro-pill">Client-side AI</span>
-            <span class="micro-pill">Helmet + beard combo</span>
+            <span class="micro-pill">Griffin Hall background</span>
             <span class="micro-pill">Camera off control</span>
           </div>
 
           <div class="eyebrow">Real-time AR-style face filter</div>
           <h1 class="hero-title">NKU Norse AI Filter</h1>
           <p class="hero-lead mb-3">
-            This version includes a combined Viking helmet + beard filter positioned higher on the face so the helmet sits naturally on the head while the beard falls into place.
+            This version restores your Griffin Hall mode. When the Griffin Hall button is clicked, the live camera feed is replaced with <strong>griffin-hall.jpg</strong> as the background while your selected face overlay still tracks on top.
           </p>
 
           <div class="info-box mb-3">
             <div class="info-title">What’s included</div>
             <ul class="step-list">
-              <li><span class="step-num">1.</span><span><strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>No Filter</strong>.</span></li>
+              <li><span class="step-num">1.</span><span><strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>Griffin Hall</strong>.</span></li>
               <li><span class="step-num">2.</span><span><strong>Mirrored selfie mode</strong> for natural front-camera movement.</span></li>
-              <li><span class="step-num">3.</span><span><strong>Turn Camera Off</strong> button to stop the stream cleanly.</span></li>
-              <li><span class="step-num">4.</span><span><strong>Held face lock + smoothing</strong> to reduce jitter.</span></li>
+              <li><span class="step-num">3.</span><span><strong>Griffin Hall button</strong> swaps the background to <strong>griffin-hall.jpg</strong>.</span></li>
+              <li><span class="step-num">4.</span><span><strong>Turn Camera Off</strong> stops the stream cleanly.</span></li>
             </ul>
           </div>
 
           <div class="info-box">
-            <div class="info-title">Asset you need</div>
+            <div class="info-title">Assets you need</div>
             <p class="mb-0" style="color:#4b5563; font-size:0.92rem;">
-              Add a transparent PNG named <strong>beard.png</strong> in the same folder as this HTML file.
-              This version assumes that <strong>beard.png</strong> actually contains a combined <strong>helmet + beard</strong> graphic.
+              Keep these files in the same folder as this HTML file:
+              <strong>glasses.png</strong>, <strong>helmet.png</strong>, <strong>beard.png</strong>, and <strong>griffin-hall.jpg</strong>.
             </p>
           </div>
         </section>
@@ -664,7 +664,7 @@
             </div>
 
             <div class="d-flex justify-content-center mb-3">
-              <div class="filter-group" role="radiogroup" aria-label="Choose filter">
+              <div class="filter-group" role="radiogroup" aria-label="Choose filter or background mode">
                 <button
                   class="filter-btn active"
                   data-filter="glasses"
@@ -703,14 +703,14 @@
 
                 <button
                   class="filter-btn"
-                  data-filter="none"
+                  data-filter="griffin"
                   type="button"
                   role="radio"
                   aria-pressed="false"
                   aria-checked="false"
                 >
-                  <img src="griffin-hall.jpg" alt="No filter preview" class="filter-thumb" />
-                  <span>No Filter</span>
+                  <img src="griffin-hall.jpg" alt="Griffin Hall background preview" class="filter-thumb" />
+                  <span>Griffin Hall</span>
                 </button>
               </div>
             </div>
@@ -787,6 +787,7 @@
       let glassesImgReady = false;
       let helmetImgReady = false;
       let beardImgReady = false;
+      let griffinReady = false;
 
       let renderHandle = null;
       let detectLoopHandle = null;
@@ -820,6 +821,11 @@
       beardImg.src = "beard.png";
       beardImg.onload = () => { beardImgReady = true; };
       beardImg.onerror = () => console.warn("Could not load beard.png");
+
+      const griffinImg = new Image();
+      griffinImg.src = "griffin-hall.jpg";
+      griffinImg.onload = () => { griffinReady = true; };
+      griffinImg.onerror = () => console.warn("Could not load griffin-hall.jpg");
 
       function setStatus(message, mode = "idle") {
         if (message === lastStatusMessage && mode === lastStatusMode) return;
@@ -861,7 +867,6 @@
             const ok = await tf.setBackend(backend);
             if (ok) {
               await tf.ready();
-              console.log("Using TFJS backend:", tf.getBackend());
               return;
             }
           } catch (err) {
@@ -924,14 +929,12 @@
 
         const width = x2 - x1;
         const height = y2 - y1;
-
         if (width <= 0 || height <= 0) return null;
 
         const cx = x1 + width / 2;
         const cy = y1 + height / 2;
 
         let roll = 0;
-
         if (prediction.landmarks && prediction.landmarks.length >= 2) {
           const left = prediction.landmarks[0];
           const right = prediction.landmarks[1];
@@ -954,7 +957,6 @@
         for (const pred of predictions) {
           const face = normalizeFace(pred);
           if (!face) continue;
-
           const area = face.width * face.height;
           if (area > bestArea) {
             bestArea = area;
@@ -1028,6 +1030,27 @@
         }
       }
 
+      function drawCoverImage(img) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+
+        if (!iw || !ih) {
+          ctx.fillStyle = "#dbe4ee";
+          ctx.fillRect(0, 0, cw, ch);
+          return;
+        }
+
+        const scale = Math.max(cw / iw, ch / ih);
+        const dw = iw * scale;
+        const dh = ih * scale;
+        const dx = (cw - dw) / 2;
+        const dy = (ch - dh) / 2;
+
+        ctx.drawImage(img, dx, dy, dw, dh);
+      }
+
       function videoToCanvasX(x) {
         const vw = video.videoWidth || 1;
         const raw = (x / vw) * canvas.width;
@@ -1046,12 +1069,18 @@
         return (height / (video.videoHeight || 1)) * canvas.height;
       }
 
-      function drawVideoFrame() {
+      function drawBaseFrame() {
         const w = canvas.width;
         const h = canvas.height;
 
         ctx.clearRect(0, 0, w, h);
         ctx.save();
+
+        if (activeFilter === "griffin" && griffinReady) {
+          drawCoverImage(griffinImg);
+          ctx.restore();
+          return;
+        }
 
         if (mirrored) {
           ctx.translate(w, 0);
@@ -1117,13 +1146,7 @@
         ctx.rotate(face.roll || 0);
         ctx.shadowColor = "rgba(0,0,0,0.22)";
         ctx.shadowBlur = 12;
-        ctx.drawImage(
-          glassesImg,
-          -overlayWidth / 2,
-          -overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
+        ctx.drawImage(glassesImg, -overlayWidth / 2, -overlayHeight / 2, overlayWidth, overlayHeight);
         ctx.restore();
       }
 
@@ -1140,24 +1163,17 @@
         const overlayHeight = overlayWidth * aspect;
 
         const anchorY = y + height * 0.07;
-        const helmetCenterY = anchorY - overlayHeight * 0.16;
+        const helmetCenterY = anchorY - overlayHeight * 0.28;
 
         ctx.save();
         ctx.translate(centerX, helmetCenterY);
         ctx.rotate((face.roll || 0) * 0.7);
         ctx.shadowColor = "rgba(0,0,0,0.24)";
         ctx.shadowBlur = 18;
-        ctx.drawImage(
-          helmetImg,
-          -overlayWidth / 2,
-          -overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
+        ctx.drawImage(helmetImg, -overlayWidth / 2, -overlayHeight / 2, overlayWidth, overlayHeight);
         ctx.restore();
       }
 
-      // Combined helmet + beard asset using beard.png
       function drawBeard(face) {
         if (!beardImgReady || !face) return;
 
@@ -1178,21 +1194,13 @@
         ctx.rotate((face.roll || 0) * 0.7);
         ctx.shadowColor = "rgba(0,0,0,0.20)";
         ctx.shadowBlur = 16;
-
-        ctx.drawImage(
-          beardImg,
-          -overlayWidth / 2,
-          -overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-
+        ctx.drawImage(beardImg, -overlayWidth / 2, -overlayHeight / 2, overlayWidth, overlayHeight);
         ctx.restore();
       }
 
       function renderIdleState() {
         resizeCanvasToDisplaySize();
-        drawVideoFrame();
+        drawBaseFrame();
       }
 
       function render() {
@@ -1204,7 +1212,7 @@
           return;
         }
 
-        drawVideoFrame();
+        drawBaseFrame();
 
         const now = performance.now();
         const hasLiveFace = !!targetFace || (!!smoothedFace && now - lastFaceSeenAt < FACE_HOLD_MS);
@@ -1228,8 +1236,13 @@
         } else if (smoothedFace && activeFilter === "beard") {
           drawBeard(smoothedFace);
           setStatus("AI is running: Viking combo filter on live camera.", "active");
-        } else if (activeFilter === "none") {
-          setStatus("AI is running: live camera with no filter.", "active");
+        } else if (activeFilter === "griffin") {
+          setStatus(
+            griffinReady
+              ? "AI is running: Griffin Hall background mode is active."
+              : "Griffin Hall background selected, but the image is not loaded.",
+            griffinReady ? "active" : "error"
+          );
         } else {
           setStatus("Models loaded — step into frame to lock the filter.", "active");
         }
@@ -1275,12 +1288,10 @@
         stopDetectionLoop();
         resetTrackingState();
 
-        if (video) {
-          try {
-            video.pause();
-          } catch (e) {
-            console.warn("Video pause warning:", e);
-          }
+        try {
+          video.pause();
+        } catch (e) {
+          console.warn("Video pause warning:", e);
         }
 
         if (currentStream) {
@@ -1292,7 +1303,7 @@
           video.srcObject = null;
         }
 
-        drawVideoFrame();
+        drawBaseFrame();
 
         startBtn.disabled = false;
         captureBtn.disabled = true;
@@ -1354,7 +1365,7 @@
 
       filterButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          activeFilter = btn.getAttribute("data-filter") || "none";
+          activeFilter = btn.getAttribute("data-filter") || "glasses";
           updateFilterButtons(btn);
 
           if (activeFilter === "glasses") {
@@ -1372,9 +1383,11 @@
               aiRunning ? "Viking combo filter selected." : "Viking combo filter selected. Start the demo to begin.",
               aiRunning ? "active" : "idle"
             );
-          } else {
+          } else if (activeFilter === "griffin") {
             setStatus(
-              aiRunning ? "No filter selected." : "No filter selected. Start the demo to begin.",
+              aiRunning
+                ? "Griffin Hall background selected."
+                : "Griffin Hall background selected. Start the demo to begin.",
               aiRunning ? "active" : "idle"
             );
           }
@@ -1398,7 +1411,6 @@
       window.addEventListener("beforeunload", () => {
         stopDetectionLoop();
         stopRenderLoop();
-
         if (currentStream) {
           currentStream.getTracks().forEach((track) => track.stop());
         }

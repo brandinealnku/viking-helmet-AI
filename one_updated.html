@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, smoother overlays, and polished viral demo styling."
+    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, smoother overlays, beard option, and polished viral demo styling."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -476,6 +476,13 @@
       box-shadow: 0 10px 22px rgba(15,23,42,0.06);
     }
 
+    .btn-danger-soft {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #7f1d1d;
+      border: 1px solid rgba(254, 202, 202, 0.95);
+      box-shadow: 0 10px 22px rgba(127,29,29,0.08);
+    }
+
     .btn-pill:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -580,7 +587,7 @@
         <div class="nk-brand-pill">NKU Norse</div>
         <span class="nk-brand-sub">AI in the Browser · Viral Demo Edition</span>
       </div>
-      <div class="nk-brand-sub">Mirrored selfie mode · smoother face lock · polished overlay</div>
+      <div class="nk-brand-sub">Mirrored selfie mode · beard option · stable overlay</div>
     </header>
 
     <main class="glass-card p-3 p-lg-4">
@@ -588,33 +595,32 @@
         <section class="col-lg-5">
           <div class="micro-pills">
             <span class="micro-pill">Client-side AI</span>
-            <span class="micro-pill">Mirrored selfie mode</span>
-            <span class="micro-pill">Stable overlay</span>
+            <span class="micro-pill">Viking beard</span>
+            <span class="micro-pill">Camera off control</span>
           </div>
 
           <div class="eyebrow">Real-time AR-style face filter</div>
           <h1 class="hero-title">NKU Norse AI Filter</h1>
           <p class="hero-lead mb-3">
-            This pass is designed to feel more polished on screen: smoother motion,
-            prettier helmet placement, mirrored selfie behavior, and a more
-            showcase-ready visual treatment that looks better for live demos and screenshots.
+            This version adds a Viking beard option plus a clean way to turn the camera off without refreshing the page.
+            It keeps the stabilized overlay, mirrored selfie mode, and polished showcase styling.
           </p>
 
           <div class="info-box mb-3">
-            <div class="info-title">What’s improved</div>
+            <div class="info-title">What’s included</div>
             <ul class="step-list">
-              <li><span class="step-num">1.</span><span><strong>Mirrored selfie mode</strong> makes movement feel natural like a front-facing camera.</span></li>
-              <li><span class="step-num">2.</span><span><strong>Helmet placement</strong> sits higher and more naturally on the head.</span></li>
-              <li><span class="step-num">3.</span><span><strong>Smoothing + hold logic</strong> reduces jitter when detection briefly drops.</span></li>
-              <li><span class="step-num">4.</span><span><strong>Polished UI overlays</strong> make the demo feel more “event-ready.”</span></li>
+              <li><span class="step-num">1.</span><span><strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Beard</strong>, or <strong>No Filter</strong>.</span></li>
+              <li><span class="step-num">2.</span><span><strong>Mirrored selfie mode</strong> for natural front-camera movement.</span></li>
+              <li><span class="step-num">3.</span><span><strong>Turn Camera Off</strong> button to stop the stream cleanly.</span></li>
+              <li><span class="step-num">4.</span><span><strong>Held face lock + smoothing</strong> to reduce jitter.</span></li>
             </ul>
           </div>
 
           <div class="info-box">
-            <div class="info-title">Best demo tips</div>
+            <div class="info-title">Asset you need</div>
             <p class="mb-0" style="color:#4b5563; font-size:0.92rem;">
-              Stand centered, keep your face well lit, and avoid leaning too close to the camera.
-              For the cleanest helmet fit, keep your forehead visible and your full head in frame.
+              Add a transparent PNG named <strong>beard.png</strong> in the same folder as this HTML file.
+              For best results, use a tightly cropped beard image with minimal empty transparent space.
             </p>
           </div>
         </section>
@@ -686,6 +692,18 @@
 
                 <button
                   class="filter-btn"
+                  data-filter="beard"
+                  type="button"
+                  role="radio"
+                  aria-pressed="false"
+                  aria-checked="false"
+                >
+                  <img src="beard.png" alt="Beard filter preview" class="filter-thumb" />
+                  <span>Beard</span>
+                </button>
+
+                <button
+                  class="filter-btn"
                   data-filter="none"
                   type="button"
                   role="radio"
@@ -704,6 +722,9 @@
               </button>
               <button id="captureBtn" type="button" class="btn-pill btn-primary-gold" disabled>
                 📸 Capture Norse Selfie
+              </button>
+              <button id="stopBtn" type="button" class="btn-pill btn-danger-soft" disabled>
+                ⏹️ Turn Camera Off
               </button>
             </div>
 
@@ -747,6 +768,7 @@
 
       const startBtn = document.getElementById("startBtn");
       const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
       const filterButtons = document.querySelectorAll(".filter-btn");
       const mirrorToggle = document.getElementById("mirrorToggle");
@@ -761,9 +783,11 @@
       let aiRunning = false;
       let activeFilter = "glasses";
       let mirrored = true;
+      let currentStream = null;
 
       let glassesImgReady = false;
       let helmetImgReady = false;
+      let beardImgReady = false;
 
       let renderHandle = null;
       let detectLoopHandle = null;
@@ -793,6 +817,11 @@
       helmetImg.onload = () => { helmetImgReady = true; };
       helmetImg.onerror = () => console.warn("Could not load helmet.png");
 
+      const beardImg = new Image();
+      beardImg.src = "beard.png";
+      beardImg.onload = () => { beardImgReady = true; };
+      beardImg.onerror = () => console.warn("Could not load beard.png");
+
       function setStatus(message, mode = "idle") {
         if (message === lastStatusMessage && mode === lastStatusMode) return;
 
@@ -814,6 +843,14 @@
           faceLockDot.classList.remove("active");
           faceLockText.textContent = "Searching…";
         }
+      }
+
+      function resetTrackingState() {
+        targetFace = null;
+        smoothedFace = null;
+        lastFaceSeenAt = 0;
+        isDetecting = false;
+        setFaceLock(false);
       }
 
       async function getBestBackend() {
@@ -850,6 +887,7 @@
           }
         });
 
+        currentStream = stream;
         video.srcObject = stream;
 
         await new Promise((resolve) => {
@@ -862,7 +900,6 @@
         videoReady = true;
         videoSkeleton.style.display = "none";
         resizeCanvasToDisplaySize();
-        window.addEventListener("resize", resizeCanvasToDisplaySize);
       }
 
       function resizeCanvasToDisplaySize() {
@@ -1022,7 +1059,16 @@
           ctx.scale(-1, 1);
         }
 
-        ctx.drawImage(video, 0, 0, w, h);
+        if (videoReady && video.videoWidth > 0 && video.videoHeight > 0) {
+          ctx.drawImage(video, 0, 0, w, h);
+        } else {
+          const gradient = ctx.createLinearGradient(0, 0, 0, h);
+          gradient.addColorStop(0, "#dbe4ee");
+          gradient.addColorStop(1, "#eef2f7");
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, w, h);
+        }
+
         ctx.restore();
       }
 
@@ -1047,10 +1093,15 @@
         ctx.restore();
       }
 
+      function getFaceCenterX(face) {
+        const x = videoToCanvasX(face.x);
+        const width = videoSizeToCanvasWidth(face.width);
+        return mirrored ? x - width / 2 : x + width / 2;
+      }
+
       function drawGlasses(face) {
         if (!glassesImgReady || !face) return;
 
-        const x = videoToCanvasX(face.x);
         const y = videoToCanvasY(face.y);
         const width = videoSizeToCanvasWidth(face.width);
         const height = videoSizeToCanvasHeight(face.height);
@@ -1059,13 +1110,12 @@
         const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        const centerX = mirrored ? x - width / 2 : x + width / 2;
+        const centerX = getFaceCenterX(face);
         const eyeLineY = y + height * 0.42;
 
         ctx.save();
         ctx.translate(centerX, eyeLineY);
         ctx.rotate(face.roll || 0);
-
         ctx.shadowColor = "rgba(0,0,0,0.22)";
         ctx.shadowBlur = 12;
         ctx.drawImage(
@@ -1081,12 +1131,11 @@
       function drawHelmet(face) {
         if (!helmetImgReady || !face) return;
 
-        const x = videoToCanvasX(face.x);
         const y = videoToCanvasY(face.y);
         const width = videoSizeToCanvasWidth(face.width);
         const height = videoSizeToCanvasHeight(face.height);
 
-        const centerX = mirrored ? x - width / 2 : x + width / 2;
+        const centerX = getFaceCenterX(face);
 
         const overlayWidth = width * 1.52;
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
@@ -1098,7 +1147,6 @@
         ctx.save();
         ctx.translate(centerX, helmetCenterY);
         ctx.rotate((face.roll || 0) * 0.7);
-
         ctx.shadowColor = "rgba(0,0,0,0.24)";
         ctx.shadowBlur = 18;
         ctx.drawImage(
@@ -1111,13 +1159,51 @@
         ctx.restore();
       }
 
+      function drawBeard(face) {
+        if (!beardImgReady || !face) return;
+
+        const y = videoToCanvasY(face.y);
+        const width = videoSizeToCanvasWidth(face.width);
+        const height = videoSizeToCanvasHeight(face.height);
+
+        const centerX = getFaceCenterX(face);
+
+        const overlayWidth = width * 1.10;
+        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        const mouthAnchorY = y + height * 0.73;
+        const beardCenterY = mouthAnchorY + overlayHeight * 0.18;
+
+        ctx.save();
+        ctx.translate(centerX, beardCenterY);
+        ctx.rotate((face.roll || 0) * 0.85);
+        ctx.shadowColor = "rgba(0,0,0,0.18)";
+        ctx.shadowBlur = 14;
+        ctx.drawImage(
+          beardImg,
+          -overlayWidth / 2,
+          -overlayHeight * 0.18,
+          overlayWidth,
+          overlayHeight
+        );
+        ctx.restore();
+      }
+
+      function renderIdleState() {
+        resizeCanvasToDisplaySize();
+        drawVideoFrame();
+      }
+
       function render() {
+        resizeCanvasToDisplaySize();
+
         if (!aiRunning || !videoReady) {
+          renderIdleState();
           renderHandle = requestAnimationFrame(render);
           return;
         }
 
-        resizeCanvasToDisplaySize();
         drawVideoFrame();
 
         const now = performance.now();
@@ -1139,6 +1225,9 @@
         } else if (smoothedFace && activeFilter === "helmet") {
           drawHelmet(smoothedFace);
           setStatus("AI is running: helmet filter on live camera.", "active");
+        } else if (smoothedFace && activeFilter === "beard") {
+          drawBeard(smoothedFace);
+          setStatus("AI is running: beard filter on live camera.", "active");
         } else if (activeFilter === "none") {
           setStatus("AI is running: live camera with no filter.", "active");
         } else {
@@ -1146,7 +1235,6 @@
         }
 
         setFaceLock(hasLiveFace);
-
         renderHandle = requestAnimationFrame(render);
       }
 
@@ -1180,20 +1268,64 @@
         setStatus("Snapshot saved locally as a PNG.", "active");
       }
 
+      function stopCameraExperience(showMessage = true) {
+        aiRunning = false;
+        videoReady = false;
+
+        stopDetectionLoop();
+        resetTrackingState();
+
+        if (video) {
+          try {
+            video.pause();
+          } catch (e) {
+            console.warn("Video pause warning:", e);
+          }
+        }
+
+        if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
+          currentStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        drawVideoFrame();
+
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+        videoSkeleton.style.display = "block";
+
+        if (showMessage) {
+          setStatus("Camera turned off. Click Start Camera & AI to launch again.", "idle");
+        }
+      }
+
       async function startExperience() {
         try {
+          if (aiRunning) return;
+
           startBtn.disabled = true;
           captureBtn.disabled = true;
+          stopBtn.disabled = true;
 
           setStatus("Requesting camera access…", "idle");
           await setupCamera();
 
           setStatus("Loading AI model…", "idle");
           await getBestBackend();
-          faceModel = await blazeface.load();
+
+          if (!faceModel) {
+            faceModel = await blazeface.load();
+          }
 
           aiRunning = true;
           captureBtn.disabled = false;
+          stopBtn.disabled = false;
+          videoSkeleton.style.display = "none";
 
           setStatus("AI is ready. Step into frame and choose your Norse look.", "active");
 
@@ -1202,6 +1334,8 @@
         } catch (err) {
           console.error("Initialization error:", err);
           startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
           setStatus(
             "This demo could not start. Check camera permissions and try Chrome or Edge over HTTPS.",
             "error"
@@ -1233,6 +1367,11 @@
               aiRunning ? "Helmet filter selected." : "Helmet filter selected. Start the demo to begin.",
               aiRunning ? "active" : "idle"
             );
+          } else if (activeFilter === "beard") {
+            setStatus(
+              aiRunning ? "Beard filter selected." : "Beard filter selected. Start the demo to begin.",
+              aiRunning ? "active" : "idle"
+            );
           } else {
             setStatus(
               aiRunning ? "No filter selected." : "No filter selected. Start the demo to begin.",
@@ -1252,16 +1391,20 @@
 
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
+      stopBtn.addEventListener("click", () => stopCameraExperience(true));
+
+      window.addEventListener("resize", resizeCanvasToDisplaySize);
 
       window.addEventListener("beforeunload", () => {
         stopDetectionLoop();
         stopRenderLoop();
 
-        const stream = video.srcObject;
-        if (stream && stream.getTracks) {
-          stream.getTracks().forEach((track) => track.stop());
+        if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
         }
       });
+
+      startRenderLoop();
     })();
   </script>
 </body>

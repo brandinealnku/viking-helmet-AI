@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, smoother overlays, beard option, and polished viral demo styling."
+    content="NKU Norse AI Filter – stable browser-based AI face filter demo with mirrored selfie mode, smoother overlays, combined helmet-beard option, and polished viral demo styling."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -587,7 +587,7 @@
         <div class="nk-brand-pill">NKU Norse</div>
         <span class="nk-brand-sub">AI in the Browser · Viral Demo Edition</span>
       </div>
-      <div class="nk-brand-sub">Mirrored selfie mode · beard option · stable overlay</div>
+      <div class="nk-brand-sub">Mirrored selfie mode · combined Viking helmet + beard · stable overlay</div>
     </header>
 
     <main class="glass-card p-3 p-lg-4">
@@ -595,21 +595,20 @@
         <section class="col-lg-5">
           <div class="micro-pills">
             <span class="micro-pill">Client-side AI</span>
-            <span class="micro-pill">Viking beard</span>
+            <span class="micro-pill">Helmet + beard combo</span>
             <span class="micro-pill">Camera off control</span>
           </div>
 
           <div class="eyebrow">Real-time AR-style face filter</div>
           <h1 class="hero-title">NKU Norse AI Filter</h1>
           <p class="hero-lead mb-3">
-            This version adds a Viking beard option plus a clean way to turn the camera off without refreshing the page.
-            It keeps the stabilized overlay, mirrored selfie mode, and polished showcase styling.
+            This version includes a combined Viking helmet + beard filter positioned higher on the face so the helmet sits naturally on the head while the beard falls into place.
           </p>
 
           <div class="info-box mb-3">
             <div class="info-title">What’s included</div>
             <ul class="step-list">
-              <li><span class="step-num">1.</span><span><strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Beard</strong>, or <strong>No Filter</strong>.</span></li>
+              <li><span class="step-num">1.</span><span><strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>No Filter</strong>.</span></li>
               <li><span class="step-num">2.</span><span><strong>Mirrored selfie mode</strong> for natural front-camera movement.</span></li>
               <li><span class="step-num">3.</span><span><strong>Turn Camera Off</strong> button to stop the stream cleanly.</span></li>
               <li><span class="step-num">4.</span><span><strong>Held face lock + smoothing</strong> to reduce jitter.</span></li>
@@ -620,7 +619,7 @@
             <div class="info-title">Asset you need</div>
             <p class="mb-0" style="color:#4b5563; font-size:0.92rem;">
               Add a transparent PNG named <strong>beard.png</strong> in the same folder as this HTML file.
-              For best results, use a tightly cropped beard image with minimal empty transparent space.
+              This version assumes that <strong>beard.png</strong> actually contains a combined <strong>helmet + beard</strong> graphic.
             </p>
           </div>
         </section>
@@ -698,8 +697,8 @@
                   aria-pressed="false"
                   aria-checked="false"
                 >
-                  <img src="beard.png" alt="Beard filter preview" class="filter-thumb" />
-                  <span>Beard</span>
+                  <img src="beard.png" alt="Viking combo filter preview" class="filter-thumb" />
+                  <span>Viking Combo</span>
                 </button>
 
                 <button
@@ -1136,7 +1135,6 @@
         const height = videoSizeToCanvasHeight(face.height);
 
         const centerX = getFaceCenterX(face);
-
         const overlayWidth = width * 1.52;
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
@@ -1159,34 +1157,36 @@
         ctx.restore();
       }
 
+      // Combined helmet + beard asset using beard.png
       function drawBeard(face) {
         if (!beardImgReady || !face) return;
 
         const y = videoToCanvasY(face.y);
         const width = videoSizeToCanvasWidth(face.width);
         const height = videoSizeToCanvasHeight(face.height);
-
         const centerX = getFaceCenterX(face);
 
-        const overlayWidth = width * 1.10;
+        const overlayWidth = width * 1.60;
         const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        const mouthAnchorY = y + height * 0.73;
-        const beardCenterY = mouthAnchorY + overlayHeight * 0.18;
+        const foreheadAnchorY = y + height * 0.05;
+        const overlayCenterY = foreheadAnchorY + overlayHeight * 0.16;
 
         ctx.save();
-        ctx.translate(centerX, beardCenterY);
-        ctx.rotate((face.roll || 0) * 0.85);
-        ctx.shadowColor = "rgba(0,0,0,0.18)";
-        ctx.shadowBlur = 14;
+        ctx.translate(centerX, overlayCenterY);
+        ctx.rotate((face.roll || 0) * 0.7);
+        ctx.shadowColor = "rgba(0,0,0,0.20)";
+        ctx.shadowBlur = 16;
+
         ctx.drawImage(
           beardImg,
           -overlayWidth / 2,
-          -overlayHeight * 0.18,
+          -overlayHeight / 2,
           overlayWidth,
           overlayHeight
         );
+
         ctx.restore();
       }
 
@@ -1227,7 +1227,7 @@
           setStatus("AI is running: helmet filter on live camera.", "active");
         } else if (smoothedFace && activeFilter === "beard") {
           drawBeard(smoothedFace);
-          setStatus("AI is running: beard filter on live camera.", "active");
+          setStatus("AI is running: Viking combo filter on live camera.", "active");
         } else if (activeFilter === "none") {
           setStatus("AI is running: live camera with no filter.", "active");
         } else {
@@ -1369,7 +1369,7 @@
             );
           } else if (activeFilter === "beard") {
             setStatus(
-              aiRunning ? "Beard filter selected." : "Beard filter selected. Start the demo to begin.",
+              aiRunning ? "Viking combo filter selected." : "Viking combo filter selected. Start the demo to begin.",
               aiRunning ? "active" : "idle"
             );
           } else {

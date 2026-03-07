@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter – Griffin Hall Composite Fix</title>
+  <title>NKU Norse AI Filter – Smooth Griffin Hall Composite</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse AI Filter with stable overlays, mirrored selfie mode, Griffin Hall foreground/background compositing, and polished UI."
+    content="NKU Norse AI Filter with mirrored selfie mode, smooth Griffin Hall cutout compositing, and stabilized overlays."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -568,9 +568,9 @@
     <header class="glass-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <div class="nk-brand-pill">NKU Norse</div>
-        <span class="nk-brand-sub">AI in the Browser · Griffin Hall Composite Fix</span>
+        <span class="nk-brand-sub">AI in the Browser · Smooth Griffin Hall Composite</span>
       </div>
-      <div class="nk-brand-sub">You in front of Griffin Hall · mirrored selfie mode · stable overlay</div>
+      <div class="nk-brand-sub">Softer cutout edges · mirrored selfie mode · stable overlay</div>
     </header>
 
     <main class="glass-card p-3 p-lg-4">
@@ -578,24 +578,23 @@
         <section class="col-lg-5">
           <div class="micro-pills">
             <span class="micro-pill">Client-side AI</span>
-            <span class="micro-pill">Foreground/background composite</span>
-            <span class="micro-pill">Stable overlay</span>
+            <span class="micro-pill">Smooth cutout edges</span>
+            <span class="micro-pill">Griffin Hall composite</span>
           </div>
 
           <div class="eyebrow">Real-time AR-style face filter</div>
           <h1 class="hero-title">NKU Norse AI Filter</h1>
           <p class="hero-lead mb-3">
-            This version fixes the Griffin Hall composite by doing the person segmentation at the
-            camera’s native resolution before drawing the final result to the visible canvas.
+            This version softens the Griffin Hall foreground cutout by using a blurred BodyPix mask, which makes the edge around your silhouette look smoother and less jagged.
           </p>
 
           <div class="info-box mb-3">
-            <div class="info-title">What this fixes</div>
+            <div class="info-title">What improved</div>
             <ul class="step-list">
-              <li><span class="step-num">1.</span><span>Prevents your real room background from bleeding through.</span></li>
-              <li><span class="step-num">2.</span><span>Composites you over <strong>griffin-hall.jpg</strong> more cleanly.</span></li>
-              <li><span class="step-num">3.</span><span>Keeps glasses, helmet, and Viking combo filters.</span></li>
-              <li><span class="step-num">4.</span><span>Still supports mirrored selfie mode and snapshots.</span></li>
+              <li><span class="step-num">1.</span><span>Griffin Hall mode now uses a <strong>feathered person mask</strong>.</span></li>
+              <li><span class="step-num">2.</span><span>The cutout edge is smoother and less harsh.</span></li>
+              <li><span class="step-num">3.</span><span>Glasses, helmet, and Viking combo still work.</span></li>
+              <li><span class="step-num">4.</span><span>You still get mirrored selfie mode, capture, and camera off.</span></li>
             </ul>
           </div>
 
@@ -707,7 +706,7 @@
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
-      const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+      const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
 
       const statusText = document.getElementById("statusText");
       const statusDot = document.getElementById("statusDot");
@@ -762,12 +761,13 @@
       const SIZE_LERP = 0.18;
       const ROTATION_LERP = 0.20;
       const MAX_DPR = 2;
+      const GRIFFIN_MASK_BLUR = 12;
 
-      const nativeCompositeCanvas = document.createElement("canvas");
-      const nativeCompositeCtx = nativeCompositeCanvas.getContext("2d", { willReadFrequently: true });
+      const griffinBaseCanvas = document.createElement("canvas");
+      const griffinBaseCtx = griffinBaseCanvas.getContext("2d");
 
-      const nativeBgCanvas = document.createElement("canvas");
-      const nativeBgCtx = nativeBgCanvas.getContext("2d", { willReadFrequently: true });
+      const personCanvas = document.createElement("canvas");
+      const personCtx = personCanvas.getContext("2d");
 
       const glassesImg = new Image();
       glassesImg.src = "glasses.png";
@@ -866,7 +866,7 @@
         videoReady = true;
         videoSkeleton.style.display = "none";
         resizeCanvasToDisplaySize();
-        syncNativeWorkingCanvases();
+        syncWorkingCanvases();
       }
 
       function resizeCanvasToDisplaySize() {
@@ -882,20 +882,15 @@
         }
       }
 
-      function syncNativeWorkingCanvases() {
-        const vw = video.videoWidth || 0;
-        const vh = video.videoHeight || 0;
-
-        if (!vw || !vh) return;
-
-        if (nativeCompositeCanvas.width !== vw || nativeCompositeCanvas.height !== vh) {
-          nativeCompositeCanvas.width = vw;
-          nativeCompositeCanvas.height = vh;
+      function syncWorkingCanvases() {
+        if (griffinBaseCanvas.width !== canvas.width || griffinBaseCanvas.height !== canvas.height) {
+          griffinBaseCanvas.width = canvas.width;
+          griffinBaseCanvas.height = canvas.height;
         }
 
-        if (nativeBgCanvas.width !== vw || nativeBgCanvas.height !== vh) {
-          nativeBgCanvas.width = vw;
-          nativeBgCanvas.height = vh;
+        if (personCanvas.width !== canvas.width || personCanvas.height !== canvas.height) {
+          personCanvas.width = canvas.width;
+          personCanvas.height = canvas.height;
         }
       }
 
@@ -1000,9 +995,9 @@
         try {
           const segmentation = await bodyPixModel.segmentPerson(video, {
             internalResolution: "high",
-            segmentationThreshold: 0.75,
+            segmentationThreshold: 0.7,
             maxDetections: 1,
-            scoreThreshold: 0.35,
+            scoreThreshold: 0.3,
             nmsRadius: 20
           });
 
@@ -1038,7 +1033,7 @@
         }
       }
 
-      function drawCoverImageToNativeBackground(img, targetCtx, targetW, targetH) {
+      function drawCoverImageToCanvas(targetCtx, img, targetW, targetH) {
         const iw = img.naturalWidth || img.width;
         const ih = img.naturalHeight || img.height;
 
@@ -1054,7 +1049,6 @@
         const dx = (targetW - dw) / 2;
         const dy = (targetH - dh) / 2;
 
-        targetCtx.clearRect(0, 0, targetW, targetH);
         targetCtx.drawImage(img, dx, dy, dw, dh);
       }
 
@@ -1118,55 +1112,45 @@
           return;
         }
 
-        syncNativeWorkingCanvases();
+        syncWorkingCanvases();
 
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-
-        drawCoverImageToNativeBackground(griffinImg, nativeBgCtx, vw, vh);
+        griffinBaseCtx.clearRect(0, 0, cw, ch);
+        drawCoverImageToCanvas(griffinBaseCtx, griffinImg, cw, ch);
+        ctx.drawImage(griffinBaseCanvas, 0, 0);
 
         if (!latestSegmentation || performance.now() - lastSegmentationAt > SEGMENT_HOLD_MS) {
-          ctx.drawImage(nativeBgCanvas, 0, 0, vw, vh, 0, 0, cw, ch);
           return;
         }
 
-        nativeCompositeCtx.clearRect(0, 0, vw, vh);
-        nativeCompositeCtx.save();
+        const foregroundColor = { r: 0, g: 0, b: 0, a: 255 };
+        const backgroundColor = { r: 0, g: 0, b: 0, a: 0 };
+
+        const mask = bodyPix.toMask(
+          latestSegmentation,
+          foregroundColor,
+          backgroundColor
+        );
+
+        personCtx.clearRect(0, 0, cw, ch);
 
         if (mirrored) {
-          nativeCompositeCtx.translate(vw, 0);
-          nativeCompositeCtx.scale(-1, 1);
+          personCtx.save();
+          personCtx.translate(cw, 0);
+          personCtx.scale(-1, 1);
+          personCtx.drawImage(video, 0, 0, cw, ch);
+          personCtx.restore();
+        } else {
+          personCtx.drawImage(video, 0, 0, cw, ch);
         }
 
-        nativeCompositeCtx.drawImage(video, 0, 0, vw, vh);
-        nativeCompositeCtx.restore();
-
-        const frameImageData = nativeCompositeCtx.getImageData(0, 0, vw, vh);
-        const framePixels = frameImageData.data;
-
-        const bgImageData = nativeBgCtx.getImageData(0, 0, vw, vh);
-        const bgPixels = bgImageData.data;
-
-        const mask = latestSegmentation.data;
-        const pixelCount = vw * vh;
-
-        if (!mask || mask.length !== pixelCount) {
-          ctx.drawImage(nativeBgCanvas, 0, 0, vw, vh, 0, 0, cw, ch);
-          return;
-        }
-
-        for (let i = 0; i < pixelCount; i++) {
-          if (mask[i] === 0) {
-            const offset = i * 4;
-            framePixels[offset] = bgPixels[offset];
-            framePixels[offset + 1] = bgPixels[offset + 1];
-            framePixels[offset + 2] = bgPixels[offset + 2];
-            framePixels[offset + 3] = 255;
-          }
-        }
-
-        nativeCompositeCtx.putImageData(frameImageData, 0, 0);
-        ctx.drawImage(nativeCompositeCanvas, 0, 0, vw, vh, 0, 0, cw, ch);
+        bodyPix.drawMask(
+          ctx,
+          personCanvas,
+          mask,
+          1,
+          GRIFFIN_MASK_BLUR,
+          mirrored
+        );
       }
 
       function drawBaseFrame() {
@@ -1282,6 +1266,7 @@
 
       function render() {
         resizeCanvasToDisplaySize();
+        syncWorkingCanvases();
 
         if (!aiRunning || !videoReady) {
           renderIdleState();
@@ -1316,7 +1301,7 @@
         } else if (activeFilter === "griffin") {
           setStatus(
             griffinReady
-              ? "AI is running: you are composited in front of Griffin Hall."
+              ? "AI is running: smooth Griffin Hall composite mode is active."
               : "Griffin Hall background selected, but the image is not loaded.",
             griffinReady ? "active" : "error"
           );
@@ -1402,7 +1387,7 @@
 
           setStatus("Requesting camera access…", "idle");
           await setupCamera();
-          syncNativeWorkingCanvases();
+          syncWorkingCanvases();
 
           setStatus("Loading AI models…", "idle");
           await getBestBackend();
@@ -1493,7 +1478,7 @@
 
       window.addEventListener("resize", () => {
         resizeCanvasToDisplaySize();
-        syncNativeWorkingCanvases();
+        syncWorkingCanvases();
       });
 
       window.addEventListener("beforeunload", () => {

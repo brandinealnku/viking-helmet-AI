@@ -28,7 +28,6 @@
       --accent: #4f46e5;
       --muted: #6b7280;
       --border-soft: #e5e7eb;
-      --bg-soft: #f9fafb;
       --shadow-soft: 0 18px 60px rgba(15, 23, 42, 0.04),
                      0 2px 8px rgba(15, 23, 42, 0.04);
       color-scheme: light;
@@ -199,12 +198,8 @@
     }
 
     @keyframes shimmer {
-      0% {
-        background-position: -120% 0;
-      }
-      100% {
-        background-position: 120% 0;
-      }
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -595,7 +590,7 @@
                 </li>
                 <li>
                   <span class="nk-step-num">3.</span>
-                  <span>The helmet now sits lower, the beard sits higher, and the layout is optimized for smaller screens.</span>
+                  <span>The helmet sits lower, the beard sits higher, and the live feed now fills the full preview area correctly.</span>
                 </li>
               </ol>
             </section>
@@ -787,7 +782,7 @@
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
-      const ctx = canvas.getContext("2d", { alpha: true });
+      const ctx = canvas.getContext("2d");
 
       const statusText = document.getElementById("statusText");
       const statusDot = document.getElementById("statusDot");
@@ -802,8 +797,6 @@
 
       const previewSection = document.getElementById("previewSection");
       const snapshotPreview = document.getElementById("snapshotPreview");
-
-      const videoContainer = document.getElementById("videoContainer");
 
       let faceModel = null;
       let bodyPixModel = null;
@@ -833,10 +826,8 @@
       let segmentTimer = null;
       let lastStatusMsg = "";
       let lastStatusMode = "";
-      let resizeObserver = null;
 
       const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
-      const isVerySmallScreen = () => window.matchMedia("(max-width: 480px)").matches;
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
       const FACE_HOLD_MS = 380;
@@ -915,23 +906,14 @@
         }
       }
 
-      function getDevicePixelRatioCap() {
-        const raw = window.devicePixelRatio || 1;
-        if (isVerySmallScreen()) return Math.min(raw, 1.5);
-        if (isSmallScreen()) return Math.min(raw, 1.75);
-        return Math.min(raw, 2);
-      }
-
       function updateCanvasBufferSize() {
         if (!video.videoWidth || !video.videoHeight) return;
-
-        const dpr = getDevicePixelRatioCap();
 
         const renderWidth = video.videoWidth;
         const renderHeight = video.videoHeight;
 
-        canvas.width = Math.round(renderWidth * dpr);
-        canvas.height = Math.round(renderHeight * dpr);
+        canvas.width = renderWidth;
+        canvas.height = renderHeight;
 
         tempCanvas.width = renderWidth;
         tempCanvas.height = renderHeight;
@@ -940,7 +922,6 @@
         bgCanvas.height = renderHeight;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
       }
 
       async function setupCamera() {
@@ -975,13 +956,6 @@
             resolve();
           };
         });
-
-        if (!resizeObserver) {
-          resizeObserver = new ResizeObserver(() => {
-            if (videoReady) updateCanvasBufferSize();
-          });
-          resizeObserver.observe(videoContainer);
-        }
 
         window.addEventListener("resize", handleWindowResize, { passive: true });
         window.addEventListener("orientationchange", handleWindowResize, { passive: true });
@@ -1054,10 +1028,6 @@
         return x2 - x1 > 0 && y2 - y1 > 0;
       }
 
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
-      }
-
       function smoothBox(oldBox, newBox, alpha) {
         if (!oldBox) return newBox;
 
@@ -1084,9 +1054,8 @@
         const faceWidth = x2 - x1;
         const faceHeight = y2 - y1;
         const centerX = x1 + faceWidth / 2;
-        const centerY = y1 + faceHeight / 2;
 
-        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX };
       }
 
       function drawGlassesOnFace(topLeft, bottomRight) {
@@ -1097,7 +1066,6 @@
         const overlayWidth = faceWidth * 1.12;
         const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
-
         const eyeLineY = y1 + faceHeight * 0.43;
 
         ctx.drawImage(
@@ -1118,11 +1086,6 @@
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        /*
-          Lower than before:
-          - old code placed helmet top using eyebrowY - overlayHeight
-          - new code uses a forehead anchor and shifts helmet down
-        */
         const foreheadY = y1 + faceHeight * 0.18;
         const helmetTopY = foreheadY - overlayHeight * 0.78;
 
@@ -1140,10 +1103,6 @@
 
         const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
 
-        /*
-          Raised higher than before:
-          - anchor beard around mouth/chin rather than too far below the face
-        */
         const overlayWidth = faceWidth * 1.18;
         const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
@@ -1228,8 +1187,8 @@
       }
 
       function drawBaseComposite() {
-        const logicalW = tempCanvas.width;
-        const logicalH = tempCanvas.height;
+        const logicalW = canvas.width;
+        const logicalH = canvas.height;
 
         if (!logicalW || !logicalH) return;
 
@@ -1314,8 +1273,8 @@
       function captureSnapshot() {
         if (!videoReady) return;
 
-        const outputW = tempCanvas.width;
-        const outputH = tempCanvas.height;
+        const outputW = canvas.width;
+        const outputH = canvas.height;
         if (!outputW || !outputH) return;
 
         const snapCanvas = document.createElement("canvas");

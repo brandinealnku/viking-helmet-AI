@@ -25,16 +25,12 @@
       --nku-gold: #f7b718;
       --nku-black: #111111;
       --nku-white: #ffffff;
-      --nku-gray: #d1d5db;
-      --panel: rgba(255,255,255,0.08);
       --border: rgba(255,255,255,0.12);
       --shadow: 0 24px 80px rgba(0,0,0,0.32);
       color-scheme: dark;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -48,9 +44,7 @@
       text-rendering: optimizeLegibility;
     }
 
-    body {
-      padding: 12px;
-    }
+    body { padding: 12px; }
 
     .shell {
       max-width: 1240px;
@@ -124,9 +118,7 @@
       margin: 0 0 14px;
     }
 
-    .hero-title .gold {
-      color: var(--nku-gold);
-    }
+    .hero-title .gold { color: var(--nku-gold); }
 
     .hero-lead {
       color: #e5e7eb;
@@ -145,9 +137,7 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-    .info-card {
-      margin-bottom: 12px;
-    }
+    .info-card { margin-bottom: 12px; }
 
     .info-title,
     .preview-title {
@@ -458,24 +448,13 @@
     }
 
     @media (max-width: 767.98px) {
-      body {
-        padding: 10px;
-      }
-
-      .hero {
-        border-radius: 20px;
-      }
-
-      .stage-card,
-      .stage-wrap {
-        border-radius: 18px;
-      }
-
+      body { padding: 10px; }
+      .hero { border-radius: 20px; }
+      .stage-card, .stage-wrap { border-radius: 18px; }
       .stage-wrap {
         min-height: 520px;
         height: min(76svh, 760px);
       }
-
       .controls .btn-pill {
         flex: 1 1 calc(50% - 10px);
         justify-content: center;
@@ -483,23 +462,13 @@
     }
 
     @media (max-width: 480px) {
-      .controls .btn-pill {
-        flex: 1 1 100%;
-      }
-
-      .stage-wrap {
-        min-height: 560px;
-      }
-
-      .screen-pill {
-        font-size: 0.64rem;
-      }
+      .controls .btn-pill { flex: 1 1 100%; }
+      .stage-wrap { min-height: 560px; }
+      .screen-pill { font-size: 0.64rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
+      *, *::before, *::after {
         animation: none !important;
         transition: none !important;
       }
@@ -532,10 +501,10 @@
             </p>
 
             <div class="info-card">
-              <div class="info-title">How it works</div>
+              <div class="info-title">What changed</div>
               <p class="info-body">
-                Start the camera, step into frame, and the browser will detect the face, replace the background with Griffin Hall,
-                and position the helmet automatically.
+                Griffin Hall now fills the full stage first, and only the person is drawn on top using segmentation.
+                That makes the background replacement much stronger than the earlier version.
               </p>
             </div>
 
@@ -543,6 +512,7 @@
               <div class="info-title">Best results</div>
               <p class="info-body">
                 Use even lighting, keep one face clearly in frame, and stand far enough back so the top of the head is visible.
+                Busy lighting and very dark clothing can reduce segmentation quality.
               </p>
             </div>
           </section>
@@ -615,7 +585,7 @@
               </div>
 
               <p class="small-note">
-                This version is intentionally minimal so the person stays visible and the NKU setting stays clear.
+                This version is intentionally minimal so the person stays visible and Griffin Hall fills the frame.
               </p>
             </div>
           </section>
@@ -651,11 +621,8 @@
       const snapshotCanvas = document.getElementById("snapshotCanvas");
       const snapshotCtx = snapshotCanvas.getContext("2d");
 
-      const tempCanvas = document.createElement("canvas");
-      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
-
-      const bgCanvas = document.createElement("canvas");
-      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+      const personCanvas = document.createElement("canvas");
+      const personCtx = personCanvas.getContext("2d");
 
       let faceModel = null;
       let bodyPixModel = null;
@@ -667,14 +634,14 @@
       let faceDetectTimer = null;
       let segmentTimer = null;
 
-      let segmentation = null;
+      let latestSegmentation = null;
       let latestFace = null;
       let smoothedFace = null;
       let lastFaceTime = 0;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       const FACE_DETECT_MS = isMobileUA ? 140 : 90;
-      const SEGMENT_MS = isMobileUA ? 260 : 180;
+      const SEGMENT_MS = isMobileUA ? 220 : 150;
       const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
       const FACE_HOLD_MS = 420;
 
@@ -739,12 +706,8 @@
         renderCanvas.style.width = rect.width + "px";
         renderCanvas.style.height = rect.height + "px";
 
-        tempCanvas.width = renderCanvas.width;
-        tempCanvas.height = renderCanvas.height;
-        bgCanvas.width = renderCanvas.width;
-        bgCanvas.height = renderCanvas.height;
-
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        personCanvas.width = renderCanvas.width;
+        personCanvas.height = renderCanvas.height;
       }
 
       async function setupCamera() {
@@ -907,15 +870,47 @@
         if (!aiRunning || !videoReady || !bodyPixModel) return;
 
         try {
-          segmentation = await bodyPixModel.segmentPerson(video, {
-            internalResolution: isMobileUA ? "low" : "medium",
-            segmentationThreshold: 0.7,
-            maxDetections: 1
+          latestSegmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: isMobileUA ? "medium" : "high",
+            segmentationThreshold: 0.62,
+            maxDetections: 1,
+            scoreThreshold: 0.25,
+            nmsRadius: 20
           });
         } catch (error) {
           console.warn("Segmentation error:", error);
-          segmentation = null;
+          latestSegmentation = null;
         }
+      }
+
+      function drawPersonOnlyFromSegmentation() {
+        if (!latestSegmentation) return false;
+
+        const mask = bodyPix.toMask(
+          latestSegmentation,
+          { r: 0, g: 0, b: 0, a: 255 },
+          { r: 0, g: 0, b: 0, a: 0 }
+        );
+
+        personCtx.clearRect(0, 0, personCanvas.width, personCanvas.height);
+
+        personCtx.save();
+        personCtx.translate(personCanvas.width, 0);
+        personCtx.scale(-1, 1);
+        personCtx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
+        personCtx.restore();
+
+        bodyPix.drawMask(
+          personCanvas,
+          personCanvas,
+          mask,
+          1,
+          2,
+          false
+        );
+
+        ctx.drawImage(personCanvas, 0, 0, renderCanvas.width, renderCanvas.height);
+        return true;
       }
 
       function drawComposite() {
@@ -924,40 +919,19 @@
 
         ctx.clearRect(0, 0, w, h);
 
-        if (bgReady && segmentation) {
-          tempCtx.clearRect(0, 0, w, h);
-
-          tempCtx.save();
-          tempCtx.translate(w, 0);
-          tempCtx.scale(-1, 1);
-          tempCtx.drawImage(video, 0, 0, w, h);
-          tempCtx.restore();
-
-          const frameImageData = tempCtx.getImageData(0, 0, w, h);
-          const framePixels = frameImageData.data;
-
-          bgCtx.clearRect(0, 0, w, h);
-          drawBackgroundCover(bgImage, bgCtx, w, h);
-
-          const bgData = bgCtx.getImageData(0, 0, w, h);
-          const bgPixels = bgData.data;
-          const mask = segmentation.data;
-          const len = Math.min(mask.length, framePixels.length / 4);
-
-          for (let i = 0; i < len; i++) {
-            const offset = i * 4;
-            if (mask[i] === 0) {
-              framePixels[offset] = bgPixels[offset];
-              framePixels[offset + 1] = bgPixels[offset + 1];
-              framePixels[offset + 2] = bgPixels[offset + 2];
-              framePixels[offset + 3] = bgPixels[offset + 3];
-            }
-          }
-
-          ctx.putImageData(frameImageData, 0, 0);
-        } else if (bgReady) {
+        // Always paint Griffin Hall first so it fills the entire stage.
+        if (bgReady) {
           drawBackgroundCover(bgImage, ctx, w, h);
         } else {
+          ctx.fillStyle = "#111111";
+          ctx.fillRect(0, 0, w, h);
+        }
+
+        // Then draw only the segmented person on top.
+        const drewPerson = drawPersonOnlyFromSegmentation();
+
+        // If segmentation is not ready yet, show the mirrored live camera temporarily.
+        if (!drewPerson) {
           ctx.save();
           ctx.translate(w, 0);
           ctx.scale(-1, 1);
@@ -1102,7 +1076,7 @@
 
         video.srcObject = null;
         videoReady = false;
-        segmentation = null;
+        latestSegmentation = null;
         latestFace = null;
         smoothedFace = null;
 
@@ -1138,14 +1112,18 @@
 
           try {
             bodyPixModel = await bodyPix.load({
-              architecture: "MobileNetV1",
+              architecture: "ResNet50",
               outputStride: 16,
-              multiplier: isMobileUA ? 0.5 : 0.75,
               quantBytes: 2
             });
           } catch (error) {
-            console.warn("BodyPix failed to load. Background replacement may be limited.", error);
-            bodyPixModel = null;
+            console.warn("ResNet50 BodyPix load failed, falling back to MobileNetV1.", error);
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: isMobileUA ? 0.75 : 1.0,
+              quantBytes: 2
+            });
           }
 
           aiRunning = true;

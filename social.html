@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Laugh to Unlock — Campus Viking AI Challenge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="A modern browser-based AI challenge that turns laughter into a cinematic Viking-style unlock moment."
+  />
+  <meta name="theme-color" content="#0b1220" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <style>
+    :root {
+      --bg: #08101d;
+      --bg-2: #0d1728;
+      --panel: rgba(255, 255, 255, 0.08);
+      --panel-strong: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: #c7d2e0;
+      --muted-2: #9fb0c9;
+      --gold: #ffc72c;
+      --gold-2: #ffdf7a;
+      --blue: #7dd3fc;
+      --green: #22c55e;
+      --red: #fb7185;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --glass: blur(18px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(125, 211, 252, 0.12), transparent 22%),
+        radial-gradient(circle at 88% 10%, rgba(255, 199, 44, 0.12), transparent 20%),
+        radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.10), transparent 28%),
+        linear-gradient(180deg, #09111d 0%, #08101d 100%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: var(--glass);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, rgba(255, 199, 44, 0.18), rgba(255, 255, 255, 0.06));
+      border: 1px solid rgba(255, 199, 44, 0.25);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand-copy {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .privacy-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      background: rgba(125, 211, 252, 0.08);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .hero {
+      border-radius: 32px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: var(--glass);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-inner {
+      padding: 20px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--gold-2);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      margin: 0 0 14px;
+      font-size: clamp(2.2rem, 4.2vw, 4rem);
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+    }
+
+    .headline .accent {
+      color: var(--gold);
+      text-shadow: 0 0 28px rgba(255, 199, 44, 0.18);
+    }
+
+    .lead {
+      margin: 0 0 18px;
+      color: #deebfa;
+      font-size: 1rem;
+      line-height: 1.78;
+      max-width: 62ch;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .mini-card {
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mini-title {
+      margin-bottom: 6px;
+      color: var(--gold-2);
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .mini-copy {
+      margin: 0;
+      color: #deebfa;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .buzz-box {
+      border-radius: 22px;
+      padding: 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 199, 44, 0.12), rgba(255, 255, 255, 0.05));
+      border: 1px solid rgba(255, 199, 44, 0.18);
+    }
+
+    .buzz-kicker {
+      color: #ffefae;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .buzz-title {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .buzz-copy {
+      margin: 0;
+      color: #dce8f8;
+      line-height: 1.65;
+      font-size: 0.94rem;
+    }
+
+    .stage-shell {
+      border-radius: 26px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 24px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 50%),
+        linear-gradient(180deg, #101827 0%, #0b1220 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 18px 60px rgba(0, 0, 0, 0.24);
+      isolation: isolate;
+    }
+
+    #video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 1;
+      display: block;
+      filter: saturate(1.02) contrast(1.03);
+    }
+
+    .skeleton {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        linear-gradient(110deg,
+          #1a2435 8%,
+          #27344a 18%,
+          #1a2435 33%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to { background-position-x: -200%; }
+    }
+
+    .stage-gradient {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 199, 44, 0.08), transparent 45%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.16));
+      opacity: 0.7;
+    }
+
+    .scan {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,0.022) 0px,
+          rgba(255,255,255,0.022) 1px,
+          transparent 3px,
+          transparent 6px
+        );
+      opacity: 0.18;
+      mix-blend-mode: screen;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 46%, rgba(0,0,0,0.58) 100%);
+    }
+
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 8;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      pointer-events: none;
+    }
+
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(11, 18, 32, 0.7);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #94a3b8;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+      transition: background 0.2s ease;
+    }
+
+    .dot.live {
+      background: var(--green);
+    }
+
+    .dot.warn {
+      background: var(--gold);
+    }
+
+    .dot.error {
+      background: var(--red);
+    }
+
+    .center-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: min(62vw, 360px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 199, 44, 0.18);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 0 40px rgba(255, 199, 44, 0.14);
+      opacity: 0;
+      transform: scale(0.88);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .pulse-ring.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: spin 16s linear infinite;
+    }
+
+    .pulse-ring::before,
+    .pulse-ring::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      inset: 20px;
+      border: 1px dashed rgba(255, 199, 44, 0.22);
+    }
+
+    .pulse-ring::after {
+      inset: 42px;
+      border-style: solid;
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    @keyframes spin {
+      to { transform: scale(1) rotate(360deg); }
+    }
+
+    .unlock-orb {
+      display: grid;
+      place-items: center;
+      width: min(30vw, 172px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0.75);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), transparent 30%),
+        radial-gradient(circle at center, rgba(255,199,44,0.22), rgba(255,199,44,0.08) 46%, rgba(255,255,255,0.04) 70%);
+      border: 1px solid rgba(255, 199, 44, 0.32);
+      box-shadow:
+        0 0 40px rgba(255, 199, 44, 0.18),
+        inset 0 0 18px rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+    }
+
+    .unlock-orb.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: orbPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes orbPulse {
+      50% {
+        box-shadow:
+          0 0 58px rgba(255, 199, 44, 0.26),
+          0 0 120px rgba(255, 199, 44, 0.08),
+          inset 0 0 18px rgba(255,255,255,0.10);
+      }
+    }
+
+    .orb-emoji {
+      font-size: clamp(3.4rem, 7vw, 5.5rem);
+      line-height: 1;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,0.25));
+    }
+
+    .unlock-banner {
+      position: absolute;
+      left: 50%;
+      bottom: 7%;
+      transform: translateX(-50%) translateY(14px);
+      width: min(90%, 760px);
+      padding: 16px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(11,18,32,0.82), rgba(11,18,32,0.64));
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(12px);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      box-shadow: 0 18px 42px rgba(0,0,0,0.22);
+    }
+
+    .unlock-banner.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .unlock-kicker {
+      margin-bottom: 6px;
+      color: #ffefae;
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .unlock-main {
+      margin: 0;
+      font-size: clamp(1.7rem, 3.6vw, 3rem);
+      line-height: 0.98;
+      font-weight: 1000;
+      letter-spacing: -0.05em;
+      color: white;
+    }
+
+    .unlock-main .gold {
+      color: var(--gold);
+    }
+
+    .unlock-sub {
+      margin-top: 8px;
+      color: #dbe8f7;
+      font-size: 0.94rem;
+      font-weight: 600;
+      line-height: 1.55;
+    }
+
+    .mode-tag {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 8;
+      pointer-events: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(11,18,32,0.72);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .flash {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.92), rgba(255,199,44,0.60), transparent 60%);
+      transform: scale(0.9);
+    }
+
+    .flash.boom {
+      animation: flashBoom 900ms ease-out;
+    }
+
+    @keyframes flashBoom {
+      0%   { opacity: 0; transform: scale(0.8); }
+      18%  { opacity: 1; transform: scale(1.02); }
+      42%  { opacity: 0.45; transform: scale(1.12); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(180deg, #fff6cc 0%, var(--gold) 100%);
+      box-shadow: 0 0 14px rgba(255, 199, 44, 0.28);
+    }
+
+    .particle.burst {
+      animation: burst 1200ms ease-out forwards;
+    }
+
+    @keyframes burst {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.7) rotate(0deg);
+      }
+      10% { opacity: 1; }
+      100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot));
+      }
+    }
+
+    .status-wrap {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+      flex-wrap: wrap;
+      margin: 16px 0 14px;
+    }
+
+    .status-main {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 260px;
+    }
+
+    .status-text {
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.55;
+      color: #f8fbff;
+    }
+
+    .status-note {
+      max-width: 420px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.65;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .btn-modern {
+      appearance: none;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        opacity 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    .btn-modern:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .btn-modern:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-modern:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(255, 199, 44, 0.18);
+    }
+
+    .btn-primary-modern {
+      background: linear-gradient(135deg, #ffc72c 0%, #ffb300 100%);
+      color: #111827;
+      box-shadow: 0 14px 34px rgba(255, 199, 44, 0.2);
+    }
+
+    .btn-secondary-modern {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .btn-accent-modern {
+      background: rgba(125, 211, 252, 0.12);
+      color: #dff5ff;
+      border-color: rgba(125, 211, 252, 0.2);
+    }
+
+    .results-panel {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .result-box,
+    .score-box {
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .result-label,
+    .score-label {
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #ffefae;
+      margin-bottom: 8px;
+    }
+
+    .result-state {
+      font-size: clamp(1.35rem, 2.3vw, 2rem);
+      line-height: 1.05;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .result-state.unlocked {
+      color: var(--gold);
+      text-shadow: 0 0 24px rgba(255, 199, 44, 0.18);
+    }
+
+    .result-copy {
+      margin: 0;
+      color: #dbe8f7;
+      font-size: 0.94rem;
+      line-height: 1.65;
+    }
+
+    .score-big {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .score-num {
+      font-size: 3rem;
+      line-height: 0.9;
+      font-weight: 1000;
+      letter-spacing: -0.06em;
+    }
+
+    .score-caption {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ffe58a 0%, #ffc72c 100%);
+      transition: width 0.16s ease;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .signal-card {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .signal-label {
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #ffefae;
+      margin-bottom: 8px;
+    }
+
+    .signal-value {
+      font-size: 1.9rem;
+      line-height: 1;
+      font-weight: 1000;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .signal-copy {
+      min-height: 2.7em;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: #dce8f8;
+      margin-bottom: 10px;
+    }
+
+    .bar {
+      height: 8px;
+      width: 100%;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.14s ease;
+      background: linear-gradient(90deg, #7dd3fc 0%, #22c55e 100%);
+    }
+
+    .share-area {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .share-area.show {
+      display: block;
+    }
+
+    .share-card {
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid rgba(255, 199, 44, 0.16);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .share-title {
+      margin-bottom: 12px;
+      color: #ffefae;
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    #snapshotCanvas {
+      width: 100%;
+      max-width: 540px;
+      display: block;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: #0b1220;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+    }
+
+    .share-copy {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.65;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.83rem;
+      line-height: 1.65;
+    }
+
+    .toast-lite {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(11,18,32,0.9);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 800;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .toast-lite.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .shake {
+      animation: shake 500ms ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(-5px); }
+      36% { transform: translateX(5px); }
+      54% { transform: translateX(-4px); }
+      72% { transform: translateX(4px); }
+      90% { transform: translateX(-1px); }
+    }
+
+    @media (max-width: 992px) {
+      .mini-grid,
+      .signal-grid,
+      .results-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .hero-inner {
+        padding: 14px;
+      }
+
+      .hero,
+      .stage-shell,
+      .stage {
+        border-radius: 22px;
+      }
+
+      .unlock-banner {
+        width: 92%;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .btn-modern {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge">Web AI Experience</div>
+        <div class="brand-copy">Laugh to Unlock · Campus Viking Challenge</div>
+      </div>
+      <div class="privacy-pill">🔒 Runs in your browser · no backend needed</div>
+    </header>
+
+    <main class="hero">
+      <div class="hero-inner">
+        <div class="row g-4 align-items-start">
+          <section class="col-lg-4" aria-label="Overview">
+            <div class="eyebrow">Playful. Shareable. Crowd-pleasing.</div>
+            <h1 class="headline">
+              Turn your laugh into a
+              <span class="accent">main-character unlock moment.</span>
+            </h1>
+
+            <p class="lead">
+              This browser-based AI experience looks for a strong laugh pattern and rewards it
+              with a cinematic Viking-style reveal. It is designed to feel fast, fun, and
+              ridiculously demo-worthy — the kind of thing people try once, then immediately call
+              someone else over to try.
+            </p>
+
+            <div class="mini-grid">
+              <article class="mini-card">
+                <div class="mini-title">How it works</div>
+                <p class="mini-copy">Start the camera, look at the screen, and laugh naturally. Big energy wins.</p>
+              </article>
+
+              <article class="mini-card">
+                <div class="mini-title">Best results</div>
+                <p class="mini-copy">One face, good lighting, and a real laugh instead of a tiny polite smile.</p>
+              </article>
+
+              <article class="mini-card">
+                <div class="mini-title">Why it lands</div>
+                <p class="mini-copy">It creates a fun reveal moment people want to record, repost, and talk about.</p>
+              </article>
+            </div>
+
+            <div class="buzz-box">
+              <div class="buzz-kicker">Buzz builder</div>
+              <h2 class="buzz-title">Made for campus wow-factor.</h2>
+              <p class="buzz-copy">
+                The tone, visuals, and share card are built to help this feel less like a demo and
+                more like an experience — something that sparks curiosity about you, your work,
+                and what the university can do with browser-based AI.
+              </p>
+            </div>
+          </section>
+
+          <section class="col-lg-8" aria-label="Live challenge stage">
+            <div class="stage-shell">
+              <div id="stage" class="stage">
+                <div id="skeleton" class="skeleton" aria-hidden="true"></div>
+                <video id="video" autoplay playsinline muted aria-label="Live camera feed"></video>
+
+                <div class="stage-gradient"></div>
+                <div class="scan"></div>
+                <div class="vignette"></div>
+
+                <div class="hud">
+                  <div class="hud-pill">
+                    <span id="hudDot" class="dot"></span>
+                    <span id="hudText">Waiting for camera</span>
+                  </div>
+                  <div class="hud-pill">
+                    <span class="dot warn"></span>
+                    <span id="legendText">Buzz Level: 0</span>
+                  </div>
+                </div>
+
+                <div class="center-overlay">
+                  <div id="pulseRing" class="pulse-ring"></div>
+
+                  <div id="unlockOrb" class="unlock-orb">
+                    <div class="orb-emoji">⚔️</div>
+                  </div>
+
+                  <div id="unlockBanner" class="unlock-banner">
+                    <div class="unlock-kicker">Challenge complete</div>
+                    <h2 class="unlock-main"><span class="gold">Digital Viking</span> unlocked</h2>
+                    <div class="unlock-sub">Campus legend energy detected. That was extremely postable.</div>
+                  </div>
+                </div>
+
+                <div id="flash" class="flash"></div>
+                <div id="particles" class="particles" aria-hidden="true"></div>
+
+                <div class="mode-tag">Laugh to Unlock</div>
+              </div>
+
+              <div class="status-wrap" role="status" aria-live="polite" aria-atomic="true">
+                <div class="status-main">
+                  <span id="statusDot" class="dot"></span>
+                  <span id="statusText" class="status-text">Click “Start Camera & AI” to begin.</span>
+                </div>
+                <div class="status-note">
+                  Tip: this is a playful browser demo, not scientific emotion detection. Animated talking or dramatic reactions may also trigger it.
+                </div>
+              </div>
+
+              <div class="controls">
+                <button id="startBtn" class="btn-modern btn-primary-modern" type="button">🚀 Start Camera & AI</button>
+                <button id="stopBtn" class="btn-modern btn-secondary-modern" type="button" disabled>⏹ Stop</button>
+                <button id="captureBtn" class="btn-modern btn-accent-modern" type="button" disabled>📸 Create Share Card</button>
+                <button id="copyBtn" class="btn-modern btn-secondary-modern" type="button" disabled>📋 Copy Caption</button>
+              </div>
+
+              <div class="results-panel">
+                <article class="result-box">
+                  <div class="result-label">Live status</div>
+                  <div id="resultState" class="result-state">Waiting for the laugh...</div>
+                  <p id="resultCopy" class="result-copy">
+                    The system is looking for enough mouth openness plus repeat motion to trigger the unlock moment.
+                  </p>
+                </article>
+
+                <article class="score-box">
+                  <div class="score-label">Unlock progress</div>
+                  <div class="score-big">
+                    <div id="progressNum" class="score-num">0%</div>
+                    <div class="score-caption">sustained laughter required</div>
+                  </div>
+                  <div class="progress-track">
+                    <div id="progressFill" class="progress-fill"></div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="signal-grid">
+                <article class="signal-card">
+                  <div class="signal-label">Mouth openness</div>
+                  <div id="mouthScore" class="signal-value">0</div>
+                  <div class="signal-copy">How open the mouth appears compared with the face.</div>
+                  <div class="bar"><div id="mouthBar" class="bar-fill"></div></div>
+                </article>
+
+                <article class="signal-card">
+                  <div class="signal-label">Motion signal</div>
+                  <div id="motionScore" class="signal-value">0</div>
+                  <div class="signal-copy">Movement across recent frames, especially around the mouth and face.</div>
+                  <div class="bar"><div id="motionBar" class="bar-fill"></div></div>
+                </article>
+
+                <article class="signal-card">
+                  <div class="signal-label">Laugh score</div>
+                  <div id="laughScore" class="signal-value">0</div>
+                  <div class="signal-copy">Combined score used to decide whether the reveal should fire.</div>
+                  <div class="bar"><div id="laughBar" class="bar-fill"></div></div>
+                </article>
+              </div>
+
+              <div id="shareArea" class="share-area">
+                <div class="share-card">
+                  <div class="share-title">Share card</div>
+                  <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
+
+                  <div class="controls mt-3 mb-0">
+                    <button id="downloadBtn" class="btn-modern btn-primary-modern" type="button">⬇️ Download Image</button>
+                  </div>
+
+                  <p class="share-copy">
+                    Suggested caption: “I just unlocked Digital Viking mode with a browser-based AI experience built on campus. This is the kind of creative, interactive work that gets people excited about what’s possible.”
+                  </p>
+                </div>
+              </div>
+
+              <p class="footer-note">
+                For maximum buzz: have people record the live unlock moment, then pair it with the share card for social or presentation slides.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast-lite" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const video = document.getElementById("video");
+      const skeleton = document.getElementById("skeleton");
+      const stage = document.getElementById("stage");
+      const flash = document.getElementById("flash");
+      const particles = document.getElementById("particles");
+      const pulseRing = document.getElementById("pulseRing");
+      const unlockOrb = document.getElementById("unlockOrb");
+      const unlockBanner = document.getElementById("unlockBanner");
+
+      const hudDot = document.getElementById("hudDot");
+      const hudText = document.getElementById("hudText");
+      const legendText = document.getElementById("legendText");
+
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+
+      const resultState = document.getElementById("resultState");
+      const resultCopy = document.getElementById("resultCopy");
+
+      const mouthScoreEl = document.getElementById("mouthScore");
+      const motionScoreEl = document.getElementById("motionScore");
+      const laughScoreEl = document.getElementById("laughScore");
+
+      const mouthBar = document.getElementById("mouthBar");
+      const motionBar = document.getElementById("motionBar");
+      const laughBar = document.getElementById("laughBar");
+
+      const progressNum = document.getElementById("progressNum");
+      const progressFill = document.getElementById("progressFill");
+
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const copyBtn = document.getElementById("copyBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      const shareArea = document.getElementById("shareArea");
+      const snapshotCanvas = document.getElementById("snapshotCanvas");
+      const snapshotCtx = snapshotCanvas.getContext("2d");
+
+      const toast = document.getElementById("toast");
+
+      let faceModel = null;
+      let mediaStream = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let rafId = null;
+      let lastTick = 0;
+
+      let mouthScore = 0;
+      let motionScore = 0;
+      let laughScore = 0;
+
+      let prevFaceCenterYNorm = null;
+      let prevMouthYNorm = null;
+
+      let laughHoldFrames = 0;
+      let calmFrames = 0;
+      let unlocked = false;
+      let lastBuzzLevel = 0;
+
+      const RENDER_INTERVAL_MS = 90;
+      const SMOOTH_ALPHA = 0.18;
+      const LAUGH_THRESHOLD = 68;
+      const MOUTH_THRESHOLD = 35;
+      const HOLD_REQUIRED = 18;
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function lerp(current, target, alpha) {
+        return current + alpha * (target - current);
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2200);
+      }
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+
+        statusDot.classList.remove("live", "warn", "error");
+        hudDot.classList.remove("live", "warn", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("live");
+          hudDot.classList.add("live");
+        } else if (mode === "warn") {
+          statusDot.classList.add("warn");
+          hudDot.classList.add("warn");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+          hudDot.classList.add("error");
+        }
+      }
+
+      function setBar(el, value) {
+        el.style.width = clamp(Math.round(value), 0, 100) + "%";
+      }
+
+      function updateUI() {
+        const mouthRounded = Math.round(mouthScore);
+        const motionRounded = Math.round(motionScore);
+        const laughRounded = Math.round(laughScore);
+        const progressPercent = clamp(Math.round((laughHoldFrames / HOLD_REQUIRED) * 100), 0, 100);
+
+        mouthScoreEl.textContent = mouthRounded;
+        motionScoreEl.textContent = motionRounded;
+        laughScoreEl.textContent = laughRounded;
+
+        setBar(mouthBar, mouthRounded);
+        setBar(motionBar, motionRounded);
+        setBar(laughBar, laughRounded);
+
+        progressNum.textContent = progressPercent + "%";
+        progressFill.style.width = progressPercent + "%";
+
+        const buzzLevel = clamp(Math.round((laughRounded * 0.65) + (progressPercent * 0.35)), 0, 100);
+        lastBuzzLevel = buzzLevel;
+        legendText.textContent = "Buzz Level: " + buzzLevel;
+
+        if (unlocked) {
+          resultState.textContent = "Digital Viking unlocked";
+          resultState.classList.add("unlocked");
+          resultCopy.textContent =
+            "That was the big moment. The system saw enough sustained laugh energy to trigger the full cinematic reveal.";
+          hudText.textContent = "Unlock complete";
+          captureBtn.disabled = false;
+          copyBtn.disabled = false;
+        } else if (laughHoldFrames > 0) {
+          resultState.textContent = "Building toward the unlock...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "It sees something. Keep going — the magic happens when the laugh holds for more than a quick burst.";
+          hudText.textContent = "Tracking laugh pattern";
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+        } else {
+          resultState.textContent = "Waiting for the laugh...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "The system is watching for mouth openness plus repeated motion across frames to trigger the reveal.";
+          hudText.textContent = "Waiting for camera";
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+        }
+      }
+
+      async function getBestBackend() {
+        const backends = ["webgl", "wasm", "cpu"];
+        for (const backend of backends) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (err) {
+            console.warn("Backend unavailable:", backend, err);
+          }
+        }
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Camera access is not supported in this browser.");
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            width: { ideal: 960 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          }
+        });
+
+        mediaStream = stream;
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            videoReady = true;
+            skeleton.style.display = "none";
+            resolve();
+          };
+        });
+      }
+
+      function calculateSignals(face, videoWidth, videoHeight) {
+        if (!face || !Array.isArray(face.landmarks) || face.landmarks.length < 4) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+        const rightEye = face.landmarks[0];
+        const leftEye = face.landmarks[1];
+        const mouth = face.landmarks[3];
+
+        if (!topLeft || !bottomRight || !rightEye || !leftEye || !mouth) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        if (faceWidth <= 0 || faceHeight <= 0) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
+        const mouthDrop = mouth[1] - eyeMidY;
+        const mouthDropNorm = mouthDrop / faceHeight;
+
+        const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
+
+        const faceCenterYNorm = ((y1 + y2) / 2) / videoHeight;
+        const mouthYNorm = mouth[1] / videoHeight;
+
+        let faceBounceScore = 0;
+        let mouthMovementScore = 0;
+
+        if (prevFaceCenterYNorm !== null) {
+          const faceDelta = Math.abs(faceCenterYNorm - prevFaceCenterYNorm);
+          faceBounceScore = clamp(faceDelta / 0.014, 0, 1) * 100;
+        }
+
+        if (prevMouthYNorm !== null) {
+          const mouthDelta = Math.abs(mouthYNorm - prevMouthYNorm);
+          mouthMovementScore = clamp(mouthDelta / 0.02, 0, 1) * 100;
+        }
+
+        prevFaceCenterYNorm = faceCenterYNorm;
+        prevMouthYNorm = mouthYNorm;
+
+        const motionRaw = clamp((mouthMovementScore * 0.68) + (faceBounceScore * 0.32), 0, 100);
+
+        let laughRaw = 0;
+        if (mouthOpenRaw > 35) {
+          laughRaw = (mouthOpenRaw * 0.56) + (motionRaw * 0.44);
+        } else {
+          laughRaw = (mouthOpenRaw * 0.74) + (motionRaw * 0.16);
+        }
+
+        laughRaw = clamp(laughRaw, 0, 100);
+
+        return {
+          mouth: mouthOpenRaw,
+          motion: motionRaw,
+          laugh: laughRaw
+        };
+      }
+
+      function updateStateMachine() {
+        if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
+          laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
+          calmFrames = 0;
+        } else {
+          calmFrames += 1;
+          laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+        }
+
+        if (!unlocked && laughHoldFrames >= HOLD_REQUIRED) {
+          triggerUnlock();
+        }
+      }
+
+      function burstParticles(count = 34) {
+        particles.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement("span");
+          p.className = "particle";
+
+          const centerX = 50 + (Math.random() * 12 - 6);
+          const centerY = 50 + (Math.random() * 12 - 6);
+          const dx = (Math.random() * 360 - 180).toFixed(0) + "px";
+          const dy = (Math.random() * 240 - 180).toFixed(0) + "px";
+          const rot = (Math.random() * 540 - 270).toFixed(0) + "deg";
+
+          p.style.left = centerX + "%";
+          p.style.top = centerY + "%";
+          p.style.setProperty("--dx", dx);
+          p.style.setProperty("--dy", dy);
+          p.style.setProperty("--rot", rot);
+
+          particles.appendChild(p);
+          requestAnimationFrame(() => p.classList.add("burst"));
+        }
+      }
+
+      function playUnlockTone() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+
+          const ctx = new AudioContextClass();
+          const now = ctx.currentTime;
+          const notes = [220, 330, 440, 660];
+
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = i < 2 ? "triangle" : "sine";
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03 + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25 + i * 0.06);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now + i * 0.05);
+            osc.stop(now + 0.35 + i * 0.06);
+          });
+        } catch (err) {
+          console.warn("Audio unavailable:", err);
+        }
+      }
+
+      function speakUnlock() {
+        if (!("speechSynthesis" in window)) return;
+
+        try {
+          const u = new SpeechSynthesisUtterance("Digital Viking unlocked");
+          u.rate = 0.97;
+          u.pitch = 0.92;
+          u.volume = 0.9;
+          speechSynthesis.cancel();
+          speechSynthesis.speak(u);
+        } catch (err) {
+          console.warn("Speech unavailable:", err);
+        }
+      }
+
+      function triggerUnlock() {
+        unlocked = true;
+
+        pulseRing.classList.add("active");
+        unlockOrb.classList.add("active");
+        unlockBanner.classList.add("active");
+
+        stage.classList.add("shake");
+        flash.classList.remove("boom");
+        void flash.offsetWidth;
+        flash.classList.add("boom");
+
+        burstParticles();
+        playUnlockTone();
+        speakUnlock();
+
+        setStatus("Legendary laugh detected. Unlock complete.", "active");
+        updateUI();
+        showToast("⚔️ Digital Viking unlocked");
+
+        setTimeout(() => {
+          stage.classList.remove("shake");
+        }, 650);
+      }
+
+      async function renderLoop(ts) {
+        if (!aiRunning || !faceModel || !videoReady) return;
+
+        if (!mediaStream || !mediaStream.active || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          setStatus("Camera feed stopped. Restart to continue.", "error");
+          stopExperience(true);
+          return;
+        }
+
+        const elapsed = ts - lastTick;
+        if (elapsed < RENDER_INTERVAL_MS) {
+          rafId = requestAnimationFrame(renderLoop);
+          return;
+        }
+        lastTick = ts;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+            const raw = calculateSignals(
+              face,
+              video.videoWidth || 720,
+              video.videoHeight || 540
+            );
+
+            mouthScore = lerp(mouthScore, raw.mouth, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, raw.motion, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, raw.laugh, SMOOTH_ALPHA);
+
+            updateStateMachine();
+            updateUI();
+
+            if (!unlocked) {
+              setStatus("AI is running. Give it a real laugh and let’s see what happens...", "active");
+            }
+          } else {
+            mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, 0, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
+
+            prevFaceCenterYNorm = null;
+            prevMouthYNorm = null;
+            laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+
+            updateUI();
+
+            if (!unlocked) {
+              setStatus("AI is running. Step into frame and look at the camera.", "warn");
+            }
+          }
+        } catch (err) {
+          console.error("Inference error:", err);
+          setStatus("The AI hit an error. Refresh the page and try again.", "error");
+          aiRunning = false;
+          return;
+        }
+
+        rafId = requestAnimationFrame(renderLoop);
+      }
+
+      async function startExperience() {
+        try {
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+
+          setStatus("Requesting camera access...");
+          hudText.textContent = "Requesting camera";
+
+          await setupCamera();
+
+          setStatus("Loading AI model...");
+          hudText.textContent = "Loading AI";
+
+          await getBestBackend();
+          faceModel = await blazeface.load();
+
+          aiRunning = true;
+          stopBtn.disabled = false;
+
+          setStatus("AI is ready. Big laugh energy starts now.", "active");
+          hudText.textContent = "AI ready";
+          showToast("Camera and AI are live");
+
+          rafId = requestAnimationFrame(renderLoop);
+        } catch (err) {
+          console.error("Startup error:", err);
+          setStatus(
+            "Could not start the camera or AI. Check permissions and use HTTPS or localhost.",
+            "error"
+          );
+          hudText.textContent = "Startup failed";
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
+      }
+
+      function stopExperience(fromLoop = false) {
+        aiRunning = false;
+
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+
+        video.srcObject = null;
+        videoReady = false;
+        skeleton.style.display = "block";
+
+        mouthScore = 0;
+        motionScore = 0;
+        laughScore = 0;
+
+        prevFaceCenterYNorm = null;
+        prevMouthYNorm = null;
+
+        laughHoldFrames = 0;
+        calmFrames = 0;
+        unlocked = false;
+        lastBuzzLevel = 0;
+
+        pulseRing.classList.remove("active");
+        unlockOrb.classList.remove("active");
+        unlockBanner.classList.remove("active");
+        particles.innerHTML = "";
+        shareArea.classList.remove("show");
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        captureBtn.disabled = true;
+        copyBtn.disabled = true;
+
+        updateUI();
+
+        if (!fromLoop) {
+          setStatus("Camera is off. Restart any time.", "idle");
+          hudText.textContent = "Waiting for camera";
+          showToast("Experience stopped");
+        }
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radius);
+        ctx.arcTo(x + width, y + height, x, y + height, radius);
+        ctx.arcTo(x, y + height, x, y, radius);
+        ctx.arcTo(x, y, x + width, y, radius);
+        ctx.closePath();
+      }
+
+      function roundRectFill(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.fill();
+      }
+
+      function roundRectStroke(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.stroke();
+      }
+
+      function drawSnapshotCard() {
+        const w = snapshotCanvas.width;
+        const h = snapshotCanvas.height;
+
+        snapshotCtx.clearRect(0, 0, w, h);
+
+        const bg = snapshotCtx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, "#0b1220");
+        bg.addColorStop(1, "#101827");
+        snapshotCtx.fillStyle = bg;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.28, 30, w * 0.5, h * 0.28, 420);
+        glow.addColorStop(0, "rgba(255,199,44,0.42)");
+        glow.addColorStop(0.4, "rgba(255,199,44,0.16)");
+        glow.addColorStop(1, "rgba(255,199,44,0)");
+        snapshotCtx.fillStyle = glow;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        // background specks
+        for (let i = 0; i < 60; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const r = Math.random() * 2.4 + 0.3;
+          snapshotCtx.beginPath();
+          snapshotCtx.arc(x, y, r, 0, Math.PI * 2);
+          snapshotCtx.fillStyle = i % 3 === 0 ? "rgba(255,199,44,0.18)" : "rgba(255,255,255,0.08)";
+          snapshotCtx.fill();
+        }
+
+        // video frame
+        const frameX = 90;
+        const frameY = 164;
+        const frameW = w - 180;
+        const frameH = 720;
+        const radius = 34;
+
+        roundRect(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.save();
+        snapshotCtx.clip();
+
+        if (videoReady) {
+          snapshotCtx.save();
+          snapshotCtx.scale(-1, 1);
+          snapshotCtx.drawImage(video, -frameX - frameW, frameY, frameW, frameH);
+          snapshotCtx.restore();
+        } else {
+          snapshotCtx.fillStyle = "#1f2937";
+          snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
+        }
+        snapshotCtx.restore();
+
+        const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
+        overlayGrad.addColorStop(0, "rgba(255,255,255,0.03)");
+        overlayGrad.addColorStop(1, "rgba(255,199,44,0.12)");
+        snapshotCtx.fillStyle = overlayGrad;
+        roundRectFill(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.lineWidth = 3;
+        snapshotCtx.strokeStyle = "rgba(255,199,44,0.55)";
+        roundRectStroke(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.fillStyle = "#ffefae";
+        snapshotCtx.font = "800 30px Inter, sans-serif";
+        snapshotCtx.fillText("LAUGH TO UNLOCK", 90, 82);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "900 80px Inter, sans-serif";
+        snapshotCtx.fillText("DIGITAL VIKING", 90, 1108);
+
+        snapshotCtx.fillStyle = "#ffc72c";
+        snapshotCtx.font = "900 82px Inter, sans-serif";
+        snapshotCtx.fillText("UNLOCKED", 90, 1198);
+
+        snapshotCtx.fillStyle = "#deebfa";
+        snapshotCtx.font = "600 30px Inter, sans-serif";
+        snapshotCtx.fillText("Built to create buzz for creative AI on campus.", 90, 1252);
+
+        snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
+        roundRectFill(snapshotCtx, 90, 1282, w - 180, 86, 24);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "800 28px Inter, sans-serif";
+        snapshotCtx.fillText("Buzz Level: " + lastBuzzLevel, 124, 1336);
+
+        snapshotCtx.fillStyle = "#ffefae";
+        snapshotCtx.font = "800 28px Inter, sans-serif";
+        snapshotCtx.fillText("⚔️ Campus challenge complete", 638, 1336);
+
+        shareArea.classList.add("show");
+        showToast("Share card created");
+      }
+
+      function downloadSnapshot() {
+        const link = document.createElement("a");
+        link.download = "digital-viking-share-card.png";
+        link.href = snapshotCanvas.toDataURL("image/png");
+        link.click();
+      }
+
+      async function copyCaption() {
+        const text =
+          "I just unlocked Digital Viking mode with a browser-based AI experience built on campus. Fun, interactive, and exactly the kind of work that gets people excited about what’s possible with web AI.";
+
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("Caption copied");
+        } catch (err) {
+          console.warn("Clipboard unavailable:", err);
+          showToast("Could not copy caption");
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", () => stopExperience(false));
+      captureBtn.addEventListener("click", drawSnapshotCard);
+      downloadBtn.addEventListener("click", downloadSnapshot);
+      copyBtn.addEventListener("click", copyCaption);
+
+      updateUI();
+    })();
+  </script>
+</body>
+</html>

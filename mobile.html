@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Norse AI Filter – Griffin Hall Everywhere Edition</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="NKU Norse AI Filter – stable browser-based AI demo with Griffin Hall as the background in all modes."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --accent: #4f46e5;
+      --muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --bg-soft: #f9fafb;
+      --shadow-soft: 0 18px 60px rgba(15, 23, 42, 0.04),
+                     0 2px 8px rgba(15, 23, 42, 0.04);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #f9fafb 0%, #e5e7eb 40%, #f9fafb 100%);
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .nk-shell {
+      max-width: 1180px;
+    }
+
+    .nk-brand-bar {
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+    }
+
+    .nk-brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-weight: 700;
+    }
+
+    .nk-brand-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .nk-card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nk-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nk-title {
+      font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .nk-lead {
+      font-size: 0.98rem;
+      color: #4b5563;
+    }
+
+    .nk-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .nk-pill-badge {
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      background: #eef2ff;
+      color: #312e81;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .nk-step-list li {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.92rem;
+      color: #374151;
+    }
+
+    .nk-step-num {
+      font-weight: 700;
+      color: var(--nku-gold);
+      min-width: 1.2rem;
+      text-align: right;
+    }
+
+    .nk-subsection-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .nk-subsection-body {
+      font-size: 0.86rem;
+      color: #4b5563;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      height: clamp(420px, 68vh, 760px);
+      min-height: 420px;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+      isolation: isolate;
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        #f3f4f6 0%,
+        #f3f4f6 24%,
+        #e5e7eb 42%,
+        #f3f4f6 60%,
+        #f3f4f6 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -120% 0;
+      }
+      100% {
+        background-position: 120% 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .video-skeleton {
+        animation: none;
+      }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.45), rgba(17,17,17,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 34%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.56), rgba(17,17,17,0));
+    }
+
+    .screen-pill,
+    .screen-status {
+      position: absolute;
+      top: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.45);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .screen-pill {
+      left: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .screen-status {
+      right: 0.9rem;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 0.95rem;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 800;
+      opacity: 0.9;
+      margin-bottom: 0.18rem;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .screen-sub {
+      font-size: 0.78rem;
+      opacity: 0.92;
+      margin-top: 0.2rem;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+      background: #d1d5db;
+      transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-dot.active {
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.15);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      color: var(--accent);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .status-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      border-radius: 1rem;
+      padding: 0.3rem;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      gap: 0.35rem;
+      width: 100%;
+    }
+
+    .filter-btn {
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: #4b5563;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.9rem;
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition:
+        background 0.15s ease,
+        box-shadow 0.15s ease,
+        color 0.15s ease,
+        transform 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .filter-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .filter-btn.active {
+      background: #ffffff;
+      box-shadow: 0 0 0 3px var(--nku-gold);
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .filter-thumb {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      flex: 0 0 auto;
+    }
+
+    #startBtn,
+    #stopBtn,
+    #captureBtn {
+      border-radius: 999px;
+      font-weight: 700;
+      min-height: 48px;
+      touch-action: manipulation;
+    }
+
+    #captureBtn {
+      border: none;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+    }
+
+    #captureBtn:disabled,
+    #stopBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    code {
+      color: #1f2937;
+      background: #f3f4f6;
+      padding: 0.08rem 0.3rem;
+      border-radius: 0.3rem;
+    }
+
+    @media (max-width: 991.98px) {
+      .nk-shell {
+        padding-inline: 0.8rem;
+      }
+
+      .nk-brand-bar {
+        border-radius: 1rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      body {
+        background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+      }
+
+      .container.py-4.py-lg-5.nk-shell {
+        padding-top: 1rem !important;
+        padding-bottom: 1.25rem !important;
+      }
+
+      .card-body {
+        padding: 1rem !important;
+      }
+
+      #videoContainer {
+        height: min(74svh, 640px);
+        min-height: 500px;
+        border-radius: 1rem;
+      }
+
+      .screen-pill,
+      .screen-status {
+        top: 0.7rem;
+        padding: 0.38rem 0.65rem;
+        font-size: 0.64rem;
+      }
+
+      .screen-pill {
+        left: 0.7rem;
+        max-width: calc(100% - 8.2rem);
+      }
+
+      .screen-status {
+        right: 0.7rem;
+      }
+
+      .screen-footer {
+        left: 0.85rem;
+        right: 0.85rem;
+        bottom: 0.8rem;
+      }
+
+      .screen-title {
+        font-size: 1.02rem;
+      }
+
+      .screen-sub {
+        font-size: 0.74rem;
+      }
+
+      .filter-group {
+        justify-content: stretch;
+      }
+
+      .filter-btn {
+        flex: 1 1 calc(50% - 0.35rem);
+        justify-content: center;
+        min-width: 0;
+        padding-inline: 0.7rem;
+        font-size: 0.84rem;
+      }
+
+      .filter-thumb {
+        width: 34px;
+        height: 34px;
+      }
+
+      .status-text {
+        font-size: 0.88rem;
+      }
+
+      .status-hint {
+        font-size: 0.76rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #videoContainer {
+        height: min(76svh, 620px);
+        min-height: 520px;
+      }
+
+      .filter-btn {
+        flex: 1 1 100%;
+      }
+
+      .screen-pill,
+      .screen-status {
+        font-size: 0.6rem;
+      }
+
+      .screen-kicker {
+        font-size: 0.62rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container py-4 py-lg-5 nk-shell">
+    <header
+      class="nk-brand-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"
+      aria-label="NKU Norse AI Filter header"
+    >
+      <div class="d-flex align-items-center gap-2">
+        <div class="nk-brand-pill" aria-label="Northern Kentucky University Norse">
+          <span>NKU</span>
+          <span>Norse</span>
+        </div>
+        <span class="nk-brand-sub">AI in the Browser · JavaScript × TensorFlow.js</span>
+      </div>
+      <p class="nk-brand-sub text-end mb-0">
+        Griffin Hall on every screen
+      </p>
+    </header>
+
+    <main class="card nk-card border-0" aria-labelledby="page-title">
+      <div class="card-body p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <section class="col-lg-5" aria-label="Demo description and learning outcomes">
+            <div class="nk-badge-row">
+              <p class="nk-pill-badge mb-0">Client-side AI</p>
+              <p class="nk-pill-badge mb-0">Private background</p>
+              <p class="nk-pill-badge mb-0">Stable overlays</p>
+            </div>
+
+            <p class="nk-eyebrow mb-1">Real-time AI face filter</p>
+            <h1 id="page-title" class="nk-title mb-2">
+              NKU Norse AI Filter
+            </h1>
+
+            <p class="nk-lead mb-3">
+              This version uses Griffin Hall as the background in every mode so personal spaces stay hidden while the overlays track more naturally across desktop, tablet, and mobile.
+            </p>
+
+            <section class="mb-3" aria-labelledby="try-it-out-heading">
+              <h2 id="try-it-out-heading" class="nk-subsection-title mb-2">Try it out</h2>
+              <ol class="nk-step-list list-unstyled mb-2">
+                <li>
+                  <span class="nk-step-num">1.</span>
+                  <span>Click <strong>Start Camera &amp; AI</strong>.</span>
+                </li>
+                <li>
+                  <span class="nk-step-num">2.</span>
+                  <span>Choose <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>Griffin Hall</strong>.</span>
+                </li>
+                <li>
+                  <span class="nk-step-num">3.</span>
+                  <span>The helmet now sits lower, the beard sits higher, and the layout is optimized for smaller screens.</span>
+                </li>
+              </ol>
+            </section>
+
+            <section class="mt-3" aria-labelledby="learning-heading">
+              <h2 id="learning-heading" class="nk-subsection-title mb-2">What you’ll learn</h2>
+              <p class="nk-subsection-body mb-1">
+                • Camera access with <code>getUserMedia</code>.<br />
+                • Real-time AR overlays with <code>&lt;canvas&gt;</code>.<br />
+                • Background compositing with BodyPix and stable face tracking with BlazeFace.
+              </p>
+            </section>
+          </section>
+
+          <section class="col-lg-7" aria-label="Live AI demo">
+            <section class="bg-light border rounded-4 p-3 p-lg-3" style="border-color: #e5e7eb;">
+              <div class="mb-3">
+                <div id="videoContainer" aria-label="Live camera preview area">
+                  <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+                  <video
+                    id="video"
+                    autoplay
+                    playsinline
+                    muted
+                    aria-hidden="true"
+                  ></video>
+
+                  <canvas
+                    id="overlay"
+                    role="img"
+                    aria-label="Live AI-filtered camera view"
+                  ></canvas>
+
+                  <div class="screen-ui" aria-hidden="true">
+                    <div class="screen-gradient-top"></div>
+                    <div class="screen-gradient-bottom"></div>
+
+                    <div class="screen-pill">⚡ Making Digital Vikings</div>
+
+                    <div class="screen-status">
+                      <span id="screenStatusDot" class="screen-status-dot"></span>
+                      <span id="screenStatusText">Searching…</span>
+                    </div>
+
+                    <div class="screen-footer">
+                      <div class="screen-kicker">Live browser demo</div>
+                      <h2 class="screen-title">Norse Overlay Experience</h2>
+                      <div class="screen-sub">Client-side AI · camera + canvas + TensorFlow.js</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2"
+                aria-live="polite"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                  <span id="statusText" class="status-text">
+                    Tap “Start Camera &amp; AI” to launch the demo.
+                  </span>
+                </div>
+                <p class="status-hint text-md-end mb-0">
+                  Best results: Chrome or Edge, HTTPS, and bright lighting.
+                </p>
+              </div>
+
+              <div class="d-flex justify-content-center mb-3">
+                <div
+                  class="filter-group"
+                  role="radiogroup"
+                  aria-label="Choose AI filter"
+                >
+                  <button
+                    class="filter-btn active"
+                    data-filter="glasses"
+                    type="button"
+                    role="radio"
+                    aria-pressed="true"
+                    aria-checked="true"
+                  >
+                    <img
+                      src="glasses.png"
+                      alt="Preview of glasses filter"
+                      class="filter-thumb"
+                      loading="lazy"
+                    />
+                    <span>Glasses</span>
+                  </button>
+
+                  <button
+                    class="filter-btn"
+                    data-filter="helmet"
+                    type="button"
+                    role="radio"
+                    aria-pressed="false"
+                    aria-checked="false"
+                  >
+                    <img
+                      src="helmet.png"
+                      alt="Preview of helmet filter"
+                      class="filter-thumb"
+                      loading="lazy"
+                    />
+                    <span>Helmet</span>
+                  </button>
+
+                  <button
+                    class="filter-btn"
+                    data-filter="combo"
+                    type="button"
+                    role="radio"
+                    aria-pressed="false"
+                    aria-checked="false"
+                  >
+                    <img
+                      src="beard.png"
+                      alt="Preview of viking combo filter"
+                      class="filter-thumb"
+                      loading="lazy"
+                    />
+                    <span>Viking Combo</span>
+                  </button>
+
+                  <button
+                    class="filter-btn"
+                    data-filter="griffin"
+                    type="button"
+                    role="radio"
+                    aria-pressed="false"
+                    aria-checked="false"
+                  >
+                    <img
+                      src="griffin-hall.jpg"
+                      alt="Preview with Griffin Hall background"
+                      class="filter-thumb"
+                      loading="lazy"
+                    />
+                    <span>Griffin Hall</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-2">
+                <button id="startBtn" type="button" class="btn btn-outline-secondary px-4">
+                  🚀 Start Camera &amp; AI
+                </button>
+                <button id="captureBtn" type="button" class="btn px-4" disabled>
+                  📸 Capture Norse Selfie
+                </button>
+                <button id="stopBtn" type="button" class="btn btn-outline-danger px-4" disabled>
+                  ⏹️ Turn Camera Off
+                </button>
+              </div>
+
+              <section id="previewSection" class="mt-3" style="display: none;" aria-live="polite">
+                <h2 class="h6 mb-2">Your AI-powered Norse snapshot</h2>
+                <div class="preview-image-wrapper mb-2">
+                  <img
+                    id="snapshotPreview"
+                    alt="NKU Norse AI snapshot preview"
+                    loading="lazy"
+                  />
+                </div>
+                <p class="small text-muted mb-0">
+                  Your image was just saved locally as a PNG.
+                </p>
+              </section>
+            </section>
+          </section>
+        </div>
+
+        <footer class="mt-4 pt-3 border-top" style="border-color: #e5e7eb;">
+          <p class="nk-subsection-body mb-0">
+            Your data stays entirely on your device — nothing is uploaded or stored.
+          </p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d", { alpha: true });
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const filterButtons = document.querySelectorAll(".filter-btn");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+
+      const previewSection = document.getElementById("previewSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+
+      const videoContainer = document.getElementById("videoContainer");
+
+      let faceModel = null;
+      let bodyPixModel = null;
+      let videoReady = false;
+      let glassesImgReady = false;
+      let helmetImgReady = false;
+      let beardImgReady = false;
+      let bgReady = false;
+      let aiRunning = false;
+      let mediaStream = null;
+
+      let activeFilter = "glasses";
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      const bgCanvas = document.createElement("canvas");
+      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+
+      let latestFaceBox = null;
+      let smoothedFaceBox = null;
+      let lastFaceTime = 0;
+      let lastSegmentation = null;
+
+      let renderRaf = null;
+      let faceDetectTimer = null;
+      let segmentTimer = null;
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+      let resizeObserver = null;
+
+      const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
+      const isVerySmallScreen = () => window.matchMedia("(max-width: 480px)").matches;
+      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+      const FACE_HOLD_MS = 380;
+      const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+      const FACE_DETECT_MS = isMobileUA ? 120 : 90;
+      const SEGMENT_MS = isMobileUA ? 240 : 180;
+
+      const bgImage = new Image();
+      bgImage.src = "griffin-hall.jpg";
+      bgImage.onload = () => {
+        bgReady = true;
+        console.log("✅ Griffin Hall background loaded:", bgImage.naturalWidth, bgImage.naturalHeight);
+      };
+      bgImage.onerror = () => {
+        bgReady = false;
+        console.warn("⚠️ Could not load griffin-hall.jpg.");
+      };
+
+      const glassesImg = new Image();
+      glassesImg.src = "glasses.png";
+      glassesImg.onload = () => {
+        glassesImgReady = true;
+      };
+      glassesImg.onerror = () => console.warn("⚠️ Could not load glasses.png");
+
+      const helmetImg = new Image();
+      helmetImg.src = "helmet.png";
+      helmetImg.onload = () => {
+        helmetImgReady = true;
+      };
+      helmetImg.onerror = () => console.warn("⚠️ Could not load helmet.png");
+
+      const beardImg = new Image();
+      beardImg.src = "beard.png";
+      beardImg.onload = () => {
+        beardImgReady = true;
+      };
+      beardImg.onerror = () => console.warn("⚠️ Could not load beard.png");
+
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setScreenStatus(text, locked) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!locked);
+      }
+
+      async function getBestBackend() {
+        if (!window.tf) return;
+
+        const backendsToTry = ["webgl", "wasm", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              console.log("✅ Using TFJS backend:", tf.getBackend());
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend not available:", backendName, error);
+          }
+        }
+      }
+
+      function getDevicePixelRatioCap() {
+        const raw = window.devicePixelRatio || 1;
+        if (isVerySmallScreen()) return Math.min(raw, 1.5);
+        if (isSmallScreen()) return Math.min(raw, 1.75);
+        return Math.min(raw, 2);
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        const dpr = getDevicePixelRatioCap();
+
+        const renderWidth = video.videoWidth;
+        const renderHeight = video.videoHeight;
+
+        canvas.width = Math.round(renderWidth * dpr);
+        canvas.height = Math.round(renderHeight * dpr);
+
+        tempCanvas.width = renderWidth;
+        tempCanvas.height = renderHeight;
+
+        bgCanvas.width = renderWidth;
+        bgCanvas.height = renderHeight;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus(
+            "This browser does not support getUserMedia. Try a recent version of Chrome, Edge, Firefox, or Safari.",
+            "error"
+          );
+          throw new Error("getUserMedia not supported");
+        }
+
+        const mobileLike = isSmallScreen() || isMobileUA;
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: mobileLike ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
+            height: mobileLike ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        if (!resizeObserver) {
+          resizeObserver = new ResizeObserver(() => {
+            if (videoReady) updateCanvasBufferSize();
+          });
+          resizeObserver.observe(videoContainer);
+        }
+
+        window.addEventListener("resize", handleWindowResize, { passive: true });
+        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+      }
+
+      function handleWindowResize() {
+        if (!videoReady) return;
+        setTimeout(() => {
+          updateCanvasBufferSize();
+        }, 120);
+      }
+
+      function stopLoops() {
+        if (renderRaf) cancelAnimationFrame(renderRaf);
+        renderRaf = null;
+
+        if (faceDetectTimer) clearInterval(faceDetectTimer);
+        faceDetectTimer = null;
+
+        if (segmentTimer) clearInterval(segmentTimer);
+        segmentTimer = null;
+      }
+
+      function stopCamera() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        videoReady = false;
+        aiRunning = false;
+        latestFaceBox = null;
+        smoothedFaceBox = null;
+        lastFaceTime = 0;
+        lastSegmentation = null;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoSkeleton.style.display = "block";
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setScreenStatus("Offline", false);
+        setStatus("Camera turned off. Click Start Camera & AI to launch again.", "idle");
+      }
+
+      function isValidPoint(pt) {
+        return (
+          Array.isArray(pt) &&
+          pt.length >= 2 &&
+          typeof pt[0] === "number" &&
+          typeof pt[1] === "number" &&
+          Number.isFinite(pt[0]) &&
+          Number.isFinite(pt[1])
+        );
+      }
+
+      function isValidBox(topLeft, bottomRight) {
+        if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        return x2 - x1 > 0 && y2 - y1 > 0;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function smoothBox(oldBox, newBox, alpha) {
+        if (!oldBox) return newBox;
+
+        const [ox1, oy1] = oldBox.topLeft;
+        const [ox2, oy2] = oldBox.bottomRight;
+        const [nx1, ny1] = newBox.topLeft;
+        const [nx2, ny2] = newBox.bottomRight;
+
+        return {
+          topLeft: [
+            ox1 + alpha * (nx1 - ox1),
+            oy1 + alpha * (ny1 - oy1)
+          ],
+          bottomRight: [
+            ox2 + alpha * (nx2 - ox2),
+            oy2 + alpha * (ny2 - oy2)
+          ]
+        };
+      }
+
+      function getFaceMetrics(topLeft, bottomRight) {
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+        const centerX = x1 + faceWidth / 2;
+        const centerY = y1 + faceHeight / 2;
+
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+      }
+
+      function drawGlassesOnFace(topLeft, bottomRight) {
+        if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+        const overlayWidth = faceWidth * 1.12;
+        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        const eyeLineY = y1 + faceHeight * 0.43;
+
+        ctx.drawImage(
+          glassesImg,
+          centerX - overlayWidth / 2,
+          eyeLineY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawHelmetOnFace(topLeft, bottomRight) {
+        if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+        const overlayWidth = faceWidth * 1.42;
+        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        /*
+          Lower than before:
+          - old code placed helmet top using eyebrowY - overlayHeight
+          - new code uses a forehead anchor and shifts helmet down
+        */
+        const foreheadY = y1 + faceHeight * 0.18;
+        const helmetTopY = foreheadY - overlayHeight * 0.78;
+
+        ctx.drawImage(
+          helmetImg,
+          centerX - overlayWidth / 2,
+          helmetTopY,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawBeardOnFace(topLeft, bottomRight) {
+        if (!beardImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+        /*
+          Raised higher than before:
+          - anchor beard around mouth/chin rather than too far below the face
+        */
+        const overlayWidth = faceWidth * 1.18;
+        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        const mouthLineY = y1 + faceHeight * 0.72;
+        const beardTopY = mouthLineY - overlayHeight * 0.18;
+
+        ctx.drawImage(
+          beardImg,
+          centerX - overlayWidth / 2,
+          beardTopY,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawComboOnFace(topLeft, bottomRight) {
+        drawHelmetOnFace(topLeft, bottomRight);
+        drawBeardOnFace(topLeft, bottomRight);
+      }
+
+      async function detectFaceStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+
+            if (isValidBox(face.topLeft, face.bottomRight)) {
+              latestFaceBox = {
+                topLeft: face.topLeft,
+                bottomRight: face.bottomRight
+              };
+              lastFaceTime = performance.now();
+            }
+          } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
+            latestFaceBox = null;
+          }
+        } catch (error) {
+          console.error("Error running BlazeFace:", error);
+        }
+      }
+
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+        try {
+          lastSegmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: isMobileUA ? "low" : "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: 1
+          });
+        } catch (error) {
+          console.error("BodyPix error:", error);
+          lastSegmentation = null;
+        }
+      }
+
+      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const targetRatio = targetW / targetH;
+
+        let drawW, drawH, drawX, drawY;
+
+        if (imgRatio > targetRatio) {
+          drawH = targetH;
+          drawW = drawH * imgRatio;
+          drawX = (targetW - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = targetW;
+          drawH = drawW / imgRatio;
+          drawX = 0;
+          drawY = (targetH - drawH) / 2;
+        }
+
+        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
+      }
+
+      function drawBaseComposite() {
+        const logicalW = tempCanvas.width;
+        const logicalH = tempCanvas.height;
+
+        if (!logicalW || !logicalH) return;
+
+        ctx.clearRect(0, 0, logicalW, logicalH);
+
+        if (bgReady && bodyPixModel && lastSegmentation) {
+          tempCtx.clearRect(0, 0, logicalW, logicalH);
+          tempCtx.drawImage(video, 0, 0, logicalW, logicalH);
+
+          const mask = lastSegmentation.data;
+          const frameImageData = tempCtx.getImageData(0, 0, logicalW, logicalH);
+          const framePixels = frameImageData.data;
+
+          bgCtx.clearRect(0, 0, logicalW, logicalH);
+          drawBackgroundCover(bgImage, bgCtx, logicalW, logicalH);
+
+          const bgImageData = bgCtx.getImageData(0, 0, logicalW, logicalH);
+          const bgPixels = bgImageData.data;
+
+          const len = Math.min(mask.length, framePixels.length / 4);
+
+          for (let i = 0; i < len; i++) {
+            const offset = i * 4;
+            if (mask[i] === 0) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = bgPixels[offset + 3];
+            }
+          }
+
+          ctx.putImageData(frameImageData, 0, 0);
+        } else if (bgReady) {
+          drawBackgroundCover(bgImage, ctx, logicalW, logicalH);
+        } else {
+          ctx.drawImage(video, 0, 0, logicalW, logicalH);
+        }
+      }
+
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawBaseComposite();
+
+        let boxToUse = null;
+        const now = performance.now();
+
+        if (latestFaceBox) {
+          smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+          boxToUse = smoothedFaceBox;
+        } else if (smoothedFaceBox && now - lastFaceTime < FACE_HOLD_MS) {
+          boxToUse = smoothedFaceBox;
+        } else {
+          smoothedFaceBox = null;
+        }
+
+        if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
+          const { topLeft, bottomRight } = boxToUse;
+
+          if (activeFilter === "glasses") {
+            drawGlassesOnFace(topLeft, bottomRight);
+            setStatus("AI is running: glasses filter with Griffin Hall background.", "active");
+          } else if (activeFilter === "helmet") {
+            drawHelmetOnFace(topLeft, bottomRight);
+            setStatus("AI is running: helmet filter with Griffin Hall background.", "active");
+          } else if (activeFilter === "combo") {
+            drawComboOnFace(topLeft, bottomRight);
+            setStatus("AI is running: Viking combo with Griffin Hall background.", "active");
+          } else {
+            setStatus("AI is running: Griffin Hall background mode.", "active");
+          }
+
+          setScreenStatus("Face Locked", true);
+        } else {
+          setStatus("Griffin Hall background is active — step into frame.", "active");
+          setScreenStatus("Searching…", false);
+        }
+
+        renderRaf = requestAnimationFrame(renderFrame);
+      }
+
+      function captureSnapshot() {
+        if (!videoReady) return;
+
+        const outputW = tempCanvas.width;
+        const outputH = tempCanvas.height;
+        if (!outputW || !outputH) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = outputW;
+        snapCanvas.height = outputH;
+
+        const sctx = snapCanvas.getContext("2d");
+        sctx.drawImage(canvas, 0, 0, outputW, outputH);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        previewSection.style.display = "block";
+
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = dataURL;
+        a.download = `${TARGET_FOLDER_LABEL}-selfie-${timestampText}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setStatus("Snapshot saved locally as a PNG.", "active");
+      }
+
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
+
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
+
+          await setupCamera();
+
+          setStatus("Loading AI models…", "idle");
+          await getBestBackend();
+
+          faceModel = await blazeface.load();
+
+          try {
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: isMobileUA ? 0.5 : 0.75,
+              quantBytes: 2
+            });
+          } catch (error) {
+            console.warn("⚠️ BodyPix failed to load.", error);
+            bodyPixModel = null;
+          }
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
+          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFaceStep();
+          await segmentStep();
+
+          setStatus("AI is ready. Griffin Hall is active in every mode.", "active");
+          renderRaf = requestAnimationFrame(renderFrame);
+        } catch (error) {
+          console.error("Init error:", error);
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+          setScreenStatus("Offline", false);
+          setStatus(
+            "This device or browser may not fully support this demo. Try a recent version of Chrome, Edge, Firefox, or Safari over HTTPS.",
+            "error"
+          );
+        }
+      }
+
+      filterButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeFilter = btn.getAttribute("data-filter") || "glasses";
+
+          filterButtons.forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+            b.setAttribute("aria-checked", "false");
+          });
+
+          btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
+          btn.setAttribute("aria-checked", "true");
+
+          if (activeFilter === "glasses") {
+            setStatus(
+              "Glasses filter selected. Griffin Hall will remain behind you.",
+              aiRunning ? "active" : "idle"
+            );
+          } else if (activeFilter === "helmet") {
+            setStatus(
+              "Helmet filter selected. Helmet placement tuned lower on the head.",
+              aiRunning ? "active" : "idle"
+            );
+          } else if (activeFilter === "combo") {
+            setStatus(
+              "Viking combo selected. Helmet and beard are now tuned to track more naturally.",
+              aiRunning ? "active" : "idle"
+            );
+          } else {
+            setStatus(
+              "Griffin Hall only mode selected.",
+              aiRunning ? "active" : "idle"
+            );
+          }
+        });
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", captureSnapshot);
+      stopBtn.addEventListener("click", stopCamera);
+
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+
+      setScreenStatus("Offline", false);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Making Digital Vikings — AI + AR Showcase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="A browser-based AI + AR Digital Viking experience with Griffin Hall background replacement, face overlays, laugh-to-unlock, squad mode, snapshot capture, and short clip recording."
+  />
+  <meta name="theme-color" content="#0b1220" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #08111f;
+      --bg2: #0b1220;
+      --panel: rgba(255,255,255,0.08);
+      --panel-2: rgba(255,255,255,0.12);
+      --border: rgba(255,255,255,0.12);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --gold: #f7b718;
+      --gold-soft: #fde68a;
+      --green: #22c55e;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --purple: #8b5cf6;
+      --shadow: 0 24px 80px rgba(0,0,0,0.35);
+      --ring: 0 0 0 4px rgba(247,183,24,0.18);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(96,165,250,0.14), transparent 22%),
+        radial-gradient(circle at top right, rgba(139,92,246,0.14), transparent 20%),
+        radial-gradient(circle at bottom center, rgba(247,183,24,0.10), transparent 24%),
+        linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      padding: 14px;
+    }
+
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: white;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .top-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero {
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      color: var(--gold-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.76rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      font-weight: 900;
+      margin: 0 0 14px;
+    }
+
+    .hero-title .gold {
+      color: var(--gold);
+      text-shadow: 0 0 26px rgba(247,183,24,0.18);
+    }
+
+    .hero-lead {
+      color: #dbe7f5;
+      font-size: 1rem;
+      line-height: 1.72;
+      max-width: 60ch;
+      margin-bottom: 18px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #f8fafc;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .info-card, .result-card, .scene-panel, .preview-card {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      padding: 14px 15px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .info-card {
+      margin-bottom: 12px;
+    }
+
+    .info-title, .panel-title, .preview-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--gold-soft);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .info-body {
+      margin: 0;
+      color: #dbe7f5;
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    .result-card {
+      margin-top: 16px;
+      border-color: rgba(247,183,24,0.16);
+      background: linear-gradient(180deg, rgba(247,183,24,0.10) 0%, rgba(255,255,255,0.05) 100%);
+    }
+
+    .result-label {
+      color: #fde68a;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .result-state {
+      font-size: clamp(1.55rem, 2.7vw, 2.35rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .result-state.unlocked {
+      color: var(--gold);
+      text-shadow: 0 0 24px rgba(247,183,24,0.22);
+    }
+
+    .result-copy {
+      color: #dbe7f5;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .stage-card {
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .stage-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 420px;
+      height: min(72svh, 820px);
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        linear-gradient(180deg, #111827 0%, #0b1220 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 18px 50px rgba(0,0,0,0.25);
+      isolation: isolate;
+    }
+
+    #video {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
+    }
+
+    #renderCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      object-fit: cover;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(
+        120deg,
+        #1f2937 0%,
+        #1f2937 24%,
+        #334155 42%,
+        #1f2937 60%,
+        #1f2937 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    .ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(7,17,31,0.54), rgba(7,17,31,0));
+    }
+
+    .gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 34%;
+      background: linear-gradient(0deg, rgba(7,17,31,0.62), rgba(7,17,31,0));
+    }
+
+    .scanline {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,0.03) 0px,
+          rgba(255,255,255,0.03) 1px,
+          transparent 2px,
+          transparent 4px
+        );
+      mix-blend-mode: screen;
+      opacity: 0.16;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.55) 100%);
+    }
+
+    .hud-top {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.68);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+    }
+
+    .hud-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #94a3b8;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+    }
+
+    .hud-dot.live {
+      background: var(--green);
+    }
+
+    .hud-dot.warn {
+      background: var(--gold);
+    }
+
+    .center-ui {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .rune-ring {
+      position: absolute;
+      width: min(62vw, 390px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 2px solid rgba(247,183,24,0.18);
+      box-shadow: 0 0 30px rgba(247,183,24,0.18), inset 0 0 22px rgba(247,183,24,0.12);
+      opacity: 0;
+      transform: scale(0.86) rotate(0deg);
+      transition: opacity 0.35s ease;
+    }
+
+    .rune-ring::before,
+    .rune-ring::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1px dashed rgba(247,183,24,0.24);
+    }
+
+    .rune-ring::after {
+      inset: 40px;
+      border-style: solid;
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    .rune-ring.active {
+      opacity: 1;
+      animation: spinRing 18s linear infinite;
+    }
+
+    @keyframes spinRing {
+      from { transform: scale(1) rotate(0deg); }
+      to { transform: scale(1) rotate(360deg); }
+    }
+
+    .viking-badge {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: min(28vw, 180px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.30), transparent 35%),
+        radial-gradient(circle at center, rgba(247,183,24,0.22), rgba(247,183,24,0.08) 45%, rgba(255,255,255,0.04) 70%);
+      border: 1px solid rgba(247,183,24,0.30);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 40px rgba(247,183,24,0.22), inset 0 0 22px rgba(255,255,255,0.10);
+      opacity: 0;
+      transform: scale(0.72);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .viking-badge.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% {
+        box-shadow: 0 0 36px rgba(247,183,24,0.22), inset 0 0 22px rgba(255,255,255,0.10);
+      }
+      50% {
+        box-shadow: 0 0 56px rgba(247,183,24,0.34), 0 0 100px rgba(247,183,24,0.12), inset 0 0 22px rgba(255,255,255,0.12);
+      }
+    }
+
+    .helmet-emoji {
+      font-size: clamp(3.5rem, 8vw, 6rem);
+      line-height: 1;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,0.35));
+    }
+
+    .unlock-title {
+      position: absolute;
+      left: 50%;
+      bottom: 8%;
+      transform: translateX(-50%) translateY(16px);
+      min-width: min(90%, 760px);
+      text-align: center;
+      padding: 16px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(15,23,42,0.62) 100%);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 16px 44px rgba(0,0,0,0.28);
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .unlock-title.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .unlock-kicker {
+      color: #fde68a;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .unlock-main {
+      font-size: clamp(1.45rem, 4vw, 2.8rem);
+      line-height: 0.98;
+      font-weight: 1000;
+      letter-spacing: -0.05em;
+      margin: 0;
+      color: #fff;
+      text-shadow: 0 0 26px rgba(247,183,24,0.16);
+    }
+
+    .unlock-main .gold {
+      color: var(--gold);
+    }
+
+    .unlock-sub {
+      margin-top: 8px;
+      color: #dbe7f5;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .challenge-tag {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.72);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(180deg, #fff2b1 0%, #f7b718 100%);
+      box-shadow: 0 0 12px rgba(247,183,24,0.25);
+    }
+
+    .particle.burst {
+      animation: burst 1200ms ease-out forwards;
+    }
+
+    @keyframes burst {
+      0% { opacity: 0; transform: translate(0,0) scale(0.7) rotate(0deg); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot)); }
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: start;
+      margin-top: 16px;
+      margin-bottom: 14px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 260px;
+    }
+
+    .status-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: #94a3b8;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.14);
+    }
+
+    .status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 0 5px rgba(248,113,113,0.14);
+    }
+
+    .status-text {
+      color: #f8fafc;
+      font-size: 0.94rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .status-note {
+      color: var(--muted);
+      font-size: 0.84rem;
+      max-width: 460px;
+      line-height: 1.6;
+    }
+
+    .controls,
+    .scene-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .scene-buttons {
+      margin-top: 12px;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      border: 1px solid transparent;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      min-height: 48px;
+      touch-action: manipulation;
+    }
+
+    .btn-pill:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .btn-pill:focus-visible {
+      outline: none;
+      box-shadow: var(--ring);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #f7b718 0%, #eab308 100%);
+      color: #111827;
+      box-shadow: 0 12px 28px rgba(247,183,24,0.22);
+    }
+
+    .btn-stop {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .btn-capture {
+      background: rgba(96,165,250,0.14);
+      color: #dbeafe;
+      border-color: rgba(96,165,250,0.18);
+    }
+
+    .btn-record {
+      background: rgba(139,92,246,0.16);
+      color: #f5e8ff;
+      border-color: rgba(139,92,246,0.24);
+    }
+
+    .btn-scene {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-color: rgba(255,255,255,0.12);
+      padding: 10px 14px;
+    }
+
+    .btn-scene.active {
+      background: rgba(247,183,24,0.16);
+      color: #fff7d6;
+      border-color: rgba(247,183,24,0.32);
+      box-shadow: 0 0 0 3px rgba(247,183,24,0.14);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .metric-label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #fde68a;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      line-height: 1;
+      font-weight: 1000;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .metric-desc {
+      color: #dbe7f5;
+      font-size: 0.83rem;
+      line-height: 1.55;
+      min-height: 2.6em;
+      margin-bottom: 10px;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.14s ease;
+    }
+
+    .bar-fill.low { background: #f59e0b; }
+    .bar-fill.med { background: #60a5fa; }
+    .bar-fill.high { background: #22c55e; }
+    .bar-fill.epic { background: linear-gradient(90deg, #fde68a 0%, #f7b718 100%); }
+
+    .preview-card {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .preview-card.show {
+      display: block;
+    }
+
+    #snapshotCanvas,
+    video#recordedClip {
+      width: 100%;
+      max-width: 560px;
+      border-radius: 18px;
+      display: block;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: #0b1220;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.24);
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      margin-top: 14px;
+      margin-bottom: 0;
+    }
+
+    .flash-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.92), rgba(247,183,24,0.62), transparent 60%);
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    .flash-layer.boom {
+      animation: flashBoom 900ms ease-out;
+    }
+
+    @keyframes flashBoom {
+      0% { opacity: 0; transform: scale(0.8); }
+      18% { opacity: 1; transform: scale(1.02); }
+      42% { opacity: 0.5; transform: scale(1.12); }
+      100% { opacity: 0; transform: scale(1.22); }
+    }
+
+    .shake {
+      animation: shake 500ms ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-6px); }
+      30% { transform: translateX(6px); }
+      45% { transform: translateX(-5px); }
+      60% { transform: translateX(5px); }
+      75% { transform: translateX(-2px); }
+    }
+
+    @media (max-width: 991.98px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      body {
+        padding: 10px;
+      }
+
+      .hero {
+        border-radius: 22px;
+      }
+
+      .stage-card,
+      .stage-wrap {
+        border-radius: 18px;
+      }
+
+      .stage-wrap {
+        min-height: 520px;
+        height: min(76svh, 760px);
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .unlock-title {
+        min-width: 94%;
+        bottom: 7%;
+      }
+
+      .hud-top {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+      }
+
+      .hud-pill {
+        font-size: 0.68rem;
+        padding: 7px 10px;
+      }
+
+      .challenge-tag {
+        right: 10px;
+        bottom: 10px;
+        font-size: 0.66rem;
+      }
+
+      .controls .btn-pill,
+      .scene-buttons .btn-pill {
+        flex: 1 1 calc(50% - 10px);
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .controls .btn-pill,
+      .scene-buttons .btn-pill {
+        flex: 1 1 100%;
+      }
+
+      .stage-wrap {
+        min-height: 560px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-pill">Web AI + AR</div>
+        <div class="top-note">Making Digital Vikings · mobile, tablet, laptop</div>
+      </div>
+      <div class="top-note">Runs locally in the browser · no backend required</div>
+    </header>
+
+    <main class="hero">
+      <div class="p-3 p-lg-4">
+        <div class="row g-4 align-items-start">
+          <section class="col-lg-4">
+            <div class="eyebrow">Showcase-ready experience</div>
+            <h1 class="hero-title">
+              Turn live camera input into a
+              <span class="gold">Digital Viking</span>
+              stage.
+            </h1>
+
+            <p class="hero-lead">
+              This version combines browser-based AI, AR-style overlays, Griffin Hall background replacement,
+              squad detection, laugh-to-unlock, and built-in snapshot and clip capture so you can record standout
+              showcase footage from your phone, tablet, or laptop.
+            </p>
+
+            <div class="chip-row">
+              <div class="chip">⚡ Live AI face tracking</div>
+              <div class="chip">🛡️ Helmet + combo overlays</div>
+              <div class="chip">🏛️ Griffin Hall background</div>
+              <div class="chip">🎬 Clip recording</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-title">How to use it</div>
+              <p class="info-body">
+                Start the camera, choose a scene, step into frame, and laugh naturally to trigger the unlock moment.
+                Use Squad Mode when multiple people are on screen, then capture a share card or a short video clip.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <div class="info-title">Best showcase strategy</div>
+              <p class="info-body">
+                Record a few solo clips on laptop, then use your phone for vertical-feeling footage with colleagues.
+                The unlock reveal, crowd count, and exported visuals will give you strong material for a 3-minute hype reel.
+              </p>
+            </div>
+
+            <div class="result-card" aria-live="polite">
+              <div class="result-label">Experience status</div>
+              <div id="resultState" class="result-state">Waiting to begin...</div>
+              <p id="resultCopy" class="result-copy">
+                Start the experience and step into frame. The system will track faces, build energy, and unlock the hero moment.
+              </p>
+            </div>
+
+            <div class="scene-panel mt-3">
+              <div class="panel-title">Scene modes</div>
+              <div class="scene-buttons">
+                <button class="btn-pill btn-scene active" type="button" data-scene="scan">🔎 Scan</button>
+                <button class="btn-pill btn-scene" type="button" data-scene="helmet">🪖 Helmet</button>
+                <button class="btn-pill btn-scene" type="button" data-scene="combo">🧔 Combo</button>
+                <button class="btn-pill btn-scene" type="button" data-scene="squad">👥 Squad</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="col-lg-8">
+            <div class="stage-card">
+              <div id="stageWrap" class="stage-wrap">
+                <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
+                <video id="video" autoplay playsinline muted></video>
+                <canvas id="renderCanvas" aria-label="Live AI rendered stage"></canvas>
+
+                <div class="flash-layer" id="flashLayer"></div>
+
+                <div class="ui-layer" aria-hidden="true">
+                  <div class="gradient-top"></div>
+                  <div class="gradient-bottom"></div>
+                  <div class="scanline"></div>
+                  <div class="vignette"></div>
+
+                  <div class="hud-top">
+                    <div class="hud-pill">
+                      <span id="hudDot" class="hud-dot"></span>
+                      <span id="hudText">Awaiting camera</span>
+                    </div>
+                    <div class="hud-pill">
+                      <span class="hud-dot warn"></span>
+                      <span id="legendText">Legend Level: 0</span>
+                    </div>
+                  </div>
+
+                  <div class="center-ui">
+                    <div id="runeRing" class="rune-ring"></div>
+
+                    <div id="vikingBadge" class="viking-badge">
+                      <div class="helmet-emoji">⚔️</div>
+                    </div>
+
+                    <div id="unlockTitle" class="unlock-title">
+                      <div class="unlock-kicker">Challenge complete</div>
+                      <h2 class="unlock-main">
+                        <span class="gold">DIGITAL VIKING</span> UNLOCKED
+                      </h2>
+                      <div class="unlock-sub">Built in the browser. Ready for the internet.</div>
+                    </div>
+                  </div>
+
+                  <div id="particles" class="particles"></div>
+                  <div class="challenge-tag" id="challengeTag">AI + AR Showcase</div>
+                </div>
+              </div>
+
+              <div class="status-row" role="status" aria-live="polite" aria-atomic="true">
+                <div class="status-left">
+                  <span id="statusDot" class="status-dot"></span>
+                  <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
+                </div>
+                <div class="status-note">
+                  Best results: good lighting, recent Chrome or Edge, and HTTPS if served online. On mobile, hold the phone a little farther back for better tracking.
+                </div>
+              </div>
+
+              <div class="controls">
+                <button id="startBtn" class="btn-pill btn-start" type="button">🚀 Start Camera &amp; AI</button>
+                <button id="stopBtn" class="btn-pill btn-stop" type="button" disabled>⏹ Stop</button>
+                <button id="captureBtn" class="btn-pill btn-capture" type="button" disabled>📸 Capture Share Card</button>
+                <button id="recordBtn" class="btn-pill btn-record" type="button" disabled>🎬 Record 7s Clip</button>
+              </div>
+
+              <div class="metrics-grid">
+                <article class="metric">
+                  <div class="metric-label">Mouth openness</div>
+                  <div id="mouthScore" class="metric-value">0</div>
+                  <div class="metric-desc">How open the mouth appears relative to the face.</div>
+                  <div class="bar-track"><div id="mouthBar" class="bar-fill low"></div></div>
+                </article>
+
+                <article class="metric">
+                  <div class="metric-label">Motion signal</div>
+                  <div id="motionScore" class="metric-value">0</div>
+                  <div class="metric-desc">Repeated face and mouth movement across recent frames.</div>
+                  <div class="bar-track"><div id="motionBar" class="bar-fill low"></div></div>
+                </article>
+
+                <article class="metric">
+                  <div class="metric-label">Laugh score</div>
+                  <div id="laughScore" class="metric-value">0</div>
+                  <div class="metric-desc">Combined score used to determine unlock readiness.</div>
+                  <div class="bar-track"><div id="laughBar" class="bar-fill low"></div></div>
+                </article>
+
+                <article class="metric">
+                  <div class="metric-label">Squad count</div>
+                  <div id="progressScore" class="metric-value">0</div>
+                  <div class="metric-desc">Number of faces currently detected on screen.</div>
+                  <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
+                </article>
+              </div>
+
+              <div id="snapshotArea" class="preview-card">
+                <div class="preview-title">Share card</div>
+                <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
+                <div class="controls mt-3 mb-0">
+                  <button id="downloadSnapshotBtn" class="btn-pill btn-start" type="button">⬇️ Download Snapshot</button>
+                </div>
+              </div>
+
+              <div id="clipArea" class="preview-card">
+                <div class="preview-title">Recorded clip</div>
+                <video id="recordedClip" controls playsinline></video>
+                <div class="controls mt-3 mb-0">
+                  <button id="downloadClipBtn" class="btn-pill btn-start" type="button">⬇️ Download Clip</button>
+                </div>
+              </div>
+
+              <p class="small-note">
+                Tip: for your showcase video, collect 4–6 short clips across scenes, including one solo laugh unlock and one squad moment with colleagues.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const video = document.getElementById("video");
+      const renderCanvas = document.getElementById("renderCanvas");
+      const ctx = renderCanvas.getContext("2d");
+
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const stageWrap = document.getElementById("stageWrap");
+      const flashLayer = document.getElementById("flashLayer");
+      const particles = document.getElementById("particles");
+      const runeRing = document.getElementById("runeRing");
+      const vikingBadge = document.getElementById("vikingBadge");
+      const unlockTitle = document.getElementById("unlockTitle");
+
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const recordBtn = document.getElementById("recordBtn");
+      const downloadSnapshotBtn = document.getElementById("downloadSnapshotBtn");
+      const downloadClipBtn = document.getElementById("downloadClipBtn");
+
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+      const hudDot = document.getElementById("hudDot");
+      const hudText = document.getElementById("hudText");
+      const legendText = document.getElementById("legendText");
+      const challengeTag = document.getElementById("challengeTag");
+
+      const resultState = document.getElementById("resultState");
+      const resultCopy = document.getElementById("resultCopy");
+
+      const mouthScoreEl = document.getElementById("mouthScore");
+      const motionScoreEl = document.getElementById("motionScore");
+      const laughScoreEl = document.getElementById("laughScore");
+      const progressScoreEl = document.getElementById("progressScore");
+
+      const mouthBar = document.getElementById("mouthBar");
+      const motionBar = document.getElementById("motionBar");
+      const laughBar = document.getElementById("laughBar");
+      const progressBar = document.getElementById("progressBar");
+
+      const snapshotArea = document.getElementById("snapshotArea");
+      const snapshotCanvas = document.getElementById("snapshotCanvas");
+      const snapshotCtx = snapshotCanvas.getContext("2d");
+
+      const clipArea = document.getElementById("clipArea");
+      const recordedClip = document.getElementById("recordedClip");
+
+      const sceneButtons = document.querySelectorAll("[data-scene]");
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      const bgCanvas = document.createElement("canvas");
+      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+
+      let faceModel = null;
+      let bodyPixModel = null;
+      let mediaStream = null;
+      let aiRunning = false;
+      let videoReady = false;
+      let renderLoopId = null;
+      let detectTimer = null;
+      let segmentTimer = null;
+
+      let activeScene = "scan";
+      let predictions = [];
+      let segmentation = null;
+
+      let latestPrimaryFace = null;
+      let smoothedPrimaryFace = null;
+      let lastFaceTime = 0;
+
+      let mouthScore = 0;
+      let motionScore = 0;
+      let laughScore = 0;
+      let squadCount = 0;
+      let legendLevel = 0;
+
+      let prevFaceCenterYNorm = null;
+      let prevMouthYNorm = null;
+
+      let laughHoldFrames = 0;
+      let unlocked = false;
+      let autoRecordedAfterUnlock = false;
+
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let currentClipBlob = null;
+      let clipStopTimeout = null;
+      let isRecording = false;
+
+      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const FACE_DETECT_MS = isMobileUA ? 140 : 90;
+      const SEGMENT_MS = isMobileUA ? 260 : 180;
+      const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+      const FACE_HOLD_MS = 420;
+
+      const LAUGH_THRESHOLD = 68;
+      const MOUTH_THRESHOLD = 35;
+      const HOLD_REQUIRED = 16;
+
+      const bgImage = new Image();
+      const glassesImg = new Image();
+      const helmetImg = new Image();
+      const beardImg = new Image();
+
+      let bgReady = false;
+      let glassesReady = false;
+      let helmetReady = false;
+      let beardReady = false;
+
+      bgImage.src = "griffin-hall.jpg";
+      bgImage.onload = () => bgReady = true;
+
+      glassesImg.src = "glasses.png";
+      glassesImg.onload = () => glassesReady = true;
+
+      helmetImg.src = "helmet.png";
+      helmetImg.onload = () => helmetReady = true;
+
+      beardImg.src = "beard.png";
+      beardImg.onload = () => beardReady = true;
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function lerp(current, target, alpha) {
+        return current + alpha * (target - current);
+      }
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+        hudDot.classList.remove("live", "warn");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+          hudDot.classList.add("live");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+          hudDot.classList.add("warn");
+        }
+      }
+
+      function setBar(el, value, epic = false) {
+        const v = clamp(Math.round(value), 0, 100);
+        el.style.width = v + "%";
+        el.classList.remove("low", "med", "high", "epic");
+
+        if (epic) {
+          el.classList.add("epic");
+          return;
+        }
+        if (v < 35) {
+          el.classList.add("low");
+        } else if (v < 70) {
+          el.classList.add("med");
+        } else {
+          el.classList.add("high");
+        }
+      }
+
+      function updateUI() {
+        mouthScoreEl.textContent = Math.round(mouthScore);
+        motionScoreEl.textContent = Math.round(motionScore);
+        laughScoreEl.textContent = Math.round(laughScore);
+        progressScoreEl.textContent = String(squadCount);
+
+        setBar(mouthBar, mouthScore);
+        setBar(motionBar, motionScore);
+        setBar(laughBar, laughScore);
+        setBar(progressBar, clamp(squadCount * 33, 0, 100), true);
+
+        legendLevel = clamp(Math.round((laughScore * 0.55) + (squadCount * 10) + (unlocked ? 20 : 0)), 0, 100);
+        legendText.textContent = "Legend Level: " + legendLevel;
+
+        if (unlocked) {
+          resultState.textContent = "DIGITAL VIKING UNLOCKED";
+          resultState.classList.add("unlocked");
+          resultCopy.textContent =
+            "The unlock reveal is active. This is the hero moment for your showcase footage and shareable captures.";
+          hudText.textContent = isRecording ? "Recording hero clip" : "Viking mode active";
+        } else if (squadCount >= 2 && activeScene === "squad") {
+          resultState.textContent = "SQUAD MODE ACTIVE";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "Multiple faces detected. This mode is great for filming colleagues reacting together in your showcase reel.";
+          hudText.textContent = "Squad detected";
+        } else if (laughHoldFrames > 0) {
+          resultState.textContent = "Building toward unlock...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "The system sees enough energy to build momentum. Keep going for the full hero reveal.";
+          hudText.textContent = "Tracking laugh signal";
+        } else {
+          resultState.textContent = "Waiting to begin...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "Start the experience and step into frame. The system will track faces, build energy, and unlock the hero moment.";
+          hudText.textContent = aiRunning ? "AI is live" : "Awaiting camera";
+        }
+
+        captureBtn.disabled = !aiRunning;
+        recordBtn.disabled = !aiRunning || isRecording;
+        recordBtn.textContent = isRecording ? "⏺ Recording..." : "🎬 Record 7s Clip";
+      }
+
+      function setScene(scene) {
+        activeScene = scene;
+        sceneButtons.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.scene === scene);
+        });
+
+        const labels = {
+          scan: "AI Scan Mode",
+          helmet: "Helmet Mode",
+          combo: "Combo Mode",
+          squad: "Squad Mode"
+        };
+        challengeTag.textContent = labels[scene] || "AI + AR Showcase";
+
+        if (aiRunning) {
+          setStatus(`${labels[scene]} selected.`, "active");
+        }
+      }
+
+      async function getBestBackend() {
+        const backends = ["webgl", "wasm", "cpu"];
+        for (const backend of backends) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend unavailable:", backend, error);
+          }
+        }
+      }
+
+      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const targetRatio = targetW / targetH;
+
+        let drawW, drawH, drawX, drawY;
+        if (imgRatio > targetRatio) {
+          drawH = targetH;
+          drawW = drawH * imgRatio;
+          drawX = (targetW - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = targetW;
+          drawH = drawW / imgRatio;
+          drawX = 0;
+          drawY = (targetH - drawH) / 2;
+        }
+        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
+      }
+
+      function resizeCanvases() {
+        const rect = stageWrap.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        renderCanvas.width = Math.max(1, Math.round(rect.width * dpr));
+        renderCanvas.height = Math.max(1, Math.round(rect.height * dpr));
+        renderCanvas.style.width = rect.width + "px";
+        renderCanvas.style.height = rect.height + "px";
+
+        tempCanvas.width = renderCanvas.width;
+        tempCanvas.height = renderCanvas.height;
+        bgCanvas.width = renderCanvas.width;
+        bgCanvas.height = renderCanvas.height;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Camera access is not supported in this browser.");
+        }
+
+        const isPortraitLayout = window.innerHeight > window.innerWidth;
+        const idealWidth = isMobileUA ? (isPortraitLayout ? 720 : 960) : 1280;
+        const idealHeight = isMobileUA ? (isPortraitLayout ? 1280 : 720) : 720;
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: idealWidth, max: 1920 },
+            height: { ideal: idealHeight, max: 1920 }
+          }
+        });
+
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resizeCanvases();
+            resolve();
+          };
+        });
+      }
+
+      function isValidPoint(pt) {
+        return Array.isArray(pt) && pt.length >= 2 && Number.isFinite(pt[0]) && Number.isFinite(pt[1]);
+      }
+
+      function isValidBox(topLeft, bottomRight) {
+        return isValidPoint(topLeft) && isValidPoint(bottomRight) &&
+          (bottomRight[0] - topLeft[0] > 0) && (bottomRight[1] - topLeft[1] > 0);
+      }
+
+      function getFaceMetrics(topLeft, bottomRight) {
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+        const centerX = x1 + faceWidth / 2;
+        const centerY = y1 + faceHeight / 2;
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+      }
+
+      function smoothBox(oldBox, newBox, alpha) {
+        if (!oldBox) return newBox;
+
+        const [ox1, oy1] = oldBox.topLeft;
+        const [ox2, oy2] = oldBox.bottomRight;
+        const [nx1, ny1] = newBox.topLeft;
+        const [nx2, ny2] = newBox.bottomRight;
+
+        return {
+          topLeft: [
+            ox1 + alpha * (nx1 - ox1),
+            oy1 + alpha * (ny1 - oy1)
+          ],
+          bottomRight: [
+            ox2 + alpha * (nx2 - ox2),
+            oy2 + alpha * (ny2 - oy2)
+          ],
+          landmarks: newBox.landmarks || []
+        };
+      }
+
+      function mapVideoPointToCanvas(x, y) {
+        const vw = video.videoWidth || 1;
+        const vh = video.videoHeight || 1;
+        return [
+          renderCanvas.width - (x / vw) * renderCanvas.width,
+          (y / vh) * renderCanvas.height
+        ];
+      }
+
+      function mapVideoBoxToCanvas(face) {
+        const tl = face.topLeft;
+        const br = face.bottomRight;
+        const mappedTL = mapVideoPointToCanvas(br[0], tl[1]);
+        const mappedBR = mapVideoPointToCanvas(tl[0], br[1]);
+
+        const mapped = {
+          topLeft: mappedTL,
+          bottomRight: mappedBR,
+          landmarks: Array.isArray(face.landmarks)
+            ? face.landmarks.map((pt) => mapVideoPointToCanvas(pt[0], pt[1]))
+            : []
+        };
+
+        return mapped;
+      }
+
+      function calculateSignals(face) {
+        if (!face || !Array.isArray(face.landmarks) || face.landmarks.length < 4) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+        const rightEye = face.landmarks[0];
+        const leftEye = face.landmarks[1];
+        const mouth = face.landmarks[3];
+
+        if (!topLeft || !bottomRight || !rightEye || !leftEye || !mouth) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        if (faceWidth <= 0 || faceHeight <= 0) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
+        const mouthDrop = mouth[1] - eyeMidY;
+        const mouthDropNorm = mouthDrop / faceHeight;
+
+        const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
+
+        const faceCenterYNorm = ((y1 + y2) / 2) / (video.videoHeight || 540);
+        const mouthYNorm = mouth[1] / (video.videoHeight || 540);
+
+        let faceBounceScore = 0;
+        let mouthMovementScore = 0;
+
+        if (prevFaceCenterYNorm !== null) {
+          const faceDelta = Math.abs(faceCenterYNorm - prevFaceCenterYNorm);
+          faceBounceScore = clamp(faceDelta / 0.014, 0, 1) * 100;
+        }
+
+        if (prevMouthYNorm !== null) {
+          const mouthDelta = Math.abs(mouthYNorm - prevMouthYNorm);
+          mouthMovementScore = clamp(mouthDelta / 0.020, 0, 1) * 100;
+        }
+
+        prevFaceCenterYNorm = faceCenterYNorm;
+        prevMouthYNorm = mouthYNorm;
+
+        const motionRaw = clamp(mouthMovementScore * 0.68 + faceBounceScore * 0.32, 0, 100);
+        let laughRaw = mouthOpenRaw > 35
+          ? mouthOpenRaw * 0.56 + motionRaw * 0.44
+          : mouthOpenRaw * 0.74 + motionRaw * 0.16;
+
+        laughRaw = clamp(laughRaw, 0, 100);
+
+        return { mouth: mouthOpenRaw, motion: motionRaw, laugh: laughRaw };
+      }
+
+      async function detectFacesStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
+
+        try {
+          const result = await faceModel.estimateFaces(video, false);
+          predictions = Array.isArray(result) ? result : [];
+          squadCount = predictions.length;
+
+          if (predictions.length > 0) {
+            const mappedFaces = predictions.map(mapVideoBoxToCanvas);
+            latestPrimaryFace = mappedFaces[0];
+            lastFaceTime = performance.now();
+
+            const signals = calculateSignals(predictions[0]);
+            mouthScore = lerp(mouthScore, signals.mouth, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, signals.motion, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, signals.laugh, SMOOTH_ALPHA);
+
+            if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
+              laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
+            } else {
+              laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+            }
+
+            if (!unlocked && laughHoldFrames >= HOLD_REQUIRED) {
+              triggerUnlock();
+            }
+          } else {
+            latestPrimaryFace = null;
+            mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, 0, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
+            laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+            prevFaceCenterYNorm = null;
+            prevMouthYNorm = null;
+          }
+
+          updateUI();
+        } catch (error) {
+          console.error("Face detection error:", error);
+        }
+      }
+
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+        try {
+          segmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: isMobileUA ? "low" : "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: 1
+          });
+        } catch (error) {
+          console.warn("Segmentation error:", error);
+          segmentation = null;
+        }
+      }
+
+      function drawBaseComposite() {
+        const w = renderCanvas.width;
+        const h = renderCanvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        if (bgReady && segmentation) {
+          tempCtx.clearRect(0, 0, w, h);
+
+          tempCtx.save();
+          tempCtx.translate(w, 0);
+          tempCtx.scale(-1, 1);
+          tempCtx.drawImage(video, 0, 0, w, h);
+          tempCtx.restore();
+
+          const frameImageData = tempCtx.getImageData(0, 0, w, h);
+          const framePixels = frameImageData.data;
+
+          bgCtx.clearRect(0, 0, w, h);
+          drawBackgroundCover(bgImage, bgCtx, w, h);
+
+          const bgData = bgCtx.getImageData(0, 0, w, h);
+          const bgPixels = bgData.data;
+          const mask = segmentation.data;
+          const len = Math.min(mask.length, framePixels.length / 4);
+
+          for (let i = 0; i < len; i++) {
+            const offset = i * 4;
+            if (mask[i] === 0) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = bgPixels[offset + 3];
+            }
+          }
+
+          ctx.putImageData(frameImageData, 0, 0);
+        } else if (bgReady) {
+          drawBackgroundCover(bgImage, ctx, w, h);
+        } else {
+          ctx.save();
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, 0, 0, w, h);
+          ctx.restore();
+        }
+
+        drawStageLook();
+      }
+
+      function drawStageLook() {
+        const w = renderCanvas.width;
+        const h = renderCanvas.height;
+
+        const glow = ctx.createRadialGradient(w * 0.5, h * 0.35, 20, w * 0.5, h * 0.35, Math.max(w, h) * 0.6);
+        glow.addColorStop(0, unlocked ? "rgba(247,183,24,0.22)" : "rgba(96,165,250,0.12)");
+        glow.addColorStop(0.45, unlocked ? "rgba(247,183,24,0.10)" : "rgba(139,92,246,0.08)");
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = "rgba(255,255,255,0.02)";
+        ctx.fillRect(0, 0, w, h);
+
+        if (unlocked) {
+          ctx.fillStyle = "rgba(247,183,24,0.06)";
+          ctx.fillRect(0, 0, w, h);
+        }
+      }
+
+      function drawFaceRing(face) {
+        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const radius = Math.max(faceWidth, faceHeight) * 0.65;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(247,183,24,0.7)";
+        ctx.lineWidth = Math.max(2, renderCanvas.width * 0.002);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.82, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "rgba(247,183,24,0.18)";
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawGlassesOnFace(face) {
+        if (!glassesReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const overlayWidth = faceWidth * 1.12;
+        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+        const eyeLineY = y1 + faceHeight * 0.43;
+
+        ctx.drawImage(
+          glassesImg,
+          centerX - overlayWidth / 2,
+          eyeLineY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawHelmetOnFace(face) {
+        if (!helmetReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const overlayWidth = faceWidth * 1.46;
+        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+        const helmetCenterY = y1 + faceHeight * 0.07;
+
+        ctx.drawImage(
+          helmetImg,
+          centerX - overlayWidth / 2,
+          helmetCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawBeardOnFace(face) {
+        if (!beardReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const overlayWidth = faceWidth * 1.42;
+        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+        const overlayCenterY = centerY - faceHeight * 0.02;
+
+        ctx.drawImage(
+          beardImg,
+          centerX - overlayWidth / 2,
+          overlayCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawGlowAroundFace(face) {
+        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const rx = faceWidth * 0.95;
+        const ry = faceHeight * 1.15;
+
+        ctx.save();
+        const gradient = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.max(rx, ry));
+        gradient.addColorStop(0, "rgba(247,183,24,0.20)");
+        gradient.addColorStop(0.45, "rgba(247,183,24,0.12)");
+        gradient.addColorStop(1, "rgba(247,183,24,0)");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawSquadIndicators(faces) {
+        if (!faces.length) return;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(96,165,250,0.65)";
+        ctx.fillStyle = "rgba(96,165,250,0.14)";
+        ctx.lineWidth = Math.max(2, renderCanvas.width * 0.002);
+
+        faces.forEach((face) => {
+          if (!isValidBox(face.topLeft, face.bottomRight)) return;
+          const { x1, y1, faceWidth, faceHeight } = getFaceMetrics(face.topLeft, face.bottomRight);
+          const pad = faceWidth * 0.08;
+          const rx = x1 - pad;
+          const ry = y1 - pad;
+          const rw = faceWidth + pad * 2;
+          const rh = faceHeight + pad * 2;
+
+          roundRectCanvas(ctx, rx, ry, rw, rh, Math.max(12, faceWidth * 0.14));
+          ctx.fill();
+          ctx.stroke();
+        });
+
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.font = `800 ${Math.max(18, renderCanvas.width * 0.02)}px Inter, sans-serif`;
+        ctx.fillText(`SQUAD x${faces.length}`, 24, renderCanvas.height - 28);
+        ctx.restore();
+      }
+
+      function roundRectCanvas(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.arcTo(x + width, y, x + width, y + height, radius);
+        context.arcTo(x + width, y + height, x, y + height, radius);
+        context.arcTo(x, y + height, x, y, radius);
+        context.arcTo(x, y, x + width, y, radius);
+        context.closePath();
+      }
+
+      function drawHeadlineOverlay() {
+        const w = renderCanvas.width;
+        const h = renderCanvas.height;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.96)";
+        ctx.font = `800 ${Math.max(20, w * 0.028)}px Inter, sans-serif`;
+        ctx.fillText("Making Digital Vikings", 28, h - 92);
+
+        ctx.fillStyle = "rgba(255,255,255,0.82)";
+        ctx.font = `700 ${Math.max(12, w * 0.014)}px Inter, sans-serif`;
+
+        let sub = "Client-side AI · browser camera · live AR overlays";
+        if (activeScene === "helmet") sub = "Helmet Mode · Griffin Hall behind every shot";
+        if (activeScene === "combo") sub = "Combo Mode · cinematic Viking face effect";
+        if (activeScene === "squad") sub = "Squad Mode · built for crowd reactions";
+        if (unlocked) sub = "Digital Viking Unlocked · hero moment active";
+
+        ctx.fillText(sub, 28, h - 58);
+        ctx.restore();
+      }
+
+      function burstParticles(count = 34) {
+        if (prefersReducedMotion) return;
+
+        particles.innerHTML = "";
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement("span");
+          p.className = "particle";
+
+          const centerX = 50 + (Math.random() * 12 - 6);
+          const centerY = 50 + (Math.random() * 12 - 6);
+          const dx = (Math.random() * 380 - 190).toFixed(0) + "px";
+          const dy = (Math.random() * 260 - 200).toFixed(0) + "px";
+          const rot = (Math.random() * 540 - 270).toFixed(0) + "deg";
+
+          p.style.left = centerX + "%";
+          p.style.top = centerY + "%";
+          p.style.setProperty("--dx", dx);
+          p.style.setProperty("--dy", dy);
+          p.style.setProperty("--rot", rot);
+
+          const colors = ["#f7b718", "#fde68a", "#ffffff", "#ffd86b"];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          p.style.background = `linear-gradient(180deg, #ffffff 0%, ${color} 100%)`;
+
+          particles.appendChild(p);
+          requestAnimationFrame(() => p.classList.add("burst"));
+        }
+      }
+
+      function speakUnlock() {
+        if (!("speechSynthesis" in window)) return;
+        try {
+          const utterance = new SpeechSynthesisUtterance("Digital Viking unlocked");
+          utterance.rate = 0.95;
+          utterance.pitch = 0.9;
+          utterance.volume = 0.9;
+          speechSynthesis.cancel();
+          speechSynthesis.speak(utterance);
+        } catch (error) {
+          console.warn("Speech synthesis unavailable:", error);
+        }
+      }
+
+      function playUnlockTone() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+
+          const audioCtx = new AudioContextClass();
+          const now = audioCtx.currentTime;
+          const notes = [220, 330, 440, 660];
+
+          notes.forEach((freq, index) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = index < 2 ? "triangle" : "sine";
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03 + index * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25 + index * 0.06);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + index * 0.05);
+            osc.stop(now + 0.35 + index * 0.06);
+          });
+        } catch (error) {
+          console.warn("Audio unavailable:", error);
+        }
+      }
+
+      function triggerUnlock() {
+        unlocked = true;
+        runeRing.classList.add("active");
+        vikingBadge.classList.add("active");
+        unlockTitle.classList.add("active");
+        stageWrap.classList.add("shake");
+
+        flashLayer.classList.remove("boom");
+        void flashLayer.offsetWidth;
+        flashLayer.classList.add("boom");
+
+        burstParticles(40);
+        speakUnlock();
+        playUnlockTone();
+        updateUI();
+
+        setStatus("Legendary laugh detected. Digital Viking unlocked.", "active");
+
+        setTimeout(() => {
+          stageWrap.classList.remove("shake");
+        }, 650);
+
+        if (!autoRecordedAfterUnlock) {
+          autoRecordedAfterUnlock = true;
+          setTimeout(() => {
+            if (aiRunning && !isRecording) {
+              startClipRecording(7000);
+            }
+          }, 500);
+        }
+      }
+
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawBaseComposite();
+
+        let primaryFace = null;
+        const now = performance.now();
+
+        if (latestPrimaryFace) {
+          smoothedPrimaryFace = smoothBox(smoothedPrimaryFace, latestPrimaryFace, SMOOTH_ALPHA);
+          primaryFace = smoothedPrimaryFace;
+        } else if (smoothedPrimaryFace && now - lastFaceTime < FACE_HOLD_MS) {
+          primaryFace = smoothedPrimaryFace;
+        } else {
+          smoothedPrimaryFace = null;
+        }
+
+        const mappedFaces = predictions.map(mapVideoBoxToCanvas);
+
+        if (primaryFace && isValidBox(primaryFace.topLeft, primaryFace.bottomRight)) {
+          drawGlowAroundFace(primaryFace);
+
+          if (activeScene === "scan") {
+            drawFaceRing(primaryFace);
+            drawGlassesOnFace(primaryFace);
+          } else if (activeScene === "helmet") {
+            drawHelmetOnFace(primaryFace);
+          } else if (activeScene === "combo") {
+            drawBeardOnFace(primaryFace);
+          } else if (activeScene === "squad") {
+            drawSquadIndicators(mappedFaces);
+            drawHelmetOnFace(primaryFace);
+          }
+
+          if (unlocked) {
+            drawGlowAroundFace(primaryFace);
+            if (activeScene !== "combo") {
+              drawHelmetOnFace(primaryFace);
+            }
+          }
+        }
+
+        if (activeScene === "squad" && mappedFaces.length >= 2) {
+          drawSquadIndicators(mappedFaces);
+        }
+
+        drawHeadlineOverlay();
+
+        if (!primaryFace && aiRunning) {
+          setStatus("AI is running. Waiting for a face in frame...", "active");
+        } else if (!unlocked && activeScene === "squad" && squadCount >= 2) {
+          setStatus("Multiple faces detected. Squad Mode is active.", "active");
+        } else if (!unlocked) {
+          setStatus("AI is running. Laugh naturally to trigger the hero reveal...", "active");
+        }
+
+        renderLoopId = requestAnimationFrame(renderFrame);
+      }
+
+      async function startClipRecording(durationMs = 7000) {
+        if (isRecording) return;
+        try {
+          if (!renderCanvas.captureStream) {
+            setStatus("Clip recording is not supported in this browser.", "error");
+            return;
+          }
+
+          const stream = renderCanvas.captureStream(30);
+          recordedChunks = [];
+          currentClipBlob = null;
+
+          let mimeType = "";
+          if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+            mimeType = "video/webm;codecs=vp9";
+          } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
+            mimeType = "video/webm;codecs=vp8";
+          } else if (MediaRecorder.isTypeSupported("video/webm")) {
+            mimeType = "video/webm";
+          }
+
+          mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            isRecording = false;
+            updateUI();
+
+            if (recordedChunks.length) {
+              currentClipBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "video/webm" });
+              const url = URL.createObjectURL(currentClipBlob);
+              recordedClip.src = url;
+              clipArea.classList.add("show");
+              setStatus("Clip recording complete. Preview ready below.", "active");
+            }
+          };
+
+          isRecording = true;
+          updateUI();
+          setStatus("Recording a short clip from the live rendered stage...", "active");
+          mediaRecorder.start();
+
+          clearTimeout(clipStopTimeout);
+          clipStopTimeout = setTimeout(() => {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+              mediaRecorder.stop();
+            }
+          }, durationMs);
+        } catch (error) {
+          console.error("Recording error:", error);
+          isRecording = false;
+          updateUI();
+          setStatus("Could not start clip recording on this device.", "error");
+        }
+      }
+
+      function drawSnapshotCard() {
+        const w = snapshotCanvas.width;
+        const h = snapshotCanvas.height;
+
+        snapshotCtx.clearRect(0, 0, w, h);
+
+        const bg = snapshotCtx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, "#0f172a");
+        bg.addColorStop(1, "#111827");
+        snapshotCtx.fillStyle = bg;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.30, 20, w * 0.5, h * 0.30, 420);
+        glow.addColorStop(0, "rgba(247,183,24,0.42)");
+        glow.addColorStop(0.4, "rgba(247,183,24,0.16)");
+        glow.addColorStop(1, "rgba(247,183,24,0)");
+        snapshotCtx.fillStyle = glow;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const frameX = 90;
+        const frameY = 160;
+        const frameW = w - 180;
+        const frameH = 720;
+        const radius = 34;
+
+        roundRectSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.save();
+        snapshotCtx.clip();
+        snapshotCtx.drawImage(renderCanvas, frameX, frameY, frameW, frameH);
+        snapshotCtx.restore();
+
+        const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
+        overlayGrad.addColorStop(0, "rgba(255,255,255,0.02)");
+        overlayGrad.addColorStop(1, "rgba(247,183,24,0.10)");
+        snapshotCtx.fillStyle = overlayGrad;
+        roundRectFillSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.lineWidth = 3;
+        snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
+        roundRectStrokeSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.fillStyle = "#fde68a";
+        snapshotCtx.font = "700 32px Inter, sans-serif";
+        snapshotCtx.fillText("MAKING DIGITAL VIKINGS", 90, 80);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "900 82px Inter, sans-serif";
+        snapshotCtx.fillText("AI + AR", 90, 1110);
+
+        snapshotCtx.fillStyle = "#f7b718";
+        snapshotCtx.font = "900 82px Inter, sans-serif";
+        snapshotCtx.fillText("SHOWCASE READY", 90, 1200);
+
+        snapshotCtx.fillStyle = "#dbe7f5";
+        snapshotCtx.font = "600 32px Inter, sans-serif";
+        snapshotCtx.fillText("Browser-built hero moment with live camera, AI, and AR overlays.", 90, 1260);
+
+        snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
+        roundRectFillSnapshot(snapshotCtx, 90, 1288, w - 180, 92, 24);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "800 30px Inter, sans-serif";
+        snapshotCtx.fillText("Legend Level: " + legendLevel, 126, 1346);
+
+        snapshotCtx.fillStyle = "#fde68a";
+        snapshotCtx.font = "800 30px Inter, sans-serif";
+        snapshotCtx.fillText(`👥 Faces: ${squadCount}  ·  Scene: ${activeScene.toUpperCase()}`, 590, 1346);
+
+        snapshotArea.classList.add("show");
+        setStatus("Share card captured below.", "active");
+      }
+
+      function roundRectSnapshot(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.arcTo(x + width, y, x + width, y + height, radius);
+        context.arcTo(x + width, y + height, x, y + height, radius);
+        context.arcTo(x, y + height, x, y, radius);
+        context.arcTo(x, y, x + width, y, radius);
+        context.closePath();
+      }
+
+      function roundRectFillSnapshot(context, x, y, width, height, radius) {
+        roundRectSnapshot(context, x, y, width, height, radius);
+        context.fill();
+      }
+
+      function roundRectStrokeSnapshot(context, x, y, width, height, radius) {
+        roundRectSnapshot(context, x, y, width, height, radius);
+        context.stroke();
+      }
+
+      function downloadSnapshot() {
+        const link = document.createElement("a");
+        link.download = "making-digital-vikings-share-card.png";
+        link.href = snapshotCanvas.toDataURL("image/png");
+        link.click();
+      }
+
+      function downloadClip() {
+        if (!currentClipBlob) return;
+        const link = document.createElement("a");
+        link.download = "making-digital-vikings-clip.webm";
+        link.href = URL.createObjectURL(currentClipBlob);
+        link.click();
+      }
+
+      function resetState() {
+        predictions = [];
+        segmentation = null;
+        latestPrimaryFace = null;
+        smoothedPrimaryFace = null;
+        lastFaceTime = 0;
+
+        mouthScore = 0;
+        motionScore = 0;
+        laughScore = 0;
+        squadCount = 0;
+        legendLevel = 0;
+
+        prevFaceCenterYNorm = null;
+        prevMouthYNorm = null;
+
+        laughHoldFrames = 0;
+        unlocked = false;
+        autoRecordedAfterUnlock = false;
+
+        runeRing.classList.remove("active");
+        vikingBadge.classList.remove("active");
+        unlockTitle.classList.remove("active");
+        particles.innerHTML = "";
+      }
+
+      function stopExperience(showMessage = true) {
+        aiRunning = false;
+
+        if (renderLoopId) cancelAnimationFrame(renderLoopId);
+        renderLoopId = null;
+
+        if (detectTimer) clearInterval(detectTimer);
+        detectTimer = null;
+
+        if (segmentTimer) clearInterval(segmentTimer);
+        segmentTimer = null;
+
+        clearTimeout(clipStopTimeout);
+
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+        isRecording = false;
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        video.srcObject = null;
+        videoReady = false;
+        videoSkeleton.style.display = "block";
+
+        resetState();
+        updateUI();
+
+        ctx.clearRect(0, 0, renderCanvas.width, renderCanvas.height);
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        captureBtn.disabled = true;
+        recordBtn.disabled = true;
+
+        if (showMessage) {
+          setStatus("Camera is off. Restart the experience any time.", "idle");
+        }
+      }
+
+      async function startExperience() {
+        try {
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+          captureBtn.disabled = true;
+          recordBtn.disabled = true;
+          snapshotArea.classList.remove("show");
+
+          setStatus("Requesting camera access...", "idle");
+
+          await setupCamera();
+
+          setStatus("Loading AI models...", "idle");
+          await getBestBackend();
+
+          faceModel = await blazeface.load();
+          try {
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: isMobileUA ? 0.5 : 0.75,
+              quantBytes: 2
+            });
+          } catch (error) {
+            console.warn("BodyPix failed to load. Background replacement may be limited.", error);
+            bodyPixModel = null;
+          }
+
+          resetState();
+
+          aiRunning = true;
+          stopBtn.disabled = false;
+          captureBtn.disabled = false;
+          recordBtn.disabled = false;
+
+          detectTimer = setInterval(detectFacesStep, FACE_DETECT_MS);
+          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFacesStep();
+          await segmentStep();
+
+          setStatus("AI is ready. Step into frame and start the show.", "active");
+          updateUI();
+          renderLoopId = requestAnimationFrame(renderFrame);
+        } catch (error) {
+          console.error("Initialization error:", error);
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          captureBtn.disabled = true;
+          recordBtn.disabled = true;
+          setStatus(
+            "Could not start the camera or AI model. Check camera permissions, use HTTPS, and try a recent Chrome or Edge browser.",
+            "error"
+          );
+        }
+      }
+
+      sceneButtons.forEach((button) => {
+        button.addEventListener("click", () => setScene(button.dataset.scene));
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", () => stopExperience(true));
+      captureBtn.addEventListener("click", drawSnapshotCard);
+      recordBtn.addEventListener("click", () => startClipRecording(7000));
+      downloadSnapshotBtn.addEventListener("click", downloadSnapshot);
+      downloadClipBtn.addEventListener("click", downloadClip);
+
+      window.addEventListener("resize", () => {
+        if (videoReady) {
+          setTimeout(resizeCanvases, 120);
+        }
+      }, { passive: true });
+
+      window.addEventListener("orientationchange", () => {
+        if (videoReady) {
+          setTimeout(resizeCanvases, 250);
+        }
+      }, { passive: true });
+
+      window.addEventListener("beforeunload", () => {
+        stopExperience(false);
+      });
+
+      updateUI();
+      setScene("scan");
+    })();
+  </script>
+</body>
+</html>

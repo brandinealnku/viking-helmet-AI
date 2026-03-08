@@ -590,7 +590,7 @@
                 </li>
                 <li>
                   <span class="nk-step-num">3.</span>
-                  <span>The helmet sits lower, the beard sits higher, and the live feed now fills the full preview area correctly.</span>
+                  <span>The helmet sits lower, combo mode uses the full-face beard image only, and the live feed fills the preview correctly.</span>
                 </li>
               </ol>
             </section>
@@ -1054,8 +1054,9 @@
         const faceWidth = x2 - x1;
         const faceHeight = y2 - y1;
         const centerX = x1 + faceWidth / 2;
+        const centerY = y1 + faceHeight / 2;
 
-        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX };
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
       }
 
       function drawGlassesOnFace(topLeft, bottomRight) {
@@ -1082,17 +1083,17 @@
 
         const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
 
-        const overlayWidth = faceWidth * 1.42;
+        const overlayWidth = faceWidth * 1.44;
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        const foreheadY = y1 + faceHeight * 0.18;
-        const helmetTopY = foreheadY - overlayHeight * 0.78;
+        // Lowered further so the helmet sits down on the head more naturally
+        const helmetCenterY = y1 + faceHeight * 0.20;
 
         ctx.drawImage(
           helmetImg,
           centerX - overlayWidth / 2,
-          helmetTopY,
+          helmetCenterY - overlayHeight / 2,
           overlayWidth,
           overlayHeight
         );
@@ -1101,26 +1102,27 @@
       function drawBeardOnFace(topLeft, bottomRight) {
         if (!beardImgReady || !isValidBox(topLeft, bottomRight)) return;
 
-        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(topLeft, bottomRight);
 
-        const overlayWidth = faceWidth * 1.18;
+        // beard.png is treated as the full-face combo overlay
+        const overlayWidth = faceWidth * 1.42;
         const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        const mouthLineY = y1 + faceHeight * 0.72;
-        const beardTopY = mouthLineY - overlayHeight * 0.18;
+        // Slight upward nudge to center the image over the detected face more naturally
+        const overlayCenterY = centerY - faceHeight * 0.02;
 
         ctx.drawImage(
           beardImg,
           centerX - overlayWidth / 2,
-          beardTopY,
+          overlayCenterY - overlayHeight / 2,
           overlayWidth,
           overlayHeight
         );
       }
 
       function drawComboOnFace(topLeft, bottomRight) {
-        drawHelmetOnFace(topLeft, bottomRight);
+        // Combo mode is the full-face beard.png overlay only
         drawBeardOnFace(topLeft, bottomRight);
       }
 
@@ -1256,7 +1258,7 @@
             setStatus("AI is running: helmet filter with Griffin Hall background.", "active");
           } else if (activeFilter === "combo") {
             drawComboOnFace(topLeft, bottomRight);
-            setStatus("AI is running: Viking combo with Griffin Hall background.", "active");
+            setStatus("AI is running: Viking combo full-face overlay with Griffin Hall background.", "active");
           } else {
             setStatus("AI is running: Griffin Hall background mode.", "active");
           }
@@ -1375,12 +1377,12 @@
             );
           } else if (activeFilter === "helmet") {
             setStatus(
-              "Helmet filter selected. Helmet placement tuned lower on the head.",
+              "Helmet filter selected. Helmet placement is tuned lower on the head.",
               aiRunning ? "active" : "idle"
             );
           } else if (activeFilter === "combo") {
             setStatus(
-              "Viking combo selected. Helmet and beard are now tuned to track more naturally.",
+              "Viking combo selected. Full-face combo overlay is centered on the face.",
               aiRunning ? "active" : "idle"
             );
           } else {

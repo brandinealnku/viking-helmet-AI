@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>The Brandi Effect — Making Digital Vikings</title>
+  <title>NKU Digital Viking — Griffin Hall Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="A polished browser-based AI + AR Digital Viking experience with Griffin Hall background replacement, clean overlays, laugh-to-unlock, squad mode, and built-in capture tools."
+    content="A clean NKU-themed browser AI experience that places the user in Griffin Hall and automatically overlays a Viking helmet."
   />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#111111" />
 
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -22,22 +22,13 @@
 
   <style>
     :root {
-      --bg: #08111f;
-      --bg2: #0b1220;
-      --panel: rgba(255,255,255,0.07);
-      --panel-2: rgba(255,255,255,0.10);
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --nku-white: #ffffff;
+      --nku-gray: #d1d5db;
+      --panel: rgba(255,255,255,0.08);
       --border: rgba(255,255,255,0.12);
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --gold: #f7b718;
-      --gold-soft: #fde68a;
-      --pink: #ff66c4;
-      --navy: #3a3b78;
-      --green: #22c55e;
-      --red: #f87171;
-      --blue: #60a5fa;
-      --shadow: 0 24px 80px rgba(0,0,0,0.34);
-      --ring: 0 0 0 4px rgba(247,183,24,0.18);
+      --shadow: 0 24px 80px rgba(0,0,0,0.32);
       color-scheme: dark;
     }
 
@@ -49,11 +40,9 @@
       margin: 0;
       min-height: 100%;
       background:
-        radial-gradient(circle at top left, rgba(255,102,196,0.12), transparent 22%),
-        radial-gradient(circle at top right, rgba(96,165,250,0.12), transparent 20%),
-        radial-gradient(circle at bottom center, rgba(247,183,24,0.10), transparent 24%),
-        linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
-      color: var(--text);
+        radial-gradient(circle at top, rgba(247,183,24,0.10), transparent 22%),
+        linear-gradient(180deg, #0f1115 0%, #111111 100%);
+      color: var(--nku-white);
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
@@ -64,7 +53,7 @@
     }
 
     .shell {
-      max-width: 1280px;
+      max-width: 1240px;
       margin: 0 auto;
     }
 
@@ -78,9 +67,9 @@
       padding: 14px 16px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(16px);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .brand-wrap {
@@ -96,24 +85,22 @@
       gap: 8px;
       padding: 7px 12px;
       border-radius: 999px;
-      background: linear-gradient(135deg, var(--pink) 0%, var(--navy) 100%);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: white;
+      background: var(--nku-gold);
+      color: var(--nku-black);
       font-size: 0.74rem;
       font-weight: 900;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      box-shadow: 0 8px 26px rgba(255,102,196,0.18);
     }
 
     .top-note {
-      color: var(--muted);
+      color: #e5e7eb;
       font-size: 0.9rem;
     }
 
     .hero {
       border: 1px solid var(--border);
-      border-radius: 26px;
+      border-radius: 24px;
       background: rgba(255,255,255,0.05);
       backdrop-filter: blur(18px);
       box-shadow: var(--shadow);
@@ -121,7 +108,7 @@
     }
 
     .eyebrow {
-      color: var(--gold-soft);
+      color: #fde68a;
       text-transform: uppercase;
       letter-spacing: 0.16em;
       font-size: 0.74rem;
@@ -130,115 +117,53 @@
     }
 
     .hero-title {
-      font-size: clamp(2rem, 4vw, 3.5rem);
-      line-height: 0.96;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.98;
       letter-spacing: -0.05em;
       font-weight: 950;
       margin: 0 0 14px;
     }
 
     .hero-title .gold {
-      color: var(--gold);
-      text-shadow: 0 0 24px rgba(247,183,24,0.18);
-    }
-
-    .hero-title .pink {
-      color: var(--pink);
-      text-shadow: 0 0 24px rgba(255,102,196,0.14);
+      color: var(--nku-gold);
     }
 
     .hero-lead {
-      color: #dbe7f5;
+      color: #e5e7eb;
       font-size: 0.98rem;
-      line-height: 1.72;
-      max-width: 62ch;
+      line-height: 1.7;
+      max-width: 60ch;
       margin-bottom: 18px;
     }
 
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.81rem;
-      font-weight: 700;
-      color: #f8fafc;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.10);
-    }
-
-    .panel,
-    .result-card,
+    .info-card,
     .preview-card {
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.06);
       padding: 14px 15px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-    .panel {
+    .info-card {
       margin-bottom: 12px;
     }
 
-    .panel-title,
+    .info-title,
     .preview-title {
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--gold-soft);
+      color: #fde68a;
       font-weight: 800;
       margin-bottom: 6px;
     }
 
-    .panel-body {
+    .info-body {
       margin: 0;
-      color: #dbe7f5;
+      color: #e5e7eb;
       font-size: 0.92rem;
       line-height: 1.62;
-    }
-
-    .result-card {
-      margin-top: 14px;
-      border-color: rgba(247,183,24,0.16);
-      background: linear-gradient(180deg, rgba(247,183,24,0.10) 0%, rgba(255,255,255,0.05) 100%);
-    }
-
-    .result-label {
-      color: #fde68a;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.74rem;
-      font-weight: 900;
-      margin-bottom: 6px;
-    }
-
-    .result-state {
-      font-size: clamp(1.45rem, 2.5vw, 2.2rem);
-      line-height: 1;
-      letter-spacing: -0.04em;
-      font-weight: 950;
-      margin-bottom: 8px;
-    }
-
-    .result-state.unlocked {
-      color: var(--gold);
-      text-shadow: 0 0 22px rgba(247,183,24,0.20);
-    }
-
-    .result-copy {
-      color: #dbe7f5;
-      font-size: 0.93rem;
-      line-height: 1.58;
-      margin: 0;
     }
 
     .stage-card {
@@ -246,7 +171,7 @@
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.06);
       padding: 14px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .stage-wrap {
@@ -255,15 +180,11 @@
       min-height: 420px;
       height: min(72svh, 820px);
       overflow: hidden;
-      border-radius: 20px;
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.12);
       background:
-        radial-gradient(circle at center, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
-        linear-gradient(180deg, #111827 0%, #0b1220 100%);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        0 18px 50px rgba(0,0,0,0.24);
-      isolation: isolate;
+        radial-gradient(circle at center, rgba(255,255,255,0.05), rgba(255,255,255,0.015)),
+        linear-gradient(180deg, #1a1a1a 0%, #111111 100%);
     }
 
     #video {
@@ -289,11 +210,11 @@
       z-index: 0;
       background: linear-gradient(
         120deg,
-        #1f2937 0%,
-        #1f2937 24%,
-        #334155 42%,
-        #1f2937 60%,
-        #1f2937 100%
+        #222 0%,
+        #222 24%,
+        #333 42%,
+        #222 60%,
+        #222 100%
       );
       background-size: 200% 100%;
       animation: shimmer 1.2s linear infinite;
@@ -304,111 +225,77 @@
       100% { background-position: 120% 0; }
     }
 
-    .ui-layer {
+    .screen-ui {
       position: absolute;
       inset: 0;
-      z-index: 5;
+      z-index: 3;
       pointer-events: none;
     }
 
-    .gradient-top {
+    .screen-gradient-top {
       position: absolute;
       inset: 0 0 auto 0;
-      height: 20%;
-      background: linear-gradient(180deg, rgba(7,17,31,0.36), rgba(7,17,31,0));
+      height: 18%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.34), rgba(17,17,17,0));
     }
 
-    .gradient-bottom {
+    .screen-gradient-bottom {
       position: absolute;
       inset: auto 0 0 0;
-      height: 20%;
-      background: linear-gradient(0deg, rgba(7,17,31,0.36), rgba(7,17,31,0));
+      height: 18%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.36), rgba(17,17,17,0));
     }
 
-    .hud-top {
+    .screen-pill {
       position: absolute;
       top: 12px;
       left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .hud-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 11px;
+      padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.62);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px);
+      background: rgba(17,17,17,0.55);
       color: #fff;
-      font-size: 0.74rem;
-      font-weight: 800;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.16);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
     }
 
-    .hud-dot {
+    .screen-pill-accent {
       width: 8px;
       height: 8px;
       border-radius: 999px;
-      background: #94a3b8;
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+      background: var(--nku-gold);
+      box-shadow: 0 0 0 4px rgba(247,183,24,0.12);
+      flex: 0 0 auto;
     }
 
-    .hud-dot.live {
-      background: var(--green);
-    }
-
-    .hud-dot.warn {
-      background: var(--gold);
-    }
-
-    .unlock-toast {
+    .screen-footer {
       position: absolute;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%) translateY(14px);
-      min-width: min(92%, 640px);
-      text-align: center;
-      padding: 12px 16px;
-      border-radius: 18px;
-      background: rgba(15,23,42,0.72);
-      border: 1px solid rgba(255,255,255,0.14);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
-      opacity: 0;
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .unlock-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .unlock-toast-kicker {
-      color: #fde68a;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-size: 0.68rem;
-      font-weight: 900;
-      margin-bottom: 4px;
-    }
-
-    .unlock-toast-main {
-      font-size: clamp(1rem, 2.2vw, 1.45rem);
-      line-height: 1.02;
-      font-weight: 950;
-      letter-spacing: -0.03em;
-      margin: 0;
+      left: 14px;
+      bottom: 14px;
       color: #fff;
     }
 
-    .unlock-toast-main .gold {
-      color: var(--gold);
+    .screen-kicker {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 900;
+      color: #fde68a;
+      margin-bottom: 3px;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin: 0;
     }
 
     .status-row {
@@ -432,69 +319,58 @@
       width: 11px;
       height: 11px;
       border-radius: 999px;
-      background: #94a3b8;
+      background: #9ca3af;
       transition: all 0.2s ease;
       flex: 0 0 auto;
     }
 
     .status-dot.active {
-      background: var(--green);
+      background: #22c55e;
       box-shadow: 0 0 0 5px rgba(34,197,94,0.14);
     }
 
     .status-dot.error {
-      background: var(--red);
+      background: #f87171;
       box-shadow: 0 0 0 5px rgba(248,113,113,0.14);
     }
 
     .status-text {
-      color: #f8fafc;
-      font-size: 0.93rem;
+      color: #fff;
+      font-size: 0.94rem;
       font-weight: 700;
       line-height: 1.5;
     }
 
     .status-note {
-      color: var(--muted);
+      color: #d1d5db;
       font-size: 0.83rem;
       max-width: 420px;
       line-height: 1.58;
     }
 
-    .controls,
-    .scene-buttons {
+    .controls {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-    }
-
-    .scene-buttons {
-      margin-top: 10px;
     }
 
     .btn-pill {
       border-radius: 999px;
       padding: 11px 18px;
       font-weight: 800;
-      letter-spacing: 0.01em;
       border: 1px solid transparent;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
       min-height: 48px;
       touch-action: manipulation;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
     }
 
     .btn-pill:hover:not(:disabled) {
       transform: translateY(-1px);
     }
 
-    .btn-pill:focus-visible {
-      outline: none;
-      box-shadow: var(--ring);
-    }
-
     .btn-start {
-      background: linear-gradient(135deg, var(--gold) 0%, #eab308 100%);
-      color: #111827;
+      background: linear-gradient(135deg, var(--nku-gold) 0%, #eab308 100%);
+      color: var(--nku-black);
       box-shadow: 0 12px 28px rgba(247,183,24,0.22);
     }
 
@@ -505,34 +381,14 @@
     }
 
     .btn-capture {
-      background: rgba(96,165,250,0.14);
-      color: #dbeafe;
-      border-color: rgba(96,165,250,0.18);
-    }
-
-    .btn-record {
-      background: rgba(255,102,196,0.16);
-      color: #ffe5f4;
-      border-color: rgba(255,102,196,0.20);
-    }
-
-    .btn-scene {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.10);
       color: #fff;
-      border-color: rgba(255,255,255,0.12);
-      padding: 10px 14px;
-    }
-
-    .btn-scene.active {
-      background: rgba(255,102,196,0.16);
-      color: #ffe5f4;
-      border-color: rgba(255,102,196,0.26);
-      box-shadow: 0 0 0 3px rgba(255,102,196,0.10);
+      border-color: rgba(255,255,255,0.14);
     }
 
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin-top: 16px;
     }
@@ -554,40 +410,19 @@
     }
 
     .metric-value {
-      font-size: 1.7rem;
+      font-size: 1.75rem;
       line-height: 1;
       font-weight: 950;
       letter-spacing: -0.04em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .metric-desc {
-      color: #dbe7f5;
+      color: #e5e7eb;
       font-size: 0.82rem;
       line-height: 1.5;
-      min-height: 2.5em;
-      margin-bottom: 10px;
+      margin: 0;
     }
-
-    .bar-track {
-      width: 100%;
-      height: 8px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.12);
-    }
-
-    .bar-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      transition: width 0.14s ease;
-    }
-
-    .bar-fill.low { background: #f59e0b; }
-    .bar-fill.med { background: #60a5fa; }
-    .bar-fill.high { background: #22c55e; }
-    .bar-fill.epic { background: linear-gradient(90deg, #ff66c4 0%, #f7b718 100%); }
 
     .preview-card {
       margin-top: 16px;
@@ -598,76 +433,27 @@
       display: block;
     }
 
-    #snapshotCanvas,
-    #recordedClip {
+    #snapshotCanvas {
       width: 100%;
       max-width: 560px;
       border-radius: 18px;
       display: block;
       border: 1px solid rgba(255,255,255,0.10);
-      background: #0b1220;
+      background: #111111;
       box-shadow: 0 16px 40px rgba(0,0,0,0.24);
     }
 
     .small-note {
-      color: var(--muted);
+      color: #d1d5db;
       font-size: 0.82rem;
       line-height: 1.58;
       margin-top: 14px;
       margin-bottom: 0;
     }
 
-    .flash-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 4;
-      pointer-events: none;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.88), rgba(247,183,24,0.55), transparent 58%);
-      opacity: 0;
-      transform: scale(0.94);
-    }
-
-    .flash-layer.boom {
-      animation: flashBoom 720ms ease-out;
-    }
-
-    @keyframes flashBoom {
-      0% { opacity: 0; transform: scale(0.9); }
-      20% { opacity: 0.95; transform: scale(1.01); }
-      100% { opacity: 0; transform: scale(1.08); }
-    }
-
-    .particles {
-      position: absolute;
-      inset: 0;
-      z-index: 4;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .particle {
-      position: absolute;
-      width: 8px;
-      height: 14px;
-      border-radius: 999px;
-      opacity: 0;
-      background: linear-gradient(180deg, #ffffff 0%, #f7b718 100%);
-      box-shadow: 0 0 10px rgba(247,183,24,0.22);
-    }
-
-    .particle.burst {
-      animation: burst 850ms ease-out forwards;
-    }
-
-    @keyframes burst {
-      0% { opacity: 0; transform: translate(0,0) scale(0.7) rotate(0deg); }
-      15% { opacity: 1; }
-      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.02) rotate(var(--rot)); }
-    }
-
     @media (max-width: 991.98px) {
       .metrics-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
       }
     }
 
@@ -690,20 +476,14 @@
         height: min(76svh, 760px);
       }
 
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .controls .btn-pill,
-      .scene-buttons .btn-pill {
+      .controls .btn-pill {
         flex: 1 1 calc(50% - 10px);
         justify-content: center;
       }
     }
 
     @media (max-width: 480px) {
-      .controls .btn-pill,
-      .scene-buttons .btn-pill {
+      .controls .btn-pill {
         flex: 1 1 100%;
       }
 
@@ -711,8 +491,8 @@
         min-height: 560px;
       }
 
-      .hud-pill {
-        font-size: 0.66rem;
+      .screen-pill {
+        font-size: 0.64rem;
       }
     }
 
@@ -730,68 +510,40 @@
   <div class="shell">
     <header class="topbar">
       <div class="brand-wrap">
-        <div class="brand-pill">The Brandi Effect</div>
-        <div class="top-note">Making Digital Vikings · polished, playful, browser-built</div>
+        <div class="brand-pill">NKU Digital Viking</div>
+        <div class="top-note">Griffin Hall edition</div>
       </div>
-      <div class="top-note">AI + AR, but make it cute and impressive</div>
+      <div class="top-note">Clean browser-based AI camera experience</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
           <section class="col-lg-4">
-            <div class="eyebrow">Big main-character energy</div>
+            <div class="eyebrow">Simple. Clean. NKU only.</div>
             <h1 class="hero-title">
-              A cleaner, bolder,
-              <span class="pink">more Brandi</span>
-              <span class="gold">Digital Viking</span>
-              moment.
+              Griffin Hall background.
+              <span class="gold">Automatic Viking helmet.</span>
             </h1>
 
             <p class="hero-lead">
-              This version strips out the visual chaos and keeps the magic. The camera stays focused on the person,
-              Griffin Hall keeps the background polished, and the AI overlay brings the drama only when it matters.
+              This version keeps the experience focused and clean. The live camera view is composited into Griffin Hall,
+              and the helmet is placed automatically on the user’s head with no extra visual clutter.
             </p>
 
-            <div class="chip-row">
-              <div class="chip">✨ Clean cinematic overlay</div>
-              <div class="chip">🏛️ Griffin Hall backdrop</div>
-              <div class="chip">🛡️ Viking payoff</div>
-              <div class="chip">🎬 Showcase-ready captures</div>
-            </div>
-
-            <div class="panel">
-              <div class="panel-title">How this one feels</div>
-              <p class="panel-body">
-                Less “look at all the things on screen.” More “wait… that is actually really cool.” The user stays visible,
-                the interface stays clean, and the unlock moment hits harder because it is earned.
+            <div class="info-card">
+              <div class="info-title">How it works</div>
+              <p class="info-body">
+                Start the camera, step into frame, and the browser will detect the face, replace the background with Griffin Hall,
+                and position the helmet automatically.
               </p>
             </div>
 
-            <div class="panel">
-              <div class="panel-title">Best use for your video</div>
-              <p class="panel-body">
-                Use Helmet Mode for the funniest clean payoff, Combo Mode for the most dramatic shot, and Squad Mode when you
-                want your colleagues jumping into frame and reacting together.
+            <div class="info-card">
+              <div class="info-title">Best results</div>
+              <p class="info-body">
+                Use even lighting, keep one face clearly in frame, and stand far enough back so the top of the head is visible.
               </p>
-            </div>
-
-            <div class="result-card" aria-live="polite">
-              <div class="result-label">Current vibe</div>
-              <div id="resultState" class="result-state">Waiting for the magic...</div>
-              <p id="resultCopy" class="result-copy">
-                Start the experience, step into frame, and let the browser do the flirting with the audience.
-              </p>
-            </div>
-
-            <div class="panel mt-3">
-              <div class="panel-title">Choose the moment</div>
-              <div class="scene-buttons">
-                <button class="btn-pill btn-scene active" type="button" data-scene="scan">✨ Clean Scan</button>
-                <button class="btn-pill btn-scene" type="button" data-scene="helmet">🪖 Helmet</button>
-                <button class="btn-pill btn-scene" type="button" data-scene="combo">🧔 Combo</button>
-                <button class="btn-pill btn-scene" type="button" data-scene="squad">👯 Squad</button>
-              </div>
             </div>
           </section>
 
@@ -800,31 +552,20 @@
               <div id="stageWrap" class="stage-wrap">
                 <div id="videoSkeleton" class="video-skeleton" aria-hidden="true"></div>
                 <video id="video" autoplay playsinline muted></video>
-                <canvas id="renderCanvas" aria-label="Live AI rendered stage"></canvas>
+                <canvas id="renderCanvas" aria-label="Live NKU AI stage"></canvas>
 
-                <div id="flashLayer" class="flash-layer"></div>
-                <div id="particles" class="particles"></div>
+                <div class="screen-ui" aria-hidden="true">
+                  <div class="screen-gradient-top"></div>
+                  <div class="screen-gradient-bottom"></div>
 
-                <div class="ui-layer" aria-hidden="true">
-                  <div class="gradient-top"></div>
-                  <div class="gradient-bottom"></div>
-
-                  <div class="hud-top">
-                    <div class="hud-pill">
-                      <span id="hudDot" class="hud-dot"></span>
-                      <span id="hudText">Awaiting camera</span>
-                    </div>
-                    <div class="hud-pill">
-                      <span class="hud-dot warn"></span>
-                      <span id="legendText">Buzz Level: 0</span>
-                    </div>
+                  <div class="screen-pill">
+                    <span class="screen-pill-accent"></span>
+                    <span>NKU AI Live</span>
                   </div>
 
-                  <div id="unlockToast" class="unlock-toast">
-                    <div class="unlock-toast-kicker">Okayyyy</div>
-                    <h2 class="unlock-toast-main">
-                      <span class="gold">Digital Viking</span> unlocked
-                    </h2>
+                  <div class="screen-footer">
+                    <div class="screen-kicker">Northern Kentucky University</div>
+                    <h2 class="screen-title">Digital Viking</h2>
                   </div>
                 </div>
               </div>
@@ -835,65 +576,46 @@
                   <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: one face, good lighting, and a real laugh or playful expression instead of a tiny little polite smile.
+                  Best results: good lighting, recent Chrome or Edge, and HTTPS if served online.
                 </div>
               </div>
 
               <div class="controls">
                 <button id="startBtn" class="btn-pill btn-start" type="button">🚀 Start Camera &amp; AI</button>
                 <button id="stopBtn" class="btn-pill btn-stop" type="button" disabled>⏹ Stop</button>
-                <button id="captureBtn" class="btn-pill btn-capture" type="button" disabled>📸 Capture Share Card</button>
-                <button id="recordBtn" class="btn-pill btn-record" type="button" disabled>🎬 Record 7s Clip</button>
+                <button id="captureBtn" class="btn-pill btn-capture" type="button" disabled>📸 Capture Image</button>
               </div>
 
               <div class="metrics-grid">
                 <article class="metric">
-                  <div class="metric-label">Mouth openness</div>
-                  <div id="mouthScore" class="metric-value">0</div>
-                  <div class="metric-desc">How open the mouth appears relative to the face.</div>
-                  <div class="bar-track"><div id="mouthBar" class="bar-fill low"></div></div>
+                  <div class="metric-label">Background</div>
+                  <div id="bgMetric" class="metric-value">Off</div>
+                  <p class="metric-desc">Shows whether Griffin Hall compositing is active.</p>
                 </article>
 
                 <article class="metric">
-                  <div class="metric-label">Motion signal</div>
-                  <div id="motionScore" class="metric-value">0</div>
-                  <div class="metric-desc">Face and mouth movement across recent frames.</div>
-                  <div class="bar-track"><div id="motionBar" class="bar-fill low"></div></div>
+                  <div class="metric-label">Face</div>
+                  <div id="faceMetric" class="metric-value">Searching</div>
+                  <p class="metric-desc">Shows whether a face is currently detected in frame.</p>
                 </article>
 
                 <article class="metric">
-                  <div class="metric-label">Laugh score</div>
-                  <div id="laughScore" class="metric-value">0</div>
-                  <div class="metric-desc">Used to decide when the unlock moment hits.</div>
-                  <div class="bar-track"><div id="laughBar" class="bar-fill low"></div></div>
-                </article>
-
-                <article class="metric">
-                  <div class="metric-label">Squad count</div>
-                  <div id="progressScore" class="metric-value">0</div>
-                  <div class="metric-desc">Faces currently detected on screen.</div>
-                  <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
+                  <div class="metric-label">Helmet</div>
+                  <div id="helmetMetric" class="metric-value">Standby</div>
+                  <p class="metric-desc">Shows whether the helmet is currently placed on the detected face.</p>
                 </article>
               </div>
 
               <div id="snapshotArea" class="preview-card">
-                <div class="preview-title">Share card</div>
+                <div class="preview-title">Captured image</div>
                 <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
                 <div class="controls mt-3 mb-0">
-                  <button id="downloadSnapshotBtn" class="btn-pill btn-start" type="button">⬇️ Download Snapshot</button>
-                </div>
-              </div>
-
-              <div id="clipArea" class="preview-card">
-                <div class="preview-title">Recorded clip</div>
-                <video id="recordedClip" controls playsinline></video>
-                <div class="controls mt-3 mb-0">
-                  <button id="downloadClipBtn" class="btn-pill btn-start" type="button">⬇️ Download Clip</button>
+                  <button id="downloadSnapshotBtn" class="btn-pill btn-start" type="button">⬇️ Download Image</button>
                 </div>
               </div>
 
               <p class="small-note">
-                Translation: this is the version that lets people actually see the person and still say, “wait… you built that in the browser?”
+                This version is intentionally minimal so the person stays visible and the NKU setting stays clear.
               </p>
             </div>
           </section>
@@ -912,44 +634,22 @@
 
       const videoSkeleton = document.getElementById("videoSkeleton");
       const stageWrap = document.getElementById("stageWrap");
-      const flashLayer = document.getElementById("flashLayer");
-      const particles = document.getElementById("particles");
-      const unlockToast = document.getElementById("unlockToast");
 
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
       const captureBtn = document.getElementById("captureBtn");
-      const recordBtn = document.getElementById("recordBtn");
       const downloadSnapshotBtn = document.getElementById("downloadSnapshotBtn");
-      const downloadClipBtn = document.getElementById("downloadClipBtn");
 
       const statusDot = document.getElementById("statusDot");
       const statusText = document.getElementById("statusText");
-      const hudDot = document.getElementById("hudDot");
-      const hudText = document.getElementById("hudText");
-      const legendText = document.getElementById("legendText");
 
-      const resultState = document.getElementById("resultState");
-      const resultCopy = document.getElementById("resultCopy");
-
-      const mouthScoreEl = document.getElementById("mouthScore");
-      const motionScoreEl = document.getElementById("motionScore");
-      const laughScoreEl = document.getElementById("laughScore");
-      const progressScoreEl = document.getElementById("progressScore");
-
-      const mouthBar = document.getElementById("mouthBar");
-      const motionBar = document.getElementById("motionBar");
-      const laughBar = document.getElementById("laughBar");
-      const progressBar = document.getElementById("progressBar");
+      const bgMetric = document.getElementById("bgMetric");
+      const faceMetric = document.getElementById("faceMetric");
+      const helmetMetric = document.getElementById("helmetMetric");
 
       const snapshotArea = document.getElementById("snapshotArea");
       const snapshotCanvas = document.getElementById("snapshotCanvas");
       const snapshotCtx = snapshotCanvas.getContext("2d");
-
-      const clipArea = document.getElementById("clipArea");
-      const recordedClip = document.getElementById("recordedClip");
-
-      const sceneButtons = document.querySelectorAll("[data-scene]");
 
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
@@ -962,171 +662,57 @@
       let mediaStream = null;
       let aiRunning = false;
       let videoReady = false;
+
       let renderLoopId = null;
-      let detectTimer = null;
+      let faceDetectTimer = null;
       let segmentTimer = null;
 
-      let activeScene = "scan";
-      let predictions = [];
       let segmentation = null;
-
-      let latestPrimaryFace = null;
-      let smoothedPrimaryFace = null;
+      let latestFace = null;
+      let smoothedFace = null;
       let lastFaceTime = 0;
 
-      let mouthScore = 0;
-      let motionScore = 0;
-      let laughScore = 0;
-      let squadCount = 0;
-      let buzzLevel = 0;
-
-      let prevFaceCenterYNorm = null;
-      let prevMouthYNorm = null;
-
-      let laughHoldFrames = 0;
-      let unlocked = false;
-      let autoRecordedAfterUnlock = false;
-
-      let mediaRecorder = null;
-      let recordedChunks = [];
-      let currentClipBlob = null;
-      let clipStopTimeout = null;
-      let isRecording = false;
-
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
       const FACE_DETECT_MS = isMobileUA ? 140 : 90;
       const SEGMENT_MS = isMobileUA ? 260 : 180;
       const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
       const FACE_HOLD_MS = 420;
 
-      const LAUGH_THRESHOLD = 68;
-      const MOUTH_THRESHOLD = 35;
-      const HOLD_REQUIRED = 16;
-
       const bgImage = new Image();
-      const glassesImg = new Image();
       const helmetImg = new Image();
-      const beardImg = new Image();
 
       let bgReady = false;
-      let glassesReady = false;
       let helmetReady = false;
-      let beardReady = false;
 
       bgImage.src = "griffin-hall.jpg";
-      bgImage.onload = () => bgReady = true;
-
-      glassesImg.src = "glasses.png";
-      glassesImg.onload = () => glassesReady = true;
+      bgImage.onload = () => {
+        bgReady = true;
+        updateMetrics();
+      };
 
       helmetImg.src = "helmet.png";
-      helmetImg.onload = () => helmetReady = true;
-
-      beardImg.src = "beard.png";
-      beardImg.onload = () => beardReady = true;
-
-      function clamp(v, min, max) {
-        return Math.max(min, Math.min(max, v));
-      }
-
-      function lerp(current, target, alpha) {
-        return current + alpha * (target - current);
-      }
+      helmetImg.onload = () => {
+        helmetReady = true;
+        updateMetrics();
+      };
 
       function setStatus(message, mode = "idle") {
         statusText.textContent = message;
         statusDot.classList.remove("active", "error");
-        hudDot.classList.remove("live", "warn");
 
         if (mode === "active") {
           statusDot.classList.add("active");
-          hudDot.classList.add("live");
         } else if (mode === "error") {
           statusDot.classList.add("error");
-          hudDot.classList.add("warn");
         }
       }
 
-      function setBar(el, value, epic = false) {
-        const v = clamp(Math.round(value), 0, 100);
-        el.style.width = v + "%";
-        el.classList.remove("low", "med", "high", "epic");
-
-        if (epic) {
-          el.classList.add("epic");
-          return;
-        }
-        if (v < 35) {
-          el.classList.add("low");
-        } else if (v < 70) {
-          el.classList.add("med");
-        } else {
-          el.classList.add("high");
-        }
-      }
-
-      function updateUI() {
-        mouthScoreEl.textContent = Math.round(mouthScore);
-        motionScoreEl.textContent = Math.round(motionScore);
-        laughScoreEl.textContent = Math.round(laughScore);
-        progressScoreEl.textContent = String(squadCount);
-
-        setBar(mouthBar, mouthScore);
-        setBar(motionBar, motionScore);
-        setBar(laughBar, laughScore);
-        setBar(progressBar, clamp(squadCount * 33, 0, 100), true);
-
-        buzzLevel = clamp(Math.round((laughScore * 0.55) + (squadCount * 10) + (unlocked ? 20 : 0)), 0, 100);
-        legendText.textContent = "Buzz Level: " + buzzLevel;
-
-        if (unlocked) {
-          resultState.textContent = "Digital Viking unlocked";
-          resultState.classList.add("unlocked");
-          resultCopy.textContent =
-            "There it is. This is the money shot. The page stays clean, the person stays visible, and the payoff actually lands.";
-          hudText.textContent = isRecording ? "Recording the good part" : "Serving browser-built drama";
-        } else if (activeScene === "squad" && squadCount >= 2) {
-          resultState.textContent = "Squad mode is doing its thing";
-          resultState.classList.remove("unlocked");
-          resultCopy.textContent =
-            "Multiple faces detected. This is where the reaction shots get fun and the video starts to feel alive.";
-          hudText.textContent = "Squad energy detected";
-        } else if (laughHoldFrames > 0) {
-          resultState.textContent = "Ohhh it’s building...";
-          resultState.classList.remove("unlocked");
-          resultCopy.textContent =
-            "The system sees something. Keep going a little longer and let it earn the unlock.";
-          hudText.textContent = "Tracking the vibe";
-        } else {
-          resultState.textContent = "Waiting for the magic...";
-          resultState.classList.remove("unlocked");
-          resultCopy.textContent =
-            "Start the experience, step into frame, and let the browser do the flirting with the audience.";
-          hudText.textContent = aiRunning ? "AI is live" : "Awaiting camera";
-        }
-
-        captureBtn.disabled = !aiRunning;
-        recordBtn.disabled = !aiRunning || isRecording;
-        recordBtn.textContent = isRecording ? "⏺ Recording..." : "🎬 Record 7s Clip";
-      }
-
-      function setScene(scene) {
-        activeScene = scene;
-        sceneButtons.forEach((btn) => {
-          btn.classList.toggle("active", btn.dataset.scene === scene);
-        });
-
-        if (aiRunning) {
-          const map = {
-            scan: "Clean Scan selected. We’re keeping it polished.",
-            helmet: "Helmet Mode selected. Cute, funny, iconic.",
-            combo: "Combo Mode selected. A little more drama, as we deserve.",
-            squad: "Squad Mode selected. Bring your people."
-          };
-          setStatus(map[scene] || "Scene selected.", "active");
-        }
+      function updateMetrics() {
+        bgMetric.textContent = bgReady && aiRunning ? "On" : (bgReady ? "Ready" : "Loading");
+        faceMetric.textContent = latestFace ? "Detected" : (aiRunning ? "Searching" : "Idle");
+        helmetMetric.textContent =
+          (helmetReady && latestFace) ? "Active" :
+          (helmetReady ? "Ready" : "Loading");
       }
 
       async function getBestBackend() {
@@ -1142,27 +728,6 @@
             console.warn("Backend unavailable:", backend, error);
           }
         }
-      }
-
-      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
-        if (!img || !img.naturalWidth || !img.naturalHeight) return;
-
-        const imgRatio = img.naturalWidth / img.naturalHeight;
-        const targetRatio = targetW / targetH;
-
-        let drawW, drawH, drawX, drawY;
-        if (imgRatio > targetRatio) {
-          drawH = targetH;
-          drawW = drawH * imgRatio;
-          drawX = (targetW - drawW) / 2;
-          drawY = 0;
-        } else {
-          drawW = targetW;
-          drawH = drawW / imgRatio;
-          drawX = 0;
-          drawY = (targetH - drawH) / 2;
-        }
-        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
       }
 
       function resizeCanvases() {
@@ -1213,23 +778,38 @@
         });
       }
 
+      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const targetRatio = targetW / targetH;
+
+        let drawW, drawH, drawX, drawY;
+
+        if (imgRatio > targetRatio) {
+          drawH = targetH;
+          drawW = drawH * imgRatio;
+          drawX = (targetW - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = targetW;
+          drawH = drawW / imgRatio;
+          drawX = 0;
+          drawY = (targetH - drawH) / 2;
+        }
+
+        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
+      }
+
       function isValidPoint(pt) {
         return Array.isArray(pt) && pt.length >= 2 && Number.isFinite(pt[0]) && Number.isFinite(pt[1]);
       }
 
       function isValidBox(topLeft, bottomRight) {
-        return isValidPoint(topLeft) && isValidPoint(bottomRight) &&
-          (bottomRight[0] - topLeft[0] > 0) && (bottomRight[1] - topLeft[1] > 0);
-      }
-
-      function getFaceMetrics(topLeft, bottomRight) {
-        const [x1, y1] = topLeft;
-        const [x2, y2] = bottomRight;
-        const faceWidth = x2 - x1;
-        const faceHeight = y2 - y1;
-        const centerX = x1 + faceWidth / 2;
-        const centerY = y1 + faceHeight / 2;
-        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+        return isValidPoint(topLeft) &&
+          isValidPoint(bottomRight) &&
+          (bottomRight[0] - topLeft[0] > 0) &&
+          (bottomRight[1] - topLeft[1] > 0);
       }
 
       function smoothBox(oldBox, newBox, alpha) {
@@ -1248,8 +828,7 @@
           bottomRight: [
             ox2 + alpha * (nx2 - ox2),
             oy2 + alpha * (ny2 - oy2)
-          ],
-          landmarks: newBox.landmarks || []
+          ]
         };
       }
 
@@ -1265,114 +844,60 @@
       function mapVideoBoxToCanvas(face) {
         const tl = face.topLeft;
         const br = face.bottomRight;
-        const mappedTL = mapVideoPointToCanvas(br[0], tl[1]);
-        const mappedBR = mapVideoPointToCanvas(tl[0], br[1]);
 
         return {
-          topLeft: mappedTL,
-          bottomRight: mappedBR,
-          landmarks: Array.isArray(face.landmarks)
-            ? face.landmarks.map((pt) => mapVideoPointToCanvas(pt[0], pt[1]))
-            : []
+          topLeft: mapVideoPointToCanvas(br[0], tl[1]),
+          bottomRight: mapVideoPointToCanvas(tl[0], br[1])
         };
       }
 
-      function calculateSignals(face) {
-        if (!face || !Array.isArray(face.landmarks) || face.landmarks.length < 4) {
-          return { mouth: 0, motion: 0, laugh: 0 };
-        }
-
-        const topLeft = face.topLeft;
-        const bottomRight = face.bottomRight;
-        const rightEye = face.landmarks[0];
-        const leftEye = face.landmarks[1];
-        const mouth = face.landmarks[3];
-
-        if (!topLeft || !bottomRight || !rightEye || !leftEye || !mouth) {
-          return { mouth: 0, motion: 0, laugh: 0 };
-        }
-
+      function getFaceMetrics(topLeft, bottomRight) {
         const [x1, y1] = topLeft;
         const [x2, y2] = bottomRight;
         const faceWidth = x2 - x1;
         const faceHeight = y2 - y1;
+        const centerX = x1 + faceWidth / 2;
 
-        if (faceWidth <= 0 || faceHeight <= 0) {
-          return { mouth: 0, motion: 0, laugh: 0 };
-        }
-
-        const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
-        const mouthDrop = mouth[1] - eyeMidY;
-        const mouthDropNorm = mouthDrop / faceHeight;
-        const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
-
-        const faceCenterYNorm = ((y1 + y2) / 2) / (video.videoHeight || 540);
-        const mouthYNorm = mouth[1] / (video.videoHeight || 540);
-
-        let faceBounceScore = 0;
-        let mouthMovementScore = 0;
-
-        if (prevFaceCenterYNorm !== null) {
-          const faceDelta = Math.abs(faceCenterYNorm - prevFaceCenterYNorm);
-          faceBounceScore = clamp(faceDelta / 0.014, 0, 1) * 100;
-        }
-
-        if (prevMouthYNorm !== null) {
-          const mouthDelta = Math.abs(mouthYNorm - prevMouthYNorm);
-          mouthMovementScore = clamp(mouthDelta / 0.020, 0, 1) * 100;
-        }
-
-        prevFaceCenterYNorm = faceCenterYNorm;
-        prevMouthYNorm = mouthYNorm;
-
-        const motionRaw = clamp(mouthMovementScore * 0.68 + faceBounceScore * 0.32, 0, 100);
-        let laughRaw = mouthOpenRaw > 35
-          ? mouthOpenRaw * 0.56 + motionRaw * 0.44
-          : mouthOpenRaw * 0.74 + motionRaw * 0.16;
-
-        laughRaw = clamp(laughRaw, 0, 100);
-
-        return { mouth: mouthOpenRaw, motion: motionRaw, laugh: laughRaw };
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX };
       }
 
-      async function detectFacesStep() {
+      function drawHelmetOnFace(face) {
+        if (!helmetReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
+
+        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
+
+        const overlayWidth = faceWidth * 1.38;
+        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        const helmetCenterY = y1 + faceHeight * 0.06;
+
+        ctx.drawImage(
+          helmetImg,
+          centerX - overlayWidth / 2,
+          helmetCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      async function detectFaceStep() {
         if (!aiRunning || !videoReady || !faceModel) return;
 
         try {
-          const result = await faceModel.estimateFaces(video, false);
-          predictions = Array.isArray(result) ? result : [];
-          squadCount = predictions.length;
+          const predictions = await faceModel.estimateFaces(video, false);
 
-          if (predictions.length > 0) {
-            const mappedFaces = predictions.map(mapVideoBoxToCanvas);
-            latestPrimaryFace = mappedFaces[0];
-            lastFaceTime = performance.now();
-
-            const signals = calculateSignals(predictions[0]);
-            mouthScore = lerp(mouthScore, signals.mouth, SMOOTH_ALPHA);
-            motionScore = lerp(motionScore, signals.motion, SMOOTH_ALPHA);
-            laughScore = lerp(laughScore, signals.laugh, SMOOTH_ALPHA);
-
-            if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
-              laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
-            } else {
-              laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const mappedFace = mapVideoBoxToCanvas(predictions[0]);
+            if (isValidBox(mappedFace.topLeft, mappedFace.bottomRight)) {
+              latestFace = mappedFace;
+              lastFaceTime = performance.now();
             }
-
-            if (!unlocked && laughHoldFrames >= HOLD_REQUIRED) {
-              triggerUnlock();
-            }
-          } else {
-            latestPrimaryFace = null;
-            mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
-            motionScore = lerp(motionScore, 0, SMOOTH_ALPHA);
-            laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
-            laughHoldFrames = Math.max(0, laughHoldFrames - 1);
-            prevFaceCenterYNorm = null;
-            prevMouthYNorm = null;
+          } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
+            latestFace = null;
           }
 
-          updateUI();
+          updateMetrics();
         } catch (error) {
           console.error("Face detection error:", error);
         }
@@ -1393,7 +918,7 @@
         }
       }
 
-      function drawBaseComposite() {
+      function drawComposite() {
         const w = renderCanvas.width;
         const h = renderCanvas.height;
 
@@ -1439,391 +964,34 @@
           ctx.drawImage(video, 0, 0, w, h);
           ctx.restore();
         }
-
-        drawSoftLook();
-      }
-
-      function drawSoftLook() {
-        const w = renderCanvas.width;
-        const h = renderCanvas.height;
-
-        const glow = ctx.createRadialGradient(w * 0.5, h * 0.36, 20, w * 0.5, h * 0.36, Math.max(w, h) * 0.55);
-        glow.addColorStop(0, unlocked ? "rgba(247,183,24,0.16)" : "rgba(255,102,196,0.05)");
-        glow.addColorStop(0.45, unlocked ? "rgba(247,183,24,0.06)" : "rgba(96,165,250,0.04)");
-        glow.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = glow;
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.fillStyle = "rgba(255,255,255,0.018)";
-        ctx.fillRect(0, 0, w, h);
-      }
-
-      function drawSmallFaceRing(face) {
-        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const radius = Math.max(faceWidth, faceHeight) * 0.60;
-
-        ctx.save();
-        ctx.strokeStyle = "rgba(255,255,255,0.34)";
-        ctx.lineWidth = Math.max(1.5, renderCanvas.width * 0.0016);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function drawGlowAroundFace(face) {
-        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const rx = faceWidth * 0.88;
-        const ry = faceHeight * 1.04;
-
-        ctx.save();
-        const gradient = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.max(rx, ry));
-        gradient.addColorStop(0, unlocked ? "rgba(247,183,24,0.12)" : "rgba(255,255,255,0.06)");
-        gradient.addColorStop(0.55, unlocked ? "rgba(247,183,24,0.06)" : "rgba(255,255,255,0.02)");
-        gradient.addColorStop(1, "rgba(247,183,24,0)");
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      function drawGlassesOnFace(face) {
-        if (!glassesReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.08;
-        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-        const eyeLineY = y1 + faceHeight * 0.43;
-
-        ctx.drawImage(
-          glassesImg,
-          centerX - overlayWidth / 2,
-          eyeLineY - overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-      }
-
-      function drawHelmetOnFace(face) {
-        if (!helmetReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.36;
-        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-        const helmetCenterY = y1 + faceHeight * 0.05;
-
-        ctx.drawImage(
-          helmetImg,
-          centerX - overlayWidth / 2,
-          helmetCenterY - overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-      }
-
-      function drawBeardOnFace(face) {
-        if (!beardReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.34;
-        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-        const overlayCenterY = centerY - faceHeight * 0.02;
-
-        ctx.drawImage(
-          beardImg,
-          centerX - overlayWidth / 2,
-          overlayCenterY - overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-      }
-
-      function drawSquadIndicators(faces) {
-        if (!faces.length) return;
-
-        ctx.save();
-        ctx.strokeStyle = "rgba(255,102,196,0.48)";
-        ctx.lineWidth = Math.max(1.5, renderCanvas.width * 0.0018);
-
-        faces.forEach((face) => {
-          if (!isValidBox(face.topLeft, face.bottomRight)) return;
-          const { x1, y1, faceWidth, faceHeight } = getFaceMetrics(face.topLeft, face.bottomRight);
-          const pad = faceWidth * 0.05;
-          const rx = x1 - pad;
-          const ry = y1 - pad;
-          const rw = faceWidth + pad * 2;
-          const rh = faceHeight + pad * 2;
-
-          roundRectCanvas(ctx, rx, ry, rw, rh, Math.max(10, faceWidth * 0.10));
-          ctx.stroke();
-        });
-
-        ctx.restore();
-
-        ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.font = `800 ${Math.max(16, renderCanvas.width * 0.018)}px Inter, sans-serif`;
-        ctx.fillText(`squad x${faces.length}`, 22, renderCanvas.height - 22);
-        ctx.restore();
-      }
-
-      function roundRectCanvas(context, x, y, width, height, radius) {
-        context.beginPath();
-        context.moveTo(x + radius, y);
-        context.arcTo(x + width, y, x + width, y + height, radius);
-        context.arcTo(x + width, y + height, x, y + height, radius);
-        context.arcTo(x, y + height, x, y, radius);
-        context.arcTo(x, y, x + width, y, radius);
-        context.closePath();
-      }
-
-      function drawMinimalBrandText() {
-        const w = renderCanvas.width;
-        const h = renderCanvas.height;
-
-        ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.font = `800 ${Math.max(18, w * 0.022)}px Inter, sans-serif`;
-        ctx.fillText("Making Digital Vikings", 24, h - 54);
-
-        ctx.fillStyle = "rgba(255,255,255,0.72)";
-        ctx.font = `700 ${Math.max(11, w * 0.012)}px Inter, sans-serif`;
-
-        let sub = "browser-built AI + AR";
-        if (activeScene === "helmet") sub = "helmet mode";
-        if (activeScene === "combo") sub = "combo mode";
-        if (activeScene === "squad") sub = "squad mode";
-        if (unlocked) sub = "digital viking unlocked";
-
-        ctx.fillText(sub, 24, h - 28);
-        ctx.restore();
-      }
-
-      function burstParticles(count = 10) {
-        if (prefersReducedMotion) return;
-
-        particles.innerHTML = "";
-        for (let i = 0; i < count; i++) {
-          const p = document.createElement("span");
-          p.className = "particle";
-
-          const centerX = 50 + (Math.random() * 10 - 5);
-          const centerY = 52 + (Math.random() * 8 - 4);
-          const dx = (Math.random() * 160 - 80).toFixed(0) + "px";
-          const dy = (Math.random() * 120 - 90).toFixed(0) + "px";
-          const rot = (Math.random() * 320 - 160).toFixed(0) + "deg";
-
-          p.style.left = centerX + "%";
-          p.style.top = centerY + "%";
-          p.style.setProperty("--dx", dx);
-          p.style.setProperty("--dy", dy);
-          p.style.setProperty("--rot", rot);
-
-          particles.appendChild(p);
-          requestAnimationFrame(() => p.classList.add("burst"));
-        }
-      }
-
-      function speakUnlock() {
-        if (!("speechSynthesis" in window)) return;
-        try {
-          const utterance = new SpeechSynthesisUtterance("Digital Viking unlocked");
-          utterance.rate = 0.98;
-          utterance.pitch = 1.02;
-          utterance.volume = 0.9;
-          speechSynthesis.cancel();
-          speechSynthesis.speak(utterance);
-        } catch (error) {
-          console.warn("Speech synthesis unavailable:", error);
-        }
-      }
-
-      function playUnlockTone() {
-        try {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContextClass) return;
-
-          const audioCtx = new AudioContextClass();
-          const now = audioCtx.currentTime;
-          const notes = [262, 392, 523];
-
-          notes.forEach((freq, index) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = "triangle";
-            osc.frequency.value = freq;
-
-            gain.gain.setValueAtTime(0.0001, now);
-            gain.gain.exponentialRampToValueAtTime(0.045, now + 0.03 + index * 0.04);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22 + index * 0.05);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start(now + index * 0.04);
-            osc.stop(now + 0.30 + index * 0.05);
-          });
-        } catch (error) {
-          console.warn("Audio unavailable:", error);
-        }
-      }
-
-      function triggerUnlock() {
-        unlocked = true;
-        updateUI();
-
-        flashLayer.classList.remove("boom");
-        void flashLayer.offsetWidth;
-        flashLayer.classList.add("boom");
-
-        unlockToast.classList.add("show");
-        burstParticles(10);
-        speakUnlock();
-        playUnlockTone();
-
-        setStatus("Okayyyy. That one ate. Digital Viking unlocked.", "active");
-
-        setTimeout(() => {
-          unlockToast.classList.remove("show");
-        }, 1600);
-
-        if (!autoRecordedAfterUnlock) {
-          autoRecordedAfterUnlock = true;
-          setTimeout(() => {
-            if (aiRunning && !isRecording) {
-              startClipRecording(7000);
-            }
-          }, 500);
-        }
       }
 
       function renderFrame() {
         if (!aiRunning || !videoReady) return;
 
-        drawBaseComposite();
+        drawComposite();
 
-        let primaryFace = null;
+        let faceToUse = null;
         const now = performance.now();
 
-        if (latestPrimaryFace) {
-          smoothedPrimaryFace = smoothBox(smoothedPrimaryFace, latestPrimaryFace, SMOOTH_ALPHA);
-          primaryFace = smoothedPrimaryFace;
-        } else if (smoothedPrimaryFace && now - lastFaceTime < FACE_HOLD_MS) {
-          primaryFace = smoothedPrimaryFace;
+        if (latestFace) {
+          smoothedFace = smoothBox(smoothedFace, latestFace, SMOOTH_ALPHA);
+          faceToUse = smoothedFace;
+        } else if (smoothedFace && now - lastFaceTime < FACE_HOLD_MS) {
+          faceToUse = smoothedFace;
         } else {
-          smoothedPrimaryFace = null;
+          smoothedFace = null;
         }
 
-        const mappedFaces = predictions.map(mapVideoBoxToCanvas);
-
-        if (primaryFace && isValidBox(primaryFace.topLeft, primaryFace.bottomRight)) {
-          drawGlowAroundFace(primaryFace);
-
-          if (activeScene === "scan") {
-            drawSmallFaceRing(primaryFace);
-            drawGlassesOnFace(primaryFace);
-          } else if (activeScene === "helmet") {
-            drawHelmetOnFace(primaryFace);
-          } else if (activeScene === "combo") {
-            drawBeardOnFace(primaryFace);
-          } else if (activeScene === "squad") {
-            if (mappedFaces.length >= 2) {
-              drawSquadIndicators(mappedFaces);
-            } else {
-              drawHelmetOnFace(primaryFace);
-            }
-          }
-
-          if (unlocked && activeScene !== "combo") {
-            drawHelmetOnFace(primaryFace);
-          }
+        if (faceToUse && isValidBox(faceToUse.topLeft, faceToUse.bottomRight)) {
+          drawHelmetOnFace(faceToUse);
+          setStatus("AI is live. Griffin Hall and helmet are active.", "active");
+        } else {
+          setStatus("AI is live. Step into frame to place the helmet.", "active");
         }
 
-        if (activeScene === "squad" && mappedFaces.length >= 2) {
-          drawSquadIndicators(mappedFaces);
-        }
-
-        drawMinimalBrandText();
-
-        if (!primaryFace && aiRunning) {
-          setStatus("AI is running. Step into frame, gorgeous.", "active");
-        } else if (!unlocked && activeScene === "squad" && squadCount >= 2) {
-          setStatus("Squad detected. Love that for us.", "active");
-        } else if (!unlocked) {
-          setStatus("AI is running. Give me a real laugh or playful moment...", "active");
-        }
-
+        updateMetrics();
         renderLoopId = requestAnimationFrame(renderFrame);
-      }
-
-      async function startClipRecording(durationMs = 7000) {
-        if (isRecording) return;
-        try {
-          if (!renderCanvas.captureStream) {
-            setStatus("Clip recording is not supported in this browser.", "error");
-            return;
-          }
-
-          const stream = renderCanvas.captureStream(30);
-          recordedChunks = [];
-          currentClipBlob = null;
-
-          let mimeType = "";
-          if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
-            mimeType = "video/webm;codecs=vp9";
-          } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
-            mimeType = "video/webm;codecs=vp8";
-          } else if (MediaRecorder.isTypeSupported("video/webm")) {
-            mimeType = "video/webm";
-          }
-
-          mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-
-          mediaRecorder.ondataavailable = (event) => {
-            if (event.data && event.data.size > 0) {
-              recordedChunks.push(event.data);
-            }
-          };
-
-          mediaRecorder.onstop = () => {
-            isRecording = false;
-            updateUI();
-
-            if (recordedChunks.length) {
-              currentClipBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "video/webm" });
-              const url = URL.createObjectURL(currentClipBlob);
-              recordedClip.src = url;
-              clipArea.classList.add("show");
-              setStatus("Clip recorded. The browser understood the assignment.", "active");
-            }
-          };
-
-          isRecording = true;
-          updateUI();
-          setStatus("Recording the good part...", "active");
-          mediaRecorder.start();
-
-          clearTimeout(clipStopTimeout);
-          clipStopTimeout = setTimeout(() => {
-            if (mediaRecorder && mediaRecorder.state !== "inactive") {
-              mediaRecorder.stop();
-            }
-          }, durationMs);
-        } catch (error) {
-          console.error("Recording error:", error);
-          isRecording = false;
-          updateUI();
-          setStatus("Could not start clip recording on this device.", "error");
-        }
       }
 
       function drawSnapshotCard() {
@@ -1833,14 +1001,14 @@
         snapshotCtx.clearRect(0, 0, w, h);
 
         const bg = snapshotCtx.createLinearGradient(0, 0, 0, h);
-        bg.addColorStop(0, "#0f172a");
-        bg.addColorStop(1, "#111827");
+        bg.addColorStop(0, "#111111");
+        bg.addColorStop(1, "#1a1a1a");
         snapshotCtx.fillStyle = bg;
         snapshotCtx.fillRect(0, 0, w, h);
 
-        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.30, 20, w * 0.5, h * 0.30, 420);
-        glow.addColorStop(0, "rgba(255,102,196,0.22)");
-        glow.addColorStop(0.35, "rgba(247,183,24,0.18)");
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.22, 20, w * 0.5, h * 0.22, 420);
+        glow.addColorStop(0, "rgba(247,183,24,0.22)");
+        glow.addColorStop(0.45, "rgba(247,183,24,0.10)");
         glow.addColorStop(1, "rgba(247,183,24,0)");
         snapshotCtx.fillStyle = glow;
         snapshotCtx.fillRect(0, 0, w, h);
@@ -1851,51 +1019,44 @@
         const frameH = 720;
         const radius = 34;
 
-        roundRectSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        roundRect(snapshotCtx, frameX, frameY, frameW, frameH, radius);
         snapshotCtx.save();
         snapshotCtx.clip();
         snapshotCtx.drawImage(renderCanvas, frameX, frameY, frameW, frameH);
         snapshotCtx.restore();
 
-        const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
-        overlayGrad.addColorStop(0, "rgba(255,255,255,0.02)");
-        overlayGrad.addColorStop(1, "rgba(247,183,24,0.08)");
-        snapshotCtx.fillStyle = overlayGrad;
-        roundRectFillSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
-
         snapshotCtx.lineWidth = 3;
-        snapshotCtx.strokeStyle = "rgba(255,255,255,0.24)";
-        roundRectStrokeSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
+        roundRectStroke(snapshotCtx, frameX, frameY, frameW, frameH, radius);
 
-        snapshotCtx.fillStyle = "#ffb4df";
+        snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("THE BRANDI EFFECT", 90, 80);
+        snapshotCtx.fillText("NORTHERN KENTUCKY UNIVERSITY", 90, 78);
 
         snapshotCtx.fillStyle = "#ffffff";
-        snapshotCtx.font = "900 80px Inter, sans-serif";
-        snapshotCtx.fillText("Making", 90, 1110);
-        snapshotCtx.fillText("Digital Vikings", 90, 1195);
+        snapshotCtx.font = "900 76px Inter, sans-serif";
+        snapshotCtx.fillText("DIGITAL VIKING", 90, 1115);
 
         snapshotCtx.fillStyle = "#f7b718";
         snapshotCtx.font = "800 34px Inter, sans-serif";
-        snapshotCtx.fillText("AI + AR, but make it iconic.", 90, 1260);
+        snapshotCtx.fillText("Griffin Hall Edition", 90, 1170);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
-        roundRectFillSnapshot(snapshotCtx, 90, 1288, w - 180, 92, 24);
+        roundRectFill(snapshotCtx, 90, 1278, w - 180, 92, 24);
 
         snapshotCtx.fillStyle = "#ffffff";
         snapshotCtx.font = "800 28px Inter, sans-serif";
-        snapshotCtx.fillText("Buzz Level: " + buzzLevel, 126, 1346);
+        snapshotCtx.fillText("Background: Griffin Hall", 126, 1336);
 
         snapshotCtx.fillStyle = "#fde68a";
         snapshotCtx.font = "800 28px Inter, sans-serif";
-        snapshotCtx.fillText(`Scene: ${activeScene.toUpperCase()}  ·  Faces: ${squadCount}`, 620, 1346);
+        snapshotCtx.fillText("Helmet: Active", 700, 1336);
 
         snapshotArea.classList.add("show");
-        setStatus("Share card captured. Cute.", "active");
+        setStatus("Image captured.", "active");
       }
 
-      function roundRectSnapshot(context, x, y, width, height, radius) {
+      function roundRect(context, x, y, width, height, radius) {
         context.beginPath();
         context.moveTo(x + radius, y);
         context.arcTo(x + width, y, x + width, y + height, radius);
@@ -1905,53 +1066,21 @@
         context.closePath();
       }
 
-      function roundRectFillSnapshot(context, x, y, width, height, radius) {
-        roundRectSnapshot(context, x, y, width, height, radius);
+      function roundRectFill(context, x, y, width, height, radius) {
+        roundRect(context, x, y, width, height, radius);
         context.fill();
       }
 
-      function roundRectStrokeSnapshot(context, x, y, width, height, radius) {
-        roundRectSnapshot(context, x, y, width, height, radius);
+      function roundRectStroke(context, x, y, width, height, radius) {
+        roundRect(context, x, y, width, height, radius);
         context.stroke();
       }
 
       function downloadSnapshot() {
         const link = document.createElement("a");
-        link.download = "the-brandi-effect-share-card.png";
+        link.download = "nku-digital-viking.png";
         link.href = snapshotCanvas.toDataURL("image/png");
         link.click();
-      }
-
-      function downloadClip() {
-        if (!currentClipBlob) return;
-        const link = document.createElement("a");
-        link.download = "the-brandi-effect-clip.webm";
-        link.href = URL.createObjectURL(currentClipBlob);
-        link.click();
-      }
-
-      function resetState() {
-        predictions = [];
-        segmentation = null;
-        latestPrimaryFace = null;
-        smoothedPrimaryFace = null;
-        lastFaceTime = 0;
-
-        mouthScore = 0;
-        motionScore = 0;
-        laughScore = 0;
-        squadCount = 0;
-        buzzLevel = 0;
-
-        prevFaceCenterYNorm = null;
-        prevMouthYNorm = null;
-
-        laughHoldFrames = 0;
-        unlocked = false;
-        autoRecordedAfterUnlock = false;
-
-        unlockToast.classList.remove("show");
-        particles.innerHTML = "";
       }
 
       function stopExperience(showMessage = true) {
@@ -1960,18 +1089,11 @@
         if (renderLoopId) cancelAnimationFrame(renderLoopId);
         renderLoopId = null;
 
-        if (detectTimer) clearInterval(detectTimer);
-        detectTimer = null;
+        if (faceDetectTimer) clearInterval(faceDetectTimer);
+        faceDetectTimer = null;
 
         if (segmentTimer) clearInterval(segmentTimer);
         segmentTimer = null;
-
-        clearTimeout(clipStopTimeout);
-
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-          mediaRecorder.stop();
-        }
-        isRecording = false;
 
         if (mediaStream) {
           mediaStream.getTracks().forEach((track) => track.stop());
@@ -1980,20 +1102,21 @@
 
         video.srcObject = null;
         videoReady = false;
+        segmentation = null;
+        latestFace = null;
+        smoothedFace = null;
+
         videoSkeleton.style.display = "block";
-
-        resetState();
-        updateUI();
-
         ctx.clearRect(0, 0, renderCanvas.width, renderCanvas.height);
 
         startBtn.disabled = false;
         stopBtn.disabled = true;
         captureBtn.disabled = true;
-        recordBtn.disabled = true;
+
+        updateMetrics();
 
         if (showMessage) {
-          setStatus("Camera is off. Come back when you’re ready to be impressive.", "idle");
+          setStatus("Camera is off.", "idle");
         }
       }
 
@@ -2002,7 +1125,6 @@
           startBtn.disabled = true;
           stopBtn.disabled = true;
           captureBtn.disabled = true;
-          recordBtn.disabled = true;
           snapshotArea.classList.remove("show");
 
           setStatus("Requesting camera access...", "idle");
@@ -2013,6 +1135,7 @@
           await getBestBackend();
 
           faceModel = await blazeface.load();
+
           try {
             bodyPixModel = await bodyPix.load({
               architecture: "MobileNetV1",
@@ -2025,28 +1148,25 @@
             bodyPixModel = null;
           }
 
-          resetState();
-
           aiRunning = true;
           stopBtn.disabled = false;
           captureBtn.disabled = false;
-          recordBtn.disabled = false;
 
-          detectTimer = setInterval(detectFacesStep, FACE_DETECT_MS);
+          faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
           segmentTimer = setInterval(segmentStep, SEGMENT_MS);
 
-          await detectFacesStep();
+          await detectFaceStep();
           await segmentStep();
 
-          setStatus("AI is ready. Let’s make this look expensive.", "active");
-          updateUI();
+          setStatus("AI is ready. Griffin Hall and helmet placement are active.", "active");
+          updateMetrics();
           renderLoopId = requestAnimationFrame(renderFrame);
         } catch (error) {
           console.error("Initialization error:", error);
           startBtn.disabled = false;
           stopBtn.disabled = true;
           captureBtn.disabled = true;
-          recordBtn.disabled = true;
+
           setStatus(
             "Could not start the camera or AI model. Check camera permissions, use HTTPS, and try a recent browser.",
             "error"
@@ -2054,16 +1174,10 @@
         }
       }
 
-      sceneButtons.forEach((button) => {
-        button.addEventListener("click", () => setScene(button.dataset.scene));
-      });
-
       startBtn.addEventListener("click", startExperience);
       stopBtn.addEventListener("click", () => stopExperience(true));
       captureBtn.addEventListener("click", drawSnapshotCard);
-      recordBtn.addEventListener("click", () => startClipRecording(7000));
       downloadSnapshotBtn.addEventListener("click", downloadSnapshot);
-      downloadClipBtn.addEventListener("click", downloadClip);
 
       window.addEventListener("resize", () => {
         if (videoReady) {
@@ -2081,8 +1195,7 @@
         stopExperience(false);
       });
 
-      updateUI();
-      setScene("scan");
+      updateMetrics();
     })();
   </script>
 </body>

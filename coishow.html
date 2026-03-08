@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Making Digital Vikings — AI + AR Showcase</title>
+  <title>The Brandi Effect — Making Digital Vikings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="A browser-based AI + AR Digital Viking experience with Griffin Hall background replacement, face overlays, laugh-to-unlock, squad mode, snapshot capture, and short clip recording."
+    content="A polished browser-based AI + AR Digital Viking experience with Griffin Hall background replacement, clean overlays, laugh-to-unlock, squad mode, and built-in capture tools."
   />
   <meta name="theme-color" content="#0b1220" />
 
@@ -24,18 +24,19 @@
     :root {
       --bg: #08111f;
       --bg2: #0b1220;
-      --panel: rgba(255,255,255,0.08);
-      --panel-2: rgba(255,255,255,0.12);
+      --panel: rgba(255,255,255,0.07);
+      --panel-2: rgba(255,255,255,0.10);
       --border: rgba(255,255,255,0.12);
       --text: #f8fafc;
       --muted: #cbd5e1;
       --gold: #f7b718;
       --gold-soft: #fde68a;
+      --pink: #ff66c4;
+      --navy: #3a3b78;
       --green: #22c55e;
       --red: #f87171;
       --blue: #60a5fa;
-      --purple: #8b5cf6;
-      --shadow: 0 24px 80px rgba(0,0,0,0.35);
+      --shadow: 0 24px 80px rgba(0,0,0,0.34);
       --ring: 0 0 0 4px rgba(247,183,24,0.18);
       color-scheme: dark;
     }
@@ -48,8 +49,8 @@
       margin: 0;
       min-height: 100%;
       background:
-        radial-gradient(circle at top left, rgba(96,165,250,0.14), transparent 22%),
-        radial-gradient(circle at top right, rgba(139,92,246,0.14), transparent 20%),
+        radial-gradient(circle at top left, rgba(255,102,196,0.12), transparent 22%),
+        radial-gradient(circle at top right, rgba(96,165,250,0.12), transparent 20%),
         radial-gradient(circle at bottom center, rgba(247,183,24,0.10), transparent 24%),
         linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
       color: var(--text);
@@ -59,7 +60,7 @@
     }
 
     body {
-      padding: 14px;
+      padding: 12px;
     }
 
     .shell {
@@ -95,24 +96,25 @@
       gap: 8px;
       padding: 7px 12px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(135deg, var(--pink) 0%, var(--navy) 100%);
+      border: 1px solid rgba(255,255,255,0.12);
       color: white;
-      font-size: 0.76rem;
-      font-weight: 800;
+      font-size: 0.74rem;
+      font-weight: 900;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      box-shadow: 0 8px 26px rgba(255,102,196,0.18);
     }
 
     .top-note {
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.9rem;
     }
 
     .hero {
       border: 1px solid var(--border);
-      border-radius: 28px;
-      background: rgba(255,255,255,0.06);
+      border-radius: 26px;
+      background: rgba(255,255,255,0.05);
       backdrop-filter: blur(18px);
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -122,29 +124,34 @@
       color: var(--gold-soft);
       text-transform: uppercase;
       letter-spacing: 0.16em;
-      font-size: 0.76rem;
-      font-weight: 800;
+      font-size: 0.74rem;
+      font-weight: 900;
       margin-bottom: 10px;
     }
 
     .hero-title {
-      font-size: clamp(2rem, 4vw, 3.6rem);
+      font-size: clamp(2rem, 4vw, 3.5rem);
       line-height: 0.96;
       letter-spacing: -0.05em;
-      font-weight: 900;
+      font-weight: 950;
       margin: 0 0 14px;
     }
 
     .hero-title .gold {
       color: var(--gold);
-      text-shadow: 0 0 26px rgba(247,183,24,0.18);
+      text-shadow: 0 0 24px rgba(247,183,24,0.18);
+    }
+
+    .hero-title .pink {
+      color: var(--pink);
+      text-shadow: 0 0 24px rgba(255,102,196,0.14);
     }
 
     .hero-lead {
       color: #dbe7f5;
-      font-size: 1rem;
+      font-size: 0.98rem;
       line-height: 1.72;
-      max-width: 60ch;
+      max-width: 62ch;
       margin-bottom: 18px;
     }
 
@@ -161,26 +168,29 @@
       gap: 8px;
       border-radius: 999px;
       padding: 8px 12px;
-      font-size: 0.82rem;
+      font-size: 0.81rem;
       font-weight: 700;
       color: #f8fafc;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.10);
     }
 
-    .info-card, .result-card, .scene-panel, .preview-card {
-      border-radius: 20px;
+    .panel,
+    .result-card,
+    .preview-card {
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.06);
       padding: 14px 15px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    .info-card {
+    .panel {
       margin-bottom: 12px;
     }
 
-    .info-title, .panel-title, .preview-title {
+    .panel-title,
+    .preview-title {
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
@@ -189,15 +199,15 @@
       margin-bottom: 6px;
     }
 
-    .info-body {
+    .panel-body {
       margin: 0;
       color: #dbe7f5;
       font-size: 0.92rem;
-      line-height: 1.65;
+      line-height: 1.62;
     }
 
     .result-card {
-      margin-top: 16px;
+      margin-top: 14px;
       border-color: rgba(247,183,24,0.16);
       background: linear-gradient(180deg, rgba(247,183,24,0.10) 0%, rgba(255,255,255,0.05) 100%);
     }
@@ -206,33 +216,33 @@
       color: #fde68a;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      font-size: 0.76rem;
-      font-weight: 800;
+      font-size: 0.74rem;
+      font-weight: 900;
       margin-bottom: 6px;
     }
 
     .result-state {
-      font-size: clamp(1.55rem, 2.7vw, 2.35rem);
+      font-size: clamp(1.45rem, 2.5vw, 2.2rem);
       line-height: 1;
       letter-spacing: -0.04em;
-      font-weight: 900;
+      font-weight: 950;
       margin-bottom: 8px;
     }
 
     .result-state.unlocked {
       color: var(--gold);
-      text-shadow: 0 0 24px rgba(247,183,24,0.22);
+      text-shadow: 0 0 22px rgba(247,183,24,0.20);
     }
 
     .result-copy {
       color: #dbe7f5;
-      font-size: 0.94rem;
-      line-height: 1.6;
+      font-size: 0.93rem;
+      line-height: 1.58;
       margin: 0;
     }
 
     .stage-card {
-      border-radius: 24px;
+      border-radius: 22px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.06);
       padding: 14px;
@@ -245,14 +255,14 @@
       min-height: 420px;
       height: min(72svh, 820px);
       overflow: hidden;
-      border-radius: 22px;
+      border-radius: 20px;
       border: 1px solid rgba(255,255,255,0.12);
       background:
-        radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        radial-gradient(circle at center, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
         linear-gradient(180deg, #111827 0%, #0b1220 100%);
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.08),
-        0 18px 50px rgba(0,0,0,0.25);
+        0 18px 50px rgba(0,0,0,0.24);
       isolation: isolate;
     }
 
@@ -271,7 +281,6 @@
       height: 100%;
       display: block;
       z-index: 1;
-      object-fit: cover;
     }
 
     .video-skeleton {
@@ -305,43 +314,22 @@
     .gradient-top {
       position: absolute;
       inset: 0 0 auto 0;
-      height: 28%;
-      background: linear-gradient(180deg, rgba(7,17,31,0.54), rgba(7,17,31,0));
+      height: 20%;
+      background: linear-gradient(180deg, rgba(7,17,31,0.36), rgba(7,17,31,0));
     }
 
     .gradient-bottom {
       position: absolute;
       inset: auto 0 0 0;
-      height: 34%;
-      background: linear-gradient(0deg, rgba(7,17,31,0.62), rgba(7,17,31,0));
-    }
-
-    .scanline {
-      position: absolute;
-      inset: 0;
-      background:
-        repeating-linear-gradient(
-          to bottom,
-          rgba(255,255,255,0.03) 0px,
-          rgba(255,255,255,0.03) 1px,
-          transparent 2px,
-          transparent 4px
-        );
-      mix-blend-mode: screen;
-      opacity: 0.16;
-    }
-
-    .vignette {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.55) 100%);
+      height: 20%;
+      background: linear-gradient(0deg, rgba(7,17,31,0.36), rgba(7,17,31,0));
     }
 
     .hud-top {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 14px;
+      top: 12px;
+      left: 12px;
+      right: 12px;
       display: flex;
       justify-content: space-between;
       gap: 10px;
@@ -352,23 +340,23 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 8px 11px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.68);
-      border: 1px solid rgba(255,255,255,0.14);
-      backdrop-filter: blur(12px);
+      background: rgba(15,23,42,0.62);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
       color: #fff;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 800;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.16);
     }
 
     .hud-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 999px;
       background: #94a3b8;
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
     }
 
     .hud-dot.live {
@@ -379,181 +367,48 @@
       background: var(--gold);
     }
 
-    .center-ui {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-    }
-
-    .rune-ring {
-      position: absolute;
-      width: min(62vw, 390px);
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      border: 2px solid rgba(247,183,24,0.18);
-      box-shadow: 0 0 30px rgba(247,183,24,0.18), inset 0 0 22px rgba(247,183,24,0.12);
-      opacity: 0;
-      transform: scale(0.86) rotate(0deg);
-      transition: opacity 0.35s ease;
-    }
-
-    .rune-ring::before,
-    .rune-ring::after {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border-radius: 50%;
-      border: 1px dashed rgba(247,183,24,0.24);
-    }
-
-    .rune-ring::after {
-      inset: 40px;
-      border-style: solid;
-      border-color: rgba(255,255,255,0.10);
-    }
-
-    .rune-ring.active {
-      opacity: 1;
-      animation: spinRing 18s linear infinite;
-    }
-
-    @keyframes spinRing {
-      from { transform: scale(1) rotate(0deg); }
-      to { transform: scale(1) rotate(360deg); }
-    }
-
-    .viking-badge {
-      position: absolute;
-      display: grid;
-      place-items: center;
-      width: min(28vw, 180px);
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.30), transparent 35%),
-        radial-gradient(circle at center, rgba(247,183,24,0.22), rgba(247,183,24,0.08) 45%, rgba(255,255,255,0.04) 70%);
-      border: 1px solid rgba(247,183,24,0.30);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 40px rgba(247,183,24,0.22), inset 0 0 22px rgba(255,255,255,0.10);
-      opacity: 0;
-      transform: scale(0.72);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .viking-badge.active {
-      opacity: 1;
-      transform: scale(1);
-      animation: badgePulse 2s ease-in-out infinite;
-    }
-
-    @keyframes badgePulse {
-      0%, 100% {
-        box-shadow: 0 0 36px rgba(247,183,24,0.22), inset 0 0 22px rgba(255,255,255,0.10);
-      }
-      50% {
-        box-shadow: 0 0 56px rgba(247,183,24,0.34), 0 0 100px rgba(247,183,24,0.12), inset 0 0 22px rgba(255,255,255,0.12);
-      }
-    }
-
-    .helmet-emoji {
-      font-size: clamp(3.5rem, 8vw, 6rem);
-      line-height: 1;
-      filter: drop-shadow(0 10px 22px rgba(0,0,0,0.35));
-    }
-
-    .unlock-title {
+    .unlock-toast {
       position: absolute;
       left: 50%;
-      bottom: 8%;
-      transform: translateX(-50%) translateY(16px);
-      min-width: min(90%, 760px);
+      bottom: 18px;
+      transform: translateX(-50%) translateY(14px);
+      min-width: min(92%, 640px);
       text-align: center;
-      padding: 16px 18px;
-      border-radius: 24px;
-      background: linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(15,23,42,0.62) 100%);
-      backdrop-filter: blur(14px);
+      padding: 12px 16px;
+      border-radius: 18px;
+      background: rgba(15,23,42,0.72);
       border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 16px 44px rgba(0,0,0,0.28);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
       opacity: 0;
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    .unlock-title.active {
+    .unlock-toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
 
-    .unlock-kicker {
+    .unlock-toast-kicker {
       color: #fde68a;
       text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 0.76rem;
+      letter-spacing: 0.16em;
+      font-size: 0.68rem;
       font-weight: 900;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    .unlock-main {
-      font-size: clamp(1.45rem, 4vw, 2.8rem);
-      line-height: 0.98;
-      font-weight: 1000;
-      letter-spacing: -0.05em;
+    .unlock-toast-main {
+      font-size: clamp(1rem, 2.2vw, 1.45rem);
+      line-height: 1.02;
+      font-weight: 950;
+      letter-spacing: -0.03em;
       margin: 0;
       color: #fff;
-      text-shadow: 0 0 26px rgba(247,183,24,0.16);
     }
 
-    .unlock-main .gold {
+    .unlock-toast-main .gold {
       color: var(--gold);
-    }
-
-    .unlock-sub {
-      margin-top: 8px;
-      color: #dbe7f5;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .challenge-tag {
-      position: absolute;
-      right: 14px;
-      bottom: 14px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.72);
-      border: 1px solid rgba(255,255,255,0.14);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      font-size: 0.74rem;
-      font-weight: 800;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-    }
-
-    .particles {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .particle {
-      position: absolute;
-      width: 10px;
-      height: 18px;
-      border-radius: 999px;
-      opacity: 0;
-      background: linear-gradient(180deg, #fff2b1 0%, #f7b718 100%);
-      box-shadow: 0 0 12px rgba(247,183,24,0.25);
-    }
-
-    .particle.burst {
-      animation: burst 1200ms ease-out forwards;
-    }
-
-    @keyframes burst {
-      0% { opacity: 0; transform: translate(0,0) scale(0.7) rotate(0deg); }
-      10% { opacity: 1; }
-      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot)); }
     }
 
     .status-row {
@@ -594,16 +449,16 @@
 
     .status-text {
       color: #f8fafc;
-      font-size: 0.94rem;
+      font-size: 0.93rem;
       font-weight: 700;
       line-height: 1.5;
     }
 
     .status-note {
       color: var(--muted);
-      font-size: 0.84rem;
-      max-width: 460px;
-      line-height: 1.6;
+      font-size: 0.83rem;
+      max-width: 420px;
+      line-height: 1.58;
     }
 
     .controls,
@@ -614,7 +469,7 @@
     }
 
     .scene-buttons {
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .btn-pill {
@@ -638,7 +493,7 @@
     }
 
     .btn-start {
-      background: linear-gradient(135deg, #f7b718 0%, #eab308 100%);
+      background: linear-gradient(135deg, var(--gold) 0%, #eab308 100%);
       color: #111827;
       box-shadow: 0 12px 28px rgba(247,183,24,0.22);
     }
@@ -656,9 +511,9 @@
     }
 
     .btn-record {
-      background: rgba(139,92,246,0.16);
-      color: #f5e8ff;
-      border-color: rgba(139,92,246,0.24);
+      background: rgba(255,102,196,0.16);
+      color: #ffe5f4;
+      border-color: rgba(255,102,196,0.20);
     }
 
     .btn-scene {
@@ -669,10 +524,10 @@
     }
 
     .btn-scene.active {
-      background: rgba(247,183,24,0.16);
-      color: #fff7d6;
-      border-color: rgba(247,183,24,0.32);
-      box-shadow: 0 0 0 3px rgba(247,183,24,0.14);
+      background: rgba(255,102,196,0.16);
+      color: #ffe5f4;
+      border-color: rgba(255,102,196,0.26);
+      box-shadow: 0 0 0 3px rgba(255,102,196,0.10);
     }
 
     .metrics-grid {
@@ -683,34 +538,34 @@
     }
 
     .metric {
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 14px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.06);
     }
 
     .metric-label {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
       color: #fde68a;
-      font-weight: 800;
+      font-weight: 900;
       margin-bottom: 8px;
     }
 
     .metric-value {
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       line-height: 1;
-      font-weight: 1000;
+      font-weight: 950;
       letter-spacing: -0.04em;
       margin-bottom: 8px;
     }
 
     .metric-desc {
       color: #dbe7f5;
-      font-size: 0.83rem;
-      line-height: 1.55;
-      min-height: 2.6em;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      min-height: 2.5em;
       margin-bottom: 10px;
     }
 
@@ -732,7 +587,7 @@
     .bar-fill.low { background: #f59e0b; }
     .bar-fill.med { background: #60a5fa; }
     .bar-fill.high { background: #22c55e; }
-    .bar-fill.epic { background: linear-gradient(90deg, #fde68a 0%, #f7b718 100%); }
+    .bar-fill.epic { background: linear-gradient(90deg, #ff66c4 0%, #f7b718 100%); }
 
     .preview-card {
       margin-top: 16px;
@@ -744,7 +599,7 @@
     }
 
     #snapshotCanvas,
-    video#recordedClip {
+    #recordedClip {
       width: 100%;
       max-width: 560px;
       border-radius: 18px;
@@ -757,7 +612,7 @@
     .small-note {
       color: var(--muted);
       font-size: 0.82rem;
-      line-height: 1.6;
+      line-height: 1.58;
       margin-top: 14px;
       margin-bottom: 0;
     }
@@ -767,33 +622,47 @@
       inset: 0;
       z-index: 4;
       pointer-events: none;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.92), rgba(247,183,24,0.62), transparent 60%);
+      background: radial-gradient(circle at center, rgba(255,255,255,0.88), rgba(247,183,24,0.55), transparent 58%);
       opacity: 0;
-      transform: scale(0.9);
+      transform: scale(0.94);
     }
 
     .flash-layer.boom {
-      animation: flashBoom 900ms ease-out;
+      animation: flashBoom 720ms ease-out;
     }
 
     @keyframes flashBoom {
-      0% { opacity: 0; transform: scale(0.8); }
-      18% { opacity: 1; transform: scale(1.02); }
-      42% { opacity: 0.5; transform: scale(1.12); }
-      100% { opacity: 0; transform: scale(1.22); }
+      0% { opacity: 0; transform: scale(0.9); }
+      20% { opacity: 0.95; transform: scale(1.01); }
+      100% { opacity: 0; transform: scale(1.08); }
     }
 
-    .shake {
-      animation: shake 500ms ease-in-out;
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      15% { transform: translateX(-6px); }
-      30% { transform: translateX(6px); }
-      45% { transform: translateX(-5px); }
-      60% { transform: translateX(5px); }
-      75% { transform: translateX(-2px); }
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(180deg, #ffffff 0%, #f7b718 100%);
+      box-shadow: 0 0 10px rgba(247,183,24,0.22);
+    }
+
+    .particle.burst {
+      animation: burst 850ms ease-out forwards;
+    }
+
+    @keyframes burst {
+      0% { opacity: 0; transform: translate(0,0) scale(0.7) rotate(0deg); }
+      15% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.02) rotate(var(--rot)); }
     }
 
     @media (max-width: 991.98px) {
@@ -808,7 +677,7 @@
       }
 
       .hero {
-        border-radius: 22px;
+        border-radius: 20px;
       }
 
       .stage-card,
@@ -823,28 +692,6 @@
 
       .metrics-grid {
         grid-template-columns: 1fr;
-      }
-
-      .unlock-title {
-        min-width: 94%;
-        bottom: 7%;
-      }
-
-      .hud-top {
-        top: 10px;
-        left: 10px;
-        right: 10px;
-      }
-
-      .hud-pill {
-        font-size: 0.68rem;
-        padding: 7px 10px;
-      }
-
-      .challenge-tag {
-        right: 10px;
-        bottom: 10px;
-        font-size: 0.66rem;
       }
 
       .controls .btn-pill,
@@ -863,6 +710,10 @@
       .stage-wrap {
         min-height: 560px;
       }
+
+      .hud-pill {
+        font-size: 0.66rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -879,67 +730,67 @@
   <div class="shell">
     <header class="topbar">
       <div class="brand-wrap">
-        <div class="brand-pill">Web AI + AR</div>
-        <div class="top-note">Making Digital Vikings · mobile, tablet, laptop</div>
+        <div class="brand-pill">The Brandi Effect</div>
+        <div class="top-note">Making Digital Vikings · polished, playful, browser-built</div>
       </div>
-      <div class="top-note">Runs locally in the browser · no backend required</div>
+      <div class="top-note">AI + AR, but make it cute and impressive</div>
     </header>
 
     <main class="hero">
       <div class="p-3 p-lg-4">
         <div class="row g-4 align-items-start">
           <section class="col-lg-4">
-            <div class="eyebrow">Showcase-ready experience</div>
+            <div class="eyebrow">Big main-character energy</div>
             <h1 class="hero-title">
-              Turn live camera input into a
+              A cleaner, bolder,
+              <span class="pink">more Brandi</span>
               <span class="gold">Digital Viking</span>
-              stage.
+              moment.
             </h1>
 
             <p class="hero-lead">
-              This version combines browser-based AI, AR-style overlays, Griffin Hall background replacement,
-              squad detection, laugh-to-unlock, and built-in snapshot and clip capture so you can record standout
-              showcase footage from your phone, tablet, or laptop.
+              This version strips out the visual chaos and keeps the magic. The camera stays focused on the person,
+              Griffin Hall keeps the background polished, and the AI overlay brings the drama only when it matters.
             </p>
 
             <div class="chip-row">
-              <div class="chip">⚡ Live AI face tracking</div>
-              <div class="chip">🛡️ Helmet + combo overlays</div>
-              <div class="chip">🏛️ Griffin Hall background</div>
-              <div class="chip">🎬 Clip recording</div>
+              <div class="chip">✨ Clean cinematic overlay</div>
+              <div class="chip">🏛️ Griffin Hall backdrop</div>
+              <div class="chip">🛡️ Viking payoff</div>
+              <div class="chip">🎬 Showcase-ready captures</div>
             </div>
 
-            <div class="info-card">
-              <div class="info-title">How to use it</div>
-              <p class="info-body">
-                Start the camera, choose a scene, step into frame, and laugh naturally to trigger the unlock moment.
-                Use Squad Mode when multiple people are on screen, then capture a share card or a short video clip.
+            <div class="panel">
+              <div class="panel-title">How this one feels</div>
+              <p class="panel-body">
+                Less “look at all the things on screen.” More “wait… that is actually really cool.” The user stays visible,
+                the interface stays clean, and the unlock moment hits harder because it is earned.
               </p>
             </div>
 
-            <div class="info-card">
-              <div class="info-title">Best showcase strategy</div>
-              <p class="info-body">
-                Record a few solo clips on laptop, then use your phone for vertical-feeling footage with colleagues.
-                The unlock reveal, crowd count, and exported visuals will give you strong material for a 3-minute hype reel.
+            <div class="panel">
+              <div class="panel-title">Best use for your video</div>
+              <p class="panel-body">
+                Use Helmet Mode for the funniest clean payoff, Combo Mode for the most dramatic shot, and Squad Mode when you
+                want your colleagues jumping into frame and reacting together.
               </p>
             </div>
 
             <div class="result-card" aria-live="polite">
-              <div class="result-label">Experience status</div>
-              <div id="resultState" class="result-state">Waiting to begin...</div>
+              <div class="result-label">Current vibe</div>
+              <div id="resultState" class="result-state">Waiting for the magic...</div>
               <p id="resultCopy" class="result-copy">
-                Start the experience and step into frame. The system will track faces, build energy, and unlock the hero moment.
+                Start the experience, step into frame, and let the browser do the flirting with the audience.
               </p>
             </div>
 
-            <div class="scene-panel mt-3">
-              <div class="panel-title">Scene modes</div>
+            <div class="panel mt-3">
+              <div class="panel-title">Choose the moment</div>
               <div class="scene-buttons">
-                <button class="btn-pill btn-scene active" type="button" data-scene="scan">🔎 Scan</button>
+                <button class="btn-pill btn-scene active" type="button" data-scene="scan">✨ Clean Scan</button>
                 <button class="btn-pill btn-scene" type="button" data-scene="helmet">🪖 Helmet</button>
                 <button class="btn-pill btn-scene" type="button" data-scene="combo">🧔 Combo</button>
-                <button class="btn-pill btn-scene" type="button" data-scene="squad">👥 Squad</button>
+                <button class="btn-pill btn-scene" type="button" data-scene="squad">👯 Squad</button>
               </div>
             </div>
           </section>
@@ -951,13 +802,12 @@
                 <video id="video" autoplay playsinline muted></video>
                 <canvas id="renderCanvas" aria-label="Live AI rendered stage"></canvas>
 
-                <div class="flash-layer" id="flashLayer"></div>
+                <div id="flashLayer" class="flash-layer"></div>
+                <div id="particles" class="particles"></div>
 
                 <div class="ui-layer" aria-hidden="true">
                   <div class="gradient-top"></div>
                   <div class="gradient-bottom"></div>
-                  <div class="scanline"></div>
-                  <div class="vignette"></div>
 
                   <div class="hud-top">
                     <div class="hud-pill">
@@ -966,28 +816,16 @@
                     </div>
                     <div class="hud-pill">
                       <span class="hud-dot warn"></span>
-                      <span id="legendText">Legend Level: 0</span>
+                      <span id="legendText">Buzz Level: 0</span>
                     </div>
                   </div>
 
-                  <div class="center-ui">
-                    <div id="runeRing" class="rune-ring"></div>
-
-                    <div id="vikingBadge" class="viking-badge">
-                      <div class="helmet-emoji">⚔️</div>
-                    </div>
-
-                    <div id="unlockTitle" class="unlock-title">
-                      <div class="unlock-kicker">Challenge complete</div>
-                      <h2 class="unlock-main">
-                        <span class="gold">DIGITAL VIKING</span> UNLOCKED
-                      </h2>
-                      <div class="unlock-sub">Built in the browser. Ready for the internet.</div>
-                    </div>
+                  <div id="unlockToast" class="unlock-toast">
+                    <div class="unlock-toast-kicker">Okayyyy</div>
+                    <h2 class="unlock-toast-main">
+                      <span class="gold">Digital Viking</span> unlocked
+                    </h2>
                   </div>
-
-                  <div id="particles" class="particles"></div>
-                  <div class="challenge-tag" id="challengeTag">AI + AR Showcase</div>
                 </div>
               </div>
 
@@ -997,7 +835,7 @@
                   <span id="statusText" class="status-text">Click “Start Camera &amp; AI” to begin.</span>
                 </div>
                 <div class="status-note">
-                  Best results: good lighting, recent Chrome or Edge, and HTTPS if served online. On mobile, hold the phone a little farther back for better tracking.
+                  Best results: one face, good lighting, and a real laugh or playful expression instead of a tiny little polite smile.
                 </div>
               </div>
 
@@ -1019,21 +857,21 @@
                 <article class="metric">
                   <div class="metric-label">Motion signal</div>
                   <div id="motionScore" class="metric-value">0</div>
-                  <div class="metric-desc">Repeated face and mouth movement across recent frames.</div>
+                  <div class="metric-desc">Face and mouth movement across recent frames.</div>
                   <div class="bar-track"><div id="motionBar" class="bar-fill low"></div></div>
                 </article>
 
                 <article class="metric">
                   <div class="metric-label">Laugh score</div>
                   <div id="laughScore" class="metric-value">0</div>
-                  <div class="metric-desc">Combined score used to determine unlock readiness.</div>
+                  <div class="metric-desc">Used to decide when the unlock moment hits.</div>
                   <div class="bar-track"><div id="laughBar" class="bar-fill low"></div></div>
                 </article>
 
                 <article class="metric">
                   <div class="metric-label">Squad count</div>
                   <div id="progressScore" class="metric-value">0</div>
-                  <div class="metric-desc">Number of faces currently detected on screen.</div>
+                  <div class="metric-desc">Faces currently detected on screen.</div>
                   <div class="bar-track"><div id="progressBar" class="bar-fill epic"></div></div>
                 </article>
               </div>
@@ -1055,7 +893,7 @@
               </div>
 
               <p class="small-note">
-                Tip: for your showcase video, collect 4–6 short clips across scenes, including one solo laugh unlock and one squad moment with colleagues.
+                Translation: this is the version that lets people actually see the person and still say, “wait… you built that in the browser?”
               </p>
             </div>
           </section>
@@ -1076,9 +914,7 @@
       const stageWrap = document.getElementById("stageWrap");
       const flashLayer = document.getElementById("flashLayer");
       const particles = document.getElementById("particles");
-      const runeRing = document.getElementById("runeRing");
-      const vikingBadge = document.getElementById("vikingBadge");
-      const unlockTitle = document.getElementById("unlockTitle");
+      const unlockToast = document.getElementById("unlockToast");
 
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
@@ -1092,7 +928,6 @@
       const hudDot = document.getElementById("hudDot");
       const hudText = document.getElementById("hudText");
       const legendText = document.getElementById("legendText");
-      const challengeTag = document.getElementById("challengeTag");
 
       const resultState = document.getElementById("resultState");
       const resultCopy = document.getElementById("resultCopy");
@@ -1143,7 +978,7 @@
       let motionScore = 0;
       let laughScore = 0;
       let squadCount = 0;
-      let legendLevel = 0;
+      let buzzLevel = 0;
 
       let prevFaceCenterYNorm = null;
       let prevMouthYNorm = null;
@@ -1243,32 +1078,32 @@
         setBar(laughBar, laughScore);
         setBar(progressBar, clamp(squadCount * 33, 0, 100), true);
 
-        legendLevel = clamp(Math.round((laughScore * 0.55) + (squadCount * 10) + (unlocked ? 20 : 0)), 0, 100);
-        legendText.textContent = "Legend Level: " + legendLevel;
+        buzzLevel = clamp(Math.round((laughScore * 0.55) + (squadCount * 10) + (unlocked ? 20 : 0)), 0, 100);
+        legendText.textContent = "Buzz Level: " + buzzLevel;
 
         if (unlocked) {
-          resultState.textContent = "DIGITAL VIKING UNLOCKED";
+          resultState.textContent = "Digital Viking unlocked";
           resultState.classList.add("unlocked");
           resultCopy.textContent =
-            "The unlock reveal is active. This is the hero moment for your showcase footage and shareable captures.";
-          hudText.textContent = isRecording ? "Recording hero clip" : "Viking mode active";
-        } else if (squadCount >= 2 && activeScene === "squad") {
-          resultState.textContent = "SQUAD MODE ACTIVE";
+            "There it is. This is the money shot. The page stays clean, the person stays visible, and the payoff actually lands.";
+          hudText.textContent = isRecording ? "Recording the good part" : "Serving browser-built drama";
+        } else if (activeScene === "squad" && squadCount >= 2) {
+          resultState.textContent = "Squad mode is doing its thing";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "Multiple faces detected. This mode is great for filming colleagues reacting together in your showcase reel.";
-          hudText.textContent = "Squad detected";
+            "Multiple faces detected. This is where the reaction shots get fun and the video starts to feel alive.";
+          hudText.textContent = "Squad energy detected";
         } else if (laughHoldFrames > 0) {
-          resultState.textContent = "Building toward unlock...";
+          resultState.textContent = "Ohhh it’s building...";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "The system sees enough energy to build momentum. Keep going for the full hero reveal.";
-          hudText.textContent = "Tracking laugh signal";
+            "The system sees something. Keep going a little longer and let it earn the unlock.";
+          hudText.textContent = "Tracking the vibe";
         } else {
-          resultState.textContent = "Waiting to begin...";
+          resultState.textContent = "Waiting for the magic...";
           resultState.classList.remove("unlocked");
           resultCopy.textContent =
-            "Start the experience and step into frame. The system will track faces, build energy, and unlock the hero moment.";
+            "Start the experience, step into frame, and let the browser do the flirting with the audience.";
           hudText.textContent = aiRunning ? "AI is live" : "Awaiting camera";
         }
 
@@ -1283,16 +1118,14 @@
           btn.classList.toggle("active", btn.dataset.scene === scene);
         });
 
-        const labels = {
-          scan: "AI Scan Mode",
-          helmet: "Helmet Mode",
-          combo: "Combo Mode",
-          squad: "Squad Mode"
-        };
-        challengeTag.textContent = labels[scene] || "AI + AR Showcase";
-
         if (aiRunning) {
-          setStatus(`${labels[scene]} selected.`, "active");
+          const map = {
+            scan: "Clean Scan selected. We’re keeping it polished.",
+            helmet: "Helmet Mode selected. Cute, funny, iconic.",
+            combo: "Combo Mode selected. A little more drama, as we deserve.",
+            squad: "Squad Mode selected. Bring your people."
+          };
+          setStatus(map[scene] || "Scene selected.", "active");
         }
       }
 
@@ -1435,15 +1268,13 @@
         const mappedTL = mapVideoPointToCanvas(br[0], tl[1]);
         const mappedBR = mapVideoPointToCanvas(tl[0], br[1]);
 
-        const mapped = {
+        return {
           topLeft: mappedTL,
           bottomRight: mappedBR,
           landmarks: Array.isArray(face.landmarks)
             ? face.landmarks.map((pt) => mapVideoPointToCanvas(pt[0], pt[1]))
             : []
         };
-
-        return mapped;
       }
 
       function calculateSignals(face) {
@@ -1473,7 +1304,6 @@
         const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
         const mouthDrop = mouth[1] - eyeMidY;
         const mouthDropNorm = mouthDrop / faceHeight;
-
         const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
 
         const faceCenterYNorm = ((y1 + y2) / 2) / (video.videoHeight || 540);
@@ -1610,52 +1440,54 @@
           ctx.restore();
         }
 
-        drawStageLook();
+        drawSoftLook();
       }
 
-      function drawStageLook() {
+      function drawSoftLook() {
         const w = renderCanvas.width;
         const h = renderCanvas.height;
 
-        const glow = ctx.createRadialGradient(w * 0.5, h * 0.35, 20, w * 0.5, h * 0.35, Math.max(w, h) * 0.6);
-        glow.addColorStop(0, unlocked ? "rgba(247,183,24,0.22)" : "rgba(96,165,250,0.12)");
-        glow.addColorStop(0.45, unlocked ? "rgba(247,183,24,0.10)" : "rgba(139,92,246,0.08)");
+        const glow = ctx.createRadialGradient(w * 0.5, h * 0.36, 20, w * 0.5, h * 0.36, Math.max(w, h) * 0.55);
+        glow.addColorStop(0, unlocked ? "rgba(247,183,24,0.16)" : "rgba(255,102,196,0.05)");
+        glow.addColorStop(0.45, unlocked ? "rgba(247,183,24,0.06)" : "rgba(96,165,250,0.04)");
         glow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, w, h);
 
-        ctx.fillStyle = "rgba(255,255,255,0.02)";
+        ctx.fillStyle = "rgba(255,255,255,0.018)";
         ctx.fillRect(0, 0, w, h);
-
-        if (unlocked) {
-          ctx.fillStyle = "rgba(247,183,24,0.06)";
-          ctx.fillRect(0, 0, w, h);
-        }
       }
 
-      function drawFaceRing(face) {
+      function drawSmallFaceRing(face) {
         if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
 
         const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const radius = Math.max(faceWidth, faceHeight) * 0.65;
+        const radius = Math.max(faceWidth, faceHeight) * 0.60;
 
         ctx.save();
-        ctx.strokeStyle = "rgba(247,183,24,0.7)";
-        ctx.lineWidth = Math.max(2, renderCanvas.width * 0.002);
+        ctx.strokeStyle = "rgba(255,255,255,0.34)";
+        ctx.lineWidth = Math.max(1.5, renderCanvas.width * 0.0016);
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
+      }
 
-        ctx.strokeStyle = "rgba(255,255,255,0.4)";
-        ctx.setLineDash([10, 10]);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius * 0.82, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
+      function drawGlowAroundFace(face) {
+        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
 
-        ctx.fillStyle = "rgba(247,183,24,0.18)";
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
+        const rx = faceWidth * 0.88;
+        const ry = faceHeight * 1.04;
+
+        ctx.save();
+        const gradient = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.max(rx, ry));
+        gradient.addColorStop(0, unlocked ? "rgba(247,183,24,0.12)" : "rgba(255,255,255,0.06)");
+        gradient.addColorStop(0.55, unlocked ? "rgba(247,183,24,0.06)" : "rgba(255,255,255,0.02)");
+        gradient.addColorStop(1, "rgba(247,183,24,0)");
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius * 0.08, 0, Math.PI * 2);
+        ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
@@ -1664,7 +1496,7 @@
         if (!glassesReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
 
         const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.12;
+        const overlayWidth = faceWidth * 1.08;
         const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
         const eyeLineY = y1 + faceHeight * 0.43;
@@ -1682,10 +1514,10 @@
         if (!helmetReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
 
         const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.46;
+        const overlayWidth = faceWidth * 1.36;
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
-        const helmetCenterY = y1 + faceHeight * 0.07;
+        const helmetCenterY = y1 + faceHeight * 0.05;
 
         ctx.drawImage(
           helmetImg,
@@ -1700,7 +1532,7 @@
         if (!beardReady || !face || !isValidBox(face.topLeft, face.bottomRight)) return;
 
         const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const overlayWidth = faceWidth * 1.42;
+        const overlayWidth = faceWidth * 1.34;
         const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
         const overlayCenterY = centerY - faceHeight * 0.02;
@@ -1714,44 +1546,23 @@
         );
       }
 
-      function drawGlowAroundFace(face) {
-        if (!face || !isValidBox(face.topLeft, face.bottomRight)) return;
-
-        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(face.topLeft, face.bottomRight);
-        const rx = faceWidth * 0.95;
-        const ry = faceHeight * 1.15;
-
-        ctx.save();
-        const gradient = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.max(rx, ry));
-        gradient.addColorStop(0, "rgba(247,183,24,0.20)");
-        gradient.addColorStop(0.45, "rgba(247,183,24,0.12)");
-        gradient.addColorStop(1, "rgba(247,183,24,0)");
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
       function drawSquadIndicators(faces) {
         if (!faces.length) return;
 
         ctx.save();
-        ctx.strokeStyle = "rgba(96,165,250,0.65)";
-        ctx.fillStyle = "rgba(96,165,250,0.14)";
-        ctx.lineWidth = Math.max(2, renderCanvas.width * 0.002);
+        ctx.strokeStyle = "rgba(255,102,196,0.48)";
+        ctx.lineWidth = Math.max(1.5, renderCanvas.width * 0.0018);
 
         faces.forEach((face) => {
           if (!isValidBox(face.topLeft, face.bottomRight)) return;
           const { x1, y1, faceWidth, faceHeight } = getFaceMetrics(face.topLeft, face.bottomRight);
-          const pad = faceWidth * 0.08;
+          const pad = faceWidth * 0.05;
           const rx = x1 - pad;
           const ry = y1 - pad;
           const rw = faceWidth + pad * 2;
           const rh = faceHeight + pad * 2;
 
-          roundRectCanvas(ctx, rx, ry, rw, rh, Math.max(12, faceWidth * 0.14));
-          ctx.fill();
+          roundRectCanvas(ctx, rx, ry, rw, rh, Math.max(10, faceWidth * 0.10));
           ctx.stroke();
         });
 
@@ -1759,8 +1570,8 @@
 
         ctx.save();
         ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.font = `800 ${Math.max(18, renderCanvas.width * 0.02)}px Inter, sans-serif`;
-        ctx.fillText(`SQUAD x${faces.length}`, 24, renderCanvas.height - 28);
+        ctx.font = `800 ${Math.max(16, renderCanvas.width * 0.018)}px Inter, sans-serif`;
+        ctx.fillText(`squad x${faces.length}`, 22, renderCanvas.height - 22);
         ctx.restore();
       }
 
@@ -1774,29 +1585,29 @@
         context.closePath();
       }
 
-      function drawHeadlineOverlay() {
+      function drawMinimalBrandText() {
         const w = renderCanvas.width;
         const h = renderCanvas.height;
 
         ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,0.96)";
-        ctx.font = `800 ${Math.max(20, w * 0.028)}px Inter, sans-serif`;
-        ctx.fillText("Making Digital Vikings", 28, h - 92);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.font = `800 ${Math.max(18, w * 0.022)}px Inter, sans-serif`;
+        ctx.fillText("Making Digital Vikings", 24, h - 54);
 
-        ctx.fillStyle = "rgba(255,255,255,0.82)";
-        ctx.font = `700 ${Math.max(12, w * 0.014)}px Inter, sans-serif`;
+        ctx.fillStyle = "rgba(255,255,255,0.72)";
+        ctx.font = `700 ${Math.max(11, w * 0.012)}px Inter, sans-serif`;
 
-        let sub = "Client-side AI · browser camera · live AR overlays";
-        if (activeScene === "helmet") sub = "Helmet Mode · Griffin Hall behind every shot";
-        if (activeScene === "combo") sub = "Combo Mode · cinematic Viking face effect";
-        if (activeScene === "squad") sub = "Squad Mode · built for crowd reactions";
-        if (unlocked) sub = "Digital Viking Unlocked · hero moment active";
+        let sub = "browser-built AI + AR";
+        if (activeScene === "helmet") sub = "helmet mode";
+        if (activeScene === "combo") sub = "combo mode";
+        if (activeScene === "squad") sub = "squad mode";
+        if (unlocked) sub = "digital viking unlocked";
 
-        ctx.fillText(sub, 28, h - 58);
+        ctx.fillText(sub, 24, h - 28);
         ctx.restore();
       }
 
-      function burstParticles(count = 34) {
+      function burstParticles(count = 10) {
         if (prefersReducedMotion) return;
 
         particles.innerHTML = "";
@@ -1804,21 +1615,17 @@
           const p = document.createElement("span");
           p.className = "particle";
 
-          const centerX = 50 + (Math.random() * 12 - 6);
-          const centerY = 50 + (Math.random() * 12 - 6);
-          const dx = (Math.random() * 380 - 190).toFixed(0) + "px";
-          const dy = (Math.random() * 260 - 200).toFixed(0) + "px";
-          const rot = (Math.random() * 540 - 270).toFixed(0) + "deg";
+          const centerX = 50 + (Math.random() * 10 - 5);
+          const centerY = 52 + (Math.random() * 8 - 4);
+          const dx = (Math.random() * 160 - 80).toFixed(0) + "px";
+          const dy = (Math.random() * 120 - 90).toFixed(0) + "px";
+          const rot = (Math.random() * 320 - 160).toFixed(0) + "deg";
 
           p.style.left = centerX + "%";
           p.style.top = centerY + "%";
           p.style.setProperty("--dx", dx);
           p.style.setProperty("--dy", dy);
           p.style.setProperty("--rot", rot);
-
-          const colors = ["#f7b718", "#fde68a", "#ffffff", "#ffd86b"];
-          const color = colors[Math.floor(Math.random() * colors.length)];
-          p.style.background = `linear-gradient(180deg, #ffffff 0%, ${color} 100%)`;
 
           particles.appendChild(p);
           requestAnimationFrame(() => p.classList.add("burst"));
@@ -1829,8 +1636,8 @@
         if (!("speechSynthesis" in window)) return;
         try {
           const utterance = new SpeechSynthesisUtterance("Digital Viking unlocked");
-          utterance.rate = 0.95;
-          utterance.pitch = 0.9;
+          utterance.rate = 0.98;
+          utterance.pitch = 1.02;
           utterance.volume = 0.9;
           speechSynthesis.cancel();
           speechSynthesis.speak(utterance);
@@ -1846,23 +1653,24 @@
 
           const audioCtx = new AudioContextClass();
           const now = audioCtx.currentTime;
-          const notes = [220, 330, 440, 660];
+          const notes = [262, 392, 523];
 
           notes.forEach((freq, index) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = index < 2 ? "triangle" : "sine";
+
+            osc.type = "triangle";
             osc.frequency.value = freq;
 
             gain.gain.setValueAtTime(0.0001, now);
-            gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03 + index * 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25 + index * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.045, now + 0.03 + index * 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22 + index * 0.05);
 
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            osc.start(now + index * 0.05);
-            osc.stop(now + 0.35 + index * 0.06);
+            osc.start(now + index * 0.04);
+            osc.stop(now + 0.30 + index * 0.05);
           });
         } catch (error) {
           console.warn("Audio unavailable:", error);
@@ -1871,25 +1679,22 @@
 
       function triggerUnlock() {
         unlocked = true;
-        runeRing.classList.add("active");
-        vikingBadge.classList.add("active");
-        unlockTitle.classList.add("active");
-        stageWrap.classList.add("shake");
+        updateUI();
 
         flashLayer.classList.remove("boom");
         void flashLayer.offsetWidth;
         flashLayer.classList.add("boom");
 
-        burstParticles(40);
+        unlockToast.classList.add("show");
+        burstParticles(10);
         speakUnlock();
         playUnlockTone();
-        updateUI();
 
-        setStatus("Legendary laugh detected. Digital Viking unlocked.", "active");
+        setStatus("Okayyyy. That one ate. Digital Viking unlocked.", "active");
 
         setTimeout(() => {
-          stageWrap.classList.remove("shake");
-        }, 650);
+          unlockToast.classList.remove("show");
+        }, 1600);
 
         if (!autoRecordedAfterUnlock) {
           autoRecordedAfterUnlock = true;
@@ -1924,22 +1729,22 @@
           drawGlowAroundFace(primaryFace);
 
           if (activeScene === "scan") {
-            drawFaceRing(primaryFace);
+            drawSmallFaceRing(primaryFace);
             drawGlassesOnFace(primaryFace);
           } else if (activeScene === "helmet") {
             drawHelmetOnFace(primaryFace);
           } else if (activeScene === "combo") {
             drawBeardOnFace(primaryFace);
           } else if (activeScene === "squad") {
-            drawSquadIndicators(mappedFaces);
-            drawHelmetOnFace(primaryFace);
-          }
-
-          if (unlocked) {
-            drawGlowAroundFace(primaryFace);
-            if (activeScene !== "combo") {
+            if (mappedFaces.length >= 2) {
+              drawSquadIndicators(mappedFaces);
+            } else {
               drawHelmetOnFace(primaryFace);
             }
+          }
+
+          if (unlocked && activeScene !== "combo") {
+            drawHelmetOnFace(primaryFace);
           }
         }
 
@@ -1947,14 +1752,14 @@
           drawSquadIndicators(mappedFaces);
         }
 
-        drawHeadlineOverlay();
+        drawMinimalBrandText();
 
         if (!primaryFace && aiRunning) {
-          setStatus("AI is running. Waiting for a face in frame...", "active");
+          setStatus("AI is running. Step into frame, gorgeous.", "active");
         } else if (!unlocked && activeScene === "squad" && squadCount >= 2) {
-          setStatus("Multiple faces detected. Squad Mode is active.", "active");
+          setStatus("Squad detected. Love that for us.", "active");
         } else if (!unlocked) {
-          setStatus("AI is running. Laugh naturally to trigger the hero reveal...", "active");
+          setStatus("AI is running. Give me a real laugh or playful moment...", "active");
         }
 
         renderLoopId = requestAnimationFrame(renderFrame);
@@ -1998,13 +1803,13 @@
               const url = URL.createObjectURL(currentClipBlob);
               recordedClip.src = url;
               clipArea.classList.add("show");
-              setStatus("Clip recording complete. Preview ready below.", "active");
+              setStatus("Clip recorded. The browser understood the assignment.", "active");
             }
           };
 
           isRecording = true;
           updateUI();
-          setStatus("Recording a short clip from the live rendered stage...", "active");
+          setStatus("Recording the good part...", "active");
           mediaRecorder.start();
 
           clearTimeout(clipStopTimeout);
@@ -2034,8 +1839,8 @@
         snapshotCtx.fillRect(0, 0, w, h);
 
         const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.30, 20, w * 0.5, h * 0.30, 420);
-        glow.addColorStop(0, "rgba(247,183,24,0.42)");
-        glow.addColorStop(0.4, "rgba(247,183,24,0.16)");
+        glow.addColorStop(0, "rgba(255,102,196,0.22)");
+        glow.addColorStop(0.35, "rgba(247,183,24,0.18)");
         glow.addColorStop(1, "rgba(247,183,24,0)");
         snapshotCtx.fillStyle = glow;
         snapshotCtx.fillRect(0, 0, w, h);
@@ -2054,43 +1859,40 @@
 
         const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
         overlayGrad.addColorStop(0, "rgba(255,255,255,0.02)");
-        overlayGrad.addColorStop(1, "rgba(247,183,24,0.10)");
+        overlayGrad.addColorStop(1, "rgba(247,183,24,0.08)");
         snapshotCtx.fillStyle = overlayGrad;
         roundRectFillSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
 
         snapshotCtx.lineWidth = 3;
-        snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
+        snapshotCtx.strokeStyle = "rgba(255,255,255,0.24)";
         roundRectStrokeSnapshot(snapshotCtx, frameX, frameY, frameW, frameH, radius);
 
-        snapshotCtx.fillStyle = "#fde68a";
-        snapshotCtx.font = "700 32px Inter, sans-serif";
-        snapshotCtx.fillText("MAKING DIGITAL VIKINGS", 90, 80);
+        snapshotCtx.fillStyle = "#ffb4df";
+        snapshotCtx.font = "800 30px Inter, sans-serif";
+        snapshotCtx.fillText("THE BRANDI EFFECT", 90, 80);
 
         snapshotCtx.fillStyle = "#ffffff";
-        snapshotCtx.font = "900 82px Inter, sans-serif";
-        snapshotCtx.fillText("AI + AR", 90, 1110);
+        snapshotCtx.font = "900 80px Inter, sans-serif";
+        snapshotCtx.fillText("Making", 90, 1110);
+        snapshotCtx.fillText("Digital Vikings", 90, 1195);
 
         snapshotCtx.fillStyle = "#f7b718";
-        snapshotCtx.font = "900 82px Inter, sans-serif";
-        snapshotCtx.fillText("SHOWCASE READY", 90, 1200);
-
-        snapshotCtx.fillStyle = "#dbe7f5";
-        snapshotCtx.font = "600 32px Inter, sans-serif";
-        snapshotCtx.fillText("Browser-built hero moment with live camera, AI, and AR overlays.", 90, 1260);
+        snapshotCtx.font = "800 34px Inter, sans-serif";
+        snapshotCtx.fillText("AI + AR, but make it iconic.", 90, 1260);
 
         snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
         roundRectFillSnapshot(snapshotCtx, 90, 1288, w - 180, 92, 24);
 
         snapshotCtx.fillStyle = "#ffffff";
-        snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText("Legend Level: " + legendLevel, 126, 1346);
+        snapshotCtx.font = "800 28px Inter, sans-serif";
+        snapshotCtx.fillText("Buzz Level: " + buzzLevel, 126, 1346);
 
         snapshotCtx.fillStyle = "#fde68a";
-        snapshotCtx.font = "800 30px Inter, sans-serif";
-        snapshotCtx.fillText(`👥 Faces: ${squadCount}  ·  Scene: ${activeScene.toUpperCase()}`, 590, 1346);
+        snapshotCtx.font = "800 28px Inter, sans-serif";
+        snapshotCtx.fillText(`Scene: ${activeScene.toUpperCase()}  ·  Faces: ${squadCount}`, 620, 1346);
 
         snapshotArea.classList.add("show");
-        setStatus("Share card captured below.", "active");
+        setStatus("Share card captured. Cute.", "active");
       }
 
       function roundRectSnapshot(context, x, y, width, height, radius) {
@@ -2115,7 +1917,7 @@
 
       function downloadSnapshot() {
         const link = document.createElement("a");
-        link.download = "making-digital-vikings-share-card.png";
+        link.download = "the-brandi-effect-share-card.png";
         link.href = snapshotCanvas.toDataURL("image/png");
         link.click();
       }
@@ -2123,7 +1925,7 @@
       function downloadClip() {
         if (!currentClipBlob) return;
         const link = document.createElement("a");
-        link.download = "making-digital-vikings-clip.webm";
+        link.download = "the-brandi-effect-clip.webm";
         link.href = URL.createObjectURL(currentClipBlob);
         link.click();
       }
@@ -2139,7 +1941,7 @@
         motionScore = 0;
         laughScore = 0;
         squadCount = 0;
-        legendLevel = 0;
+        buzzLevel = 0;
 
         prevFaceCenterYNorm = null;
         prevMouthYNorm = null;
@@ -2148,9 +1950,7 @@
         unlocked = false;
         autoRecordedAfterUnlock = false;
 
-        runeRing.classList.remove("active");
-        vikingBadge.classList.remove("active");
-        unlockTitle.classList.remove("active");
+        unlockToast.classList.remove("show");
         particles.innerHTML = "";
       }
 
@@ -2193,7 +1993,7 @@
         recordBtn.disabled = true;
 
         if (showMessage) {
-          setStatus("Camera is off. Restart the experience any time.", "idle");
+          setStatus("Camera is off. Come back when you’re ready to be impressive.", "idle");
         }
       }
 
@@ -2238,7 +2038,7 @@
           await detectFacesStep();
           await segmentStep();
 
-          setStatus("AI is ready. Step into frame and start the show.", "active");
+          setStatus("AI is ready. Let’s make this look expensive.", "active");
           updateUI();
           renderLoopId = requestAnimationFrame(renderFrame);
         } catch (error) {
@@ -2248,7 +2048,7 @@
           captureBtn.disabled = true;
           recordBtn.disabled = true;
           setStatus(
-            "Could not start the camera or AI model. Check camera permissions, use HTTPS, and try a recent Chrome or Edge browser.",
+            "Could not start the camera or AI model. Check camera permissions, use HTTPS, and try a recent browser.",
             "error"
           );
         }

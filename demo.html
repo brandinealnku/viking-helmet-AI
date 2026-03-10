@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Norse Vision Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="NKU Norse Vision Studio — a polished browser-based AI demo for Northern Kentucky University featuring live camera compositing, face tracking, and Norse overlays."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
+
+  <style>
+    :root {
+      --nku-gold: #ffc72c;
+      --nku-gold-soft: rgba(255, 199, 44, 0.16);
+      --nku-black: #111111;
+      --nku-charcoal: #1a1a1a;
+      --ink: #e9edf5;
+      --muted: #9ca3af;
+      --panel: rgba(12, 14, 18, 0.78);
+      --panel-strong: rgba(10, 12, 16, 0.92);
+      --line: rgba(255, 255, 255, 0.10);
+      --glow: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 80px rgba(0,0,0,0.38);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --success: #22c55e;
+      --danger: #f87171;
+      --info: #60a5fa;
+      --bg:
+        radial-gradient(circle at top left, rgba(255,199,44,0.10), transparent 26%),
+        radial-gradient(circle at top right, rgba(96,165,250,0.08), transparent 24%),
+        linear-gradient(180deg, #0b0d11 0%, #111419 100%);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page-shell {
+      max-width: 1440px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--glow);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(255,199,44,1), rgba(255,214,102,0.96));
+      color: #111;
+      font-weight: 900;
+      font-size: 1rem;
+      box-shadow: 0 14px 30px rgba(255, 199, 44, 0.22);
+      flex: 0 0 auto;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-kicker {
+      margin: 0;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--nku-gold);
+      font-weight: 800;
+    }
+
+    .brand-title {
+      margin: 0.12rem 0 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .brand-sub {
+      margin: 0.2rem 0 0;
+      font-size: 0.83rem;
+      color: var(--muted);
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .meta-pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      background: rgba(255,255,255,0.04);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+      backdrop-filter: blur(16px);
+      box-shadow: var(--glow);
+    }
+
+    .side-panel {
+      padding: 1.25rem;
+      position: sticky;
+      top: 1rem;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      background: var(--nku-gold-soft);
+      color: #ffe8a4;
+      border: 1px solid rgba(255,199,44,0.2);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .side-title {
+      margin: 1rem 0 0.5rem;
+      font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .side-lead {
+      color: #c8d0dc;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      margin-bottom: 1rem;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+      margin: 1rem 0 1.15rem;
+    }
+
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 0.85rem 0.9rem;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .mini-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+      font-weight: 700;
+    }
+
+    .mini-value {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .section-title {
+      margin: 1rem 0 0.65rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .how-list,
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .how-list li,
+    .feature-list li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: #d4dae4;
+      font-size: 0.93rem;
+      line-height: 1.45;
+    }
+
+    .how-list li:last-child,
+    .feature-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 199, 44, 0.14);
+      color: var(--nku-gold);
+      border: 1px solid rgba(255,199,44,0.18);
+      font-weight: 900;
+      font-size: 0.82rem;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    .feature-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      box-shadow: 0 0 0 6px rgba(255,199,44,0.08);
+      flex: 0 0 auto;
+      margin-top: 0.45rem;
+    }
+
+    .privacy-note {
+      margin-top: 1rem;
+      border: 1px solid rgba(34,197,94,0.18);
+      background: rgba(34,197,94,0.08);
+      color: #dffbe7;
+      border-radius: 18px;
+      padding: 0.9rem 1rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .stage-panel {
+      padding: 1rem;
+    }
+
+    .stage-frame {
+      position: relative;
+      width: 100%;
+      min-height: 720px;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.10);
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 36%, rgba(0,0,0,0.18) 100%),
+        #0f1318;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.03),
+        0 30px 90px rgba(0,0,0,0.42);
+      isolation: isolate;
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #video,
+    #overlayCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #overlayCanvas {
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .stage-loader {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        linear-gradient(
+          110deg,
+          rgba(255,255,255,0.03) 8%,
+          rgba(255,255,255,0.08) 18%,
+          rgba(255,255,255,0.03) 33%
+        );
+      background-size: 220% 100%;
+      animation: shimmer 1.3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 180% 0; }
+      100% { background-position: -40% 0; }
+    }
+
+    .stage-vignette-top,
+    .stage-vignette-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .stage-vignette-top {
+      top: 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.62), rgba(0,0,0,0));
+    }
+
+    .stage-vignette-bottom {
+      bottom: 0;
+      height: 38%;
+      background: linear-gradient(0deg, rgba(0,0,0,0.72), rgba(0,0,0,0));
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .hud-topbar {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      background: rgba(11,14,18,0.56);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .hud-status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.24);
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .hud-status-dot.live {
+      background: var(--success);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.14);
+    }
+
+    .hud-status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 6px rgba(248,113,113,0.14);
+    }
+
+    .hud-bottom {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .hero-callout {
+      max-width: 760px;
+    }
+
+    .hero-kicker {
+      margin: 0 0 0.3rem;
+      color: #f5d979;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .hero-title {
+      margin: 0;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(1.45rem, 2.4vw, 2.4rem);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+      text-shadow: 0 8px 20px rgba(0,0,0,0.28);
+    }
+
+    .hero-sub {
+      margin-top: 0.45rem;
+      font-size: 0.9rem;
+      color: #d8dee7;
+      max-width: 56ch;
+    }
+
+    .telemetry {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+    }
+
+    .telemetry-card {
+      padding: 0.85rem 0.9rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(11,14,18,0.56);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      min-width: 0;
+    }
+
+    .telemetry-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #adb7c4;
+      margin-bottom: 0.2rem;
+      font-weight: 800;
+    }
+
+    .telemetry-value {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .control-deck {
+      margin-top: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .control-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.03);
+      padding: 1rem;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-block {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .status-led {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      margin-top: 0.28rem;
+      background: rgba(255,255,255,0.25);
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-led.active {
+      background: var(--success);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.14);
+    }
+
+    .status-led.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 6px rgba(248,113,113,0.16);
+    }
+
+    .status-copy {
+      min-width: 0;
+    }
+
+    .status-title {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #f7f9fc;
+      font-weight: 800;
+    }
+
+    .status-sub {
+      margin: 0.18rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn-nku,
+    .btn-ghost,
+    .btn-danger-soft {
+      border-radius: 999px;
+      min-height: 50px;
+      padding-inline: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      border: 1px solid transparent;
+      transition: transform 0.12s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+      box-shadow: none;
+    }
+
+    .btn-nku:hover,
+    .btn-ghost:hover,
+    .btn-danger-soft:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-nku {
+      background: linear-gradient(180deg, #ffd75e, #ffc72c);
+      color: #111;
+      border-color: rgba(255,199,44,0.3);
+      box-shadow: 0 16px 34px rgba(255,199,44,0.18);
+    }
+
+    .btn-nku:hover {
+      color: #111;
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .btn-ghost:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .btn-danger-soft {
+      background: rgba(248,113,113,0.08);
+      color: #ffd1d1;
+      border-color: rgba(248,113,113,0.18);
+    }
+
+    .btn-danger-soft:hover {
+      color: #fff;
+      background: rgba(248,113,113,0.12);
+    }
+
+    .btn-nku:disabled,
+    .btn-ghost:disabled,
+    .btn-danger-soft:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .mode-btn {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      padding: 0.75rem;
+      color: #fff;
+      text-align: left;
+      transition: all 0.16s ease;
+      cursor: pointer;
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    .mode-btn.active {
+      border-color: rgba(255,199,44,0.36);
+      background: linear-gradient(180deg, rgba(255,199,44,0.12), rgba(255,255,255,0.04));
+      box-shadow: inset 0 0 0 1px rgba(255,199,44,0.14), 0 12px 26px rgba(255,199,44,0.08);
+    }
+
+    .mode-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      object-fit: contain;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 3px;
+    }
+
+    .mode-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+    }
+
+    .mode-copy {
+      font-size: 0.78rem;
+      color: #b9c2cf;
+      line-height: 1.35;
+    }
+
+    .snapshot-wrap {
+      display: none;
+    }
+
+    .snapshot-card {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .snapshot-head {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .snapshot-title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .snapshot-note {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .snapshot-body {
+      padding: 1rem;
+      background: rgba(0,0,0,0.12);
+    }
+
+    .snapshot-frame {
+      width: 100%;
+      max-width: 520px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: #0d1116;
+    }
+
+    #snapshotPreview {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .footer-note {
+      margin-top: 1rem;
+      text-align: center;
+      color: #9da8b6;
+      font-size: 0.83rem;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      padding: 0.18rem 0.4rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    code {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.12rem 0.42rem;
+    }
+
+    @media (max-width: 1200px) {
+      .hero-grid {
+        grid-template-columns: 320px minmax(0, 1fr);
+      }
+
+      .stage-frame {
+        min-height: 680px;
+      }
+    }
+
+    @media (max-width: 991.98px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        position: static;
+      }
+
+      .stage-frame {
+        min-height: 620px;
+      }
+
+      .mode-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hud-bottom {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .container.py-4.py-lg-5.page-shell {
+        padding-top: 0.9rem !important;
+        padding-bottom: 1rem !important;
+      }
+
+      .topbar {
+        border-radius: 24px;
+        padding: 0.9rem;
+      }
+
+      .topbar-meta {
+        justify-content: flex-start;
+      }
+
+      .side-panel,
+      .stage-panel {
+        padding: 0.9rem;
+      }
+
+      .stage-frame {
+        min-height: 560px;
+        border-radius: 22px;
+      }
+
+      .hud-topbar {
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 0.75rem;
+      }
+
+      .hud-bottom {
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 0.75rem;
+      }
+
+      .hero-title {
+        font-size: 1.28rem;
+      }
+
+      .telemetry {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .control-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .action-row {
+        justify-content: stretch;
+      }
+
+      .action-row .btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand-title {
+        font-size: 1rem;
+      }
+
+      .mini-grid,
+      .telemetry,
+      .mode-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stage-frame {
+        min-height: 520px;
+      }
+
+      .hud-pill {
+        font-size: 0.64rem;
+        padding: 0.5rem 0.7rem;
+      }
+
+      .hero-sub {
+        font-size: 0.82rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stage-loader {
+        animation: none;
+      }
+
+      * {
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4 py-lg-5 page-shell">
+    <header class="topbar" aria-label="NKU demo header">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">NKU</div>
+        <div class="brand-copy">
+          <p class="brand-kicker">Northern Kentucky University</p>
+          <h1 class="brand-title">Norse Vision Studio</h1>
+          <p class="brand-sub">Real-time browser AI showcase · Griffin Hall protected background · Live AR overlays</p>
+        </div>
+      </div>
+
+      <div class="topbar-meta" aria-label="Demo metadata">
+        <span class="meta-pill">Client-side AI</span>
+        <span class="meta-pill">Privacy-first</span>
+        <span class="meta-pill">Web camera + canvas</span>
+      </div>
+    </header>
+
+    <main class="hero-grid" aria-label="Norse Vision Studio main content">
+      <aside class="panel side-panel" aria-label="Demo overview">
+        <div class="eyebrow">AI Showcase Experience</div>
+
+        <h2 class="side-title">A browser demo built to turn heads on campus.</h2>
+
+        <p class="side-lead">
+          This polished NKU experience keeps personal spaces hidden with a Griffin Hall composite while running live Norse overlays directly in the browser using JavaScript and TensorFlow.js.
+        </p>
+
+        <div class="mini-grid" aria-label="Quick demo stats">
+          <div class="mini-card">
+            <div class="mini-label">Environment</div>
+            <div class="mini-value">Browser-only</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Background</div>
+            <div class="mini-value">Griffin Hall</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Tracking</div>
+            <div class="mini-value">Live face lock</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Output</div>
+            <div class="mini-value">Campus selfie</div>
+          </div>
+        </div>
+
+        <div class="section-title">How to demo it</div>
+        <ol class="how-list" aria-label="Quick start steps">
+          <li>
+            <span class="step-num">1</span>
+            <span>Select <strong>Start Camera + AI</strong> and allow camera access.</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span>Pick a presentation mode: <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Face</strong>, or <strong>Griffin Only</strong>.</span>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span>Use the live stage for your faculty/staff/student demo, then capture a branded snapshot.</span>
+          </li>
+        </ol>
+
+        <div class="section-title">What makes it interesting</div>
+        <ul class="feature-list" aria-label="Feature highlights">
+          <li>
+            <span class="feature-dot" aria-hidden="true"></span>
+            <span>Runs locally in the browser with <code>getUserMedia</code>, <code>&lt;canvas&gt;</code>, TensorFlow.js, BlazeFace, and BodyPix.</span>
+          </li>
+          <li>
+            <span class="feature-dot" aria-hidden="true"></span>
+            <span>Keeps the experience campus-centered by replacing personal spaces with a Griffin Hall background.</span>
+          </li>
+          <li>
+            <span class="feature-dot" aria-hidden="true"></span>
+            <span>Presentation-ready UI gives the demo a showcase feel instead of a rough prototype feel.</span>
+          </li>
+          <li>
+            <span class="feature-dot" aria-hidden="true"></span>
+            <span>Built for desktop, tablet, and mobile so people can try it quickly during events.</span>
+          </li>
+        </ul>
+
+        <div class="privacy-note">
+          <strong>Privacy note:</strong> camera frames stay on the device. This page does not upload or store live camera data.
+        </div>
+      </aside>
+
+      <section class="panel stage-panel" aria-label="Live demo stage">
+        <div class="stage-frame" id="stageFrame">
+          <div class="stage-loader" id="stageLoader" aria-hidden="true"></div>
+
+          <video
+            id="video"
+            autoplay
+            muted
+            playsinline
+            aria-hidden="true"
+          ></video>
+
+          <canvas
+            id="overlayCanvas"
+            role="img"
+            aria-label="Live AI camera experience with NKU visual overlays"
+          ></canvas>
+
+          <div class="stage-vignette-top" aria-hidden="true"></div>
+          <div class="stage-vignette-bottom" aria-hidden="true"></div>
+
+          <div class="hud" aria-hidden="true">
+            <div class="hud-topbar">
+              <div class="hud-pill">
+                <span>NKU Innovation Demo</span>
+              </div>
+
+              <div class="hud-pill">
+                <span id="hudStatusDot" class="hud-status-dot"></span>
+                <span id="hudStatusText">Offline</span>
+              </div>
+            </div>
+
+            <div class="hud-bottom">
+              <div class="hero-callout">
+                <p class="hero-kicker">Live browser experience</p>
+                <h3 class="hero-title">Norse Vision Studio</h3>
+                <div class="hero-sub" id="hudModeDescription">
+                  Griffin Hall background compositing with live face-locked Norse overlays.
+                </div>
+              </div>
+
+              <div class="telemetry">
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Mode</div>
+                  <div class="telemetry-value" id="telemetryMode">Glasses</div>
+                </div>
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Tracking</div>
+                  <div class="telemetry-value" id="telemetryTracking">Searching</div>
+                </div>
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Background</div>
+                  <div class="telemetry-value">Griffin Hall</div>
+                </div>
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Runtime</div>
+                  <div class="telemetry-value" id="telemetryRuntime">Initializing</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-deck">
+          <div class="control-card">
+            <div class="control-row">
+              <div class="status-block" aria-live="polite">
+                <span id="statusLed" class="status-led" aria-hidden="true"></span>
+                <div class="status-copy">
+                  <p class="status-title" id="statusTitle">Ready for launch</p>
+                  <p class="status-sub" id="statusSubtitle">
+                    Use Chrome or Edge over HTTPS for the smoothest event demo experience.
+                  </p>
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button id="startBtn" type="button" class="btn btn-nku">
+                  Start Camera + AI
+                </button>
+                <button id="captureBtn" type="button" class="btn btn-ghost" disabled>
+                  Capture Snapshot
+                </button>
+                <button id="fullscreenBtn" type="button" class="btn btn-ghost">
+                  Fullscreen
+                </button>
+                <button id="stopBtn" type="button" class="btn btn-danger-soft" disabled>
+                  Turn Off
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <div class="section-title mt-0">Presentation modes</div>
+
+            <div class="mode-grid" role="radiogroup" aria-label="Select presentation mode">
+              <button class="mode-btn active" type="button" data-filter="glasses" role="radio" aria-checked="true">
+                <img src="glasses.png" alt="Glasses mode preview" class="mode-thumb" loading="lazy" />
+                <div class="mode-name">Norse Glasses</div>
+                <div class="mode-copy">Clean, lightweight face overlay for live demos and quick campus selfies.</div>
+              </button>
+
+              <button class="mode-btn" type="button" data-filter="helmet" role="radio" aria-checked="false">
+                <img src="helmet.png" alt="Helmet mode preview" class="mode-thumb" loading="lazy" />
+                <div class="mode-name">Viking Helmet</div>
+                <div class="mode-copy">A stronger showcase look with helmet placement tuned for a more natural fit.</div>
+              </button>
+
+              <button class="mode-btn" type="button" data-filter="combo" role="radio" aria-checked="false">
+                <img src="beard.png" alt="Viking face mode preview" class="mode-thumb" loading="lazy" />
+                <div class="mode-name">Viking Face</div>
+                <div class="mode-copy">A full-face Norse transformation built for the most dramatic reactions.</div>
+              </button>
+
+              <button class="mode-btn" type="button" data-filter="griffin" role="radio" aria-checked="false">
+                <img src="griffin-hall.jpg" alt="Griffin Hall background preview" class="mode-thumb" loading="lazy" />
+                <div class="mode-name">Griffin Only</div>
+                <div class="mode-copy">Campus compositing mode with no face graphic overlay — clean and professional.</div>
+              </button>
+            </div>
+
+            <div class="footer-note mt-3">
+              Quick controls:
+              <span class="kbd">1</span> Glasses
+              <span class="kbd">2</span> Helmet
+              <span class="kbd">3</span> Viking Face
+              <span class="kbd">4</span> Griffin Only
+              <span class="kbd">F</span> Fullscreen
+            </div>
+          </div>
+        </div>
+
+        <div class="snapshot-wrap" id="snapshotSection" aria-live="polite">
+          <div class="snapshot-card">
+            <div class="snapshot-head">
+              <div>
+                <p class="snapshot-title">Captured NKU snapshot</p>
+                <p class="snapshot-note">Saved locally as a PNG from the live composited stage.</p>
+              </div>
+            </div>
+            <div class="snapshot-body">
+              <div class="snapshot-frame">
+                <img id="snapshotPreview" alt="Captured NKU Norse Vision Studio image preview" loading="lazy" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="footer-note">
+          Built for showcase demos, classroom excitement, and campus buzz.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DOWNLOAD_PREFIX = "NKU-Norse-Vision-Studio";
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlayCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const stageLoader = document.getElementById("stageLoader");
+
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+      const modeButtons = Array.from(document.querySelectorAll(".mode-btn"));
+
+      const statusLed = document.getElementById("statusLed");
+      const statusTitle = document.getElementById("statusTitle");
+      const statusSubtitle = document.getElementById("statusSubtitle");
+
+      const hudStatusText = document.getElementById("hudStatusText");
+      const hudStatusDot = document.getElementById("hudStatusDot");
+      const telemetryMode = document.getElementById("telemetryMode");
+      const telemetryTracking = document.getElementById("telemetryTracking");
+      const telemetryRuntime = document.getElementById("telemetryRuntime");
+      const hudModeDescription = document.getElementById("hudModeDescription");
+
+      const snapshotSection = document.getElementById("snapshotSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+      const stageFrame = document.getElementById("stageFrame");
+
+      let faceModel = null;
+      let bodyPixModel = null;
+      let mediaStream = null;
+
+      let aiRunning = false;
+      let videoReady = false;
+
+      let renderRAF = null;
+      let faceInterval = null;
+      let segmentInterval = null;
+
+      let latestFaceBox = null;
+      let smoothedFaceBox = null;
+      let lastFaceSeen = 0;
+      let lastSegmentation = null;
+
+      let activeFilter = "glasses";
+      let activeBackend = "unknown";
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      const bgCanvas = document.createElement("canvas");
+      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+
+      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
+
+      const FACE_HOLD_MS = 380;
+      const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+      const FACE_DETECT_MS = isMobileUA ? 120 : 90;
+      const SEGMENT_MS = isMobileUA ? 260 : 190;
+
+      const modeMeta = {
+        glasses: {
+          label: "Glasses",
+          description: "Griffin Hall background compositing with a lightweight face-tracked glasses overlay."
+        },
+        helmet: {
+          label: "Helmet",
+          description: "Griffin Hall background compositing with tuned Viking helmet alignment."
+        },
+        combo: {
+          label: "Viking Face",
+          description: "Griffin Hall background compositing with a dramatic full-face Norse transformation."
+        },
+        griffin: {
+          label: "Griffin Only",
+          description: "Griffin Hall background compositing only, with no face graphic overlay."
+        }
+      };
+
+      const bgImage = new Image();
+      let bgReady = false;
+      bgImage.src = "griffin-hall.jpg";
+      bgImage.onload = () => {
+        bgReady = true;
+      };
+      bgImage.onerror = () => {
+        bgReady = false;
+        console.warn("Could not load griffin-hall.jpg");
+      };
+
+      const glassesImg = new Image();
+      let glassesReady = false;
+      glassesImg.src = "glasses.png";
+      glassesImg.onload = () => glassesReady = true;
+      glassesImg.onerror = () => console.warn("Could not load glasses.png");
+
+      const helmetImg = new Image();
+      let helmetReady = false;
+      helmetImg.src = "helmet.png";
+      helmetImg.onload = () => helmetReady = true;
+      helmetImg.onerror = () => console.warn("Could not load helmet.png");
+
+      const beardImg = new Image();
+      let beardReady = false;
+      beardImg.src = "beard.png";
+      beardImg.onload = () => beardReady = true;
+      beardImg.onerror = () => console.warn("Could not load beard.png");
+
+      function setStatus(title, subtitle = "", mode = "idle") {
+        statusTitle.textContent = title;
+        statusSubtitle.textContent = subtitle;
+
+        statusLed.classList.remove("active", "error");
+        hudStatusDot.classList.remove("live", "error");
+
+        if (mode === "active") {
+          statusLed.classList.add("active");
+          hudStatusDot.classList.add("live");
+        } else if (mode === "error") {
+          statusLed.classList.add("error");
+          hudStatusDot.classList.add("error");
+        }
+      }
+
+      function setHudStatus(text, tracking = false, error = false) {
+        hudStatusText.textContent = text;
+        telemetryTracking.textContent = tracking ? "Face Locked" : "Searching";
+
+        hudStatusDot.classList.remove("live", "error");
+        if (error) {
+          hudStatusDot.classList.add("error");
+        } else if (tracking) {
+          hudStatusDot.classList.add("live");
+        }
+      }
+
+      function updateModeUI() {
+        const meta = modeMeta[activeFilter] || modeMeta.glasses;
+        telemetryMode.textContent = meta.label;
+        hudModeDescription.textContent = meta.description;
+
+        modeButtons.forEach((btn) => {
+          const isActive = btn.dataset.filter === activeFilter;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-checked", isActive ? "true" : "false");
+        });
+      }
+
+      async function selectBestBackend() {
+        const candidates = ["webgl", "wasm", "cpu"];
+        for (const backend of candidates) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              activeBackend = tf.getBackend();
+              telemetryRuntime.textContent = activeBackend.toUpperCase();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend unavailable:", backend, error);
+          }
+        }
+        telemetryRuntime.textContent = "CPU";
+      }
+
+      function updateCanvasSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+
+        canvas.width = w;
+        canvas.height = h;
+        tempCanvas.width = w;
+        tempCanvas.height = h;
+        bgCanvas.width = w;
+        bgCanvas.height = h;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("getUserMedia not supported");
+        }
+
+        const mobileLike = isSmallScreen() || isMobileUA;
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: mobileLike ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
+            height: mobileLike ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasSize();
+            videoReady = true;
+            stageLoader.style.display = "none";
+            resolve();
+          };
+        });
+      }
+
+      function stopLoops() {
+        if (renderRAF) cancelAnimationFrame(renderRAF);
+        renderRAF = null;
+
+        if (faceInterval) clearInterval(faceInterval);
+        faceInterval = null;
+
+        if (segmentInterval) clearInterval(segmentInterval);
+        segmentInterval = null;
+      }
+
+      function resetTracking() {
+        latestFaceBox = null;
+        smoothedFaceBox = null;
+        lastFaceSeen = 0;
+        lastSegmentation = null;
+      }
+
+      function stopExperience() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        aiRunning = false;
+        videoReady = false;
+        resetTracking();
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        stageLoader.style.display = "block";
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        captureBtn.disabled = true;
+
+        setStatus(
+          "Ready for launch",
+          "Use Chrome or Edge over HTTPS for the smoothest event demo experience.",
+          "idle"
+        );
+        setHudStatus("Offline", false, false);
+        telemetryTracking.textContent = "Searching";
+      }
+
+      function isValidPoint(pt) {
+        return Array.isArray(pt)
+          && pt.length >= 2
+          && Number.isFinite(pt[0])
+          && Number.isFinite(pt[1]);
+      }
+
+      function isValidBox(topLeft, bottomRight) {
+        if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+        return (bottomRight[0] - topLeft[0]) > 0 && (bottomRight[1] - topLeft[1]) > 0;
+      }
+
+      function smoothBox(previous, incoming, alpha) {
+        if (!previous) return incoming;
+
+        const [px1, py1] = previous.topLeft;
+        const [px2, py2] = previous.bottomRight;
+        const [nx1, ny1] = incoming.topLeft;
+        const [nx2, ny2] = incoming.bottomRight;
+
+        return {
+          topLeft: [
+            px1 + alpha * (nx1 - px1),
+            py1 + alpha * (ny1 - py1)
+          ],
+          bottomRight: [
+            px2 + alpha * (nx2 - px2),
+            py2 + alpha * (ny2 - py2)
+          ]
+        };
+      }
+
+      function getFaceMetrics(topLeft, bottomRight) {
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const width = x2 - x1;
+        const height = y2 - y1;
+        const cx = x1 + width / 2;
+        const cy = y1 + height / 2;
+        return { x1, y1, x2, y2, width, height, cx, cy };
+      }
+
+      function drawGlasses(topLeft, bottomRight) {
+        if (!glassesReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { x1, y1, width, height, cx } = getFaceMetrics(topLeft, bottomRight);
+        const overlayWidth = width * 1.12;
+        const overlayHeight = overlayWidth * (glassesImg.naturalHeight / glassesImg.naturalWidth);
+        const eyeLineY = y1 + height * 0.43;
+
+        ctx.drawImage(
+          glassesImg,
+          cx - overlayWidth / 2,
+          eyeLineY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawHelmet(topLeft, bottomRight) {
+        if (!helmetReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { y1, width, height, cx } = getFaceMetrics(topLeft, bottomRight);
+        const overlayWidth = width * 1.44;
+        const overlayHeight = overlayWidth * (helmetImg.naturalHeight / helmetImg.naturalWidth);
+
+        const helmetCenterY = y1 + height * 0.06;
+
+        ctx.drawImage(
+          helmetImg,
+          cx - overlayWidth / 2,
+          helmetCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawBeard(topLeft, bottomRight) {
+        if (!beardReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { width, height, cx, cy } = getFaceMetrics(topLeft, bottomRight);
+        const overlayWidth = width * 1.42;
+        const overlayHeight = overlayWidth * (beardImg.naturalHeight / beardImg.naturalWidth);
+        const overlayCenterY = cy - height * 0.02;
+
+        ctx.drawImage(
+          beardImg,
+          cx - overlayWidth / 2,
+          overlayCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawBackgroundCover(image, targetCtx, targetW, targetH) {
+        if (!image?.naturalWidth || !image?.naturalHeight) return;
+
+        const imageRatio = image.naturalWidth / image.naturalHeight;
+        const targetRatio = targetW / targetH;
+
+        let drawW, drawH, drawX, drawY;
+
+        if (imageRatio > targetRatio) {
+          drawH = targetH;
+          drawW = drawH * imageRatio;
+          drawX = (targetW - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = targetW;
+          drawH = drawW / imageRatio;
+          drawX = 0;
+          drawY = (targetH - drawH) / 2;
+        }
+
+        targetCtx.drawImage(image, drawX, drawY, drawW, drawH);
+      }
+
+      async function detectFaceStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+            if (isValidBox(face.topLeft, face.bottomRight)) {
+              latestFaceBox = {
+                topLeft: face.topLeft,
+                bottomRight: face.bottomRight
+              };
+              lastFaceSeen = performance.now();
+            }
+          } else if (performance.now() - lastFaceSeen > FACE_HOLD_MS) {
+            latestFaceBox = null;
+          }
+        } catch (error) {
+          console.error("Face detection error:", error);
+        }
+      }
+
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+        try {
+          lastSegmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: isMobileUA ? "low" : "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: 1
+          });
+        } catch (error) {
+          console.error("BodyPix segmentation error:", error);
+          lastSegmentation = null;
+        }
+      }
+
+      function drawBaseComposite() {
+        const logicalW = canvas.width;
+        const logicalH = canvas.height;
+        if (!logicalW || !logicalH) return;
+
+        ctx.clearRect(0, 0, logicalW, logicalH);
+
+        if (bgReady && bodyPixModel && lastSegmentation) {
+          tempCtx.clearRect(0, 0, logicalW, logicalH);
+          tempCtx.drawImage(video, 0, 0, logicalW, logicalH);
+
+          const personMask = lastSegmentation.data;
+          const frameImageData = tempCtx.getImageData(0, 0, logicalW, logicalH);
+          const framePixels = frameImageData.data;
+
+          bgCtx.clearRect(0, 0, logicalW, logicalH);
+          drawBackgroundCover(bgImage, bgCtx, logicalW, logicalH);
+
+          const bgImageData = bgCtx.getImageData(0, 0, logicalW, logicalH);
+          const bgPixels = bgImageData.data;
+
+          const len = Math.min(personMask.length, framePixels.length / 4);
+
+          for (let i = 0; i < len; i++) {
+            const offset = i * 4;
+            if (personMask[i] === 0) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = bgPixels[offset + 3];
+            }
+          }
+
+          ctx.putImageData(frameImageData, 0, 0);
+        } else if (bgReady) {
+          drawBackgroundCover(bgImage, ctx, logicalW, logicalH);
+        } else {
+          ctx.drawImage(video, 0, 0, logicalW, logicalH);
+        }
+      }
+
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawBaseComposite();
+
+        let boxToUse = null;
+        const now = performance.now();
+
+        if (latestFaceBox) {
+          smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+          boxToUse = smoothedFaceBox;
+        } else if (smoothedFaceBox && now - lastFaceSeen < FACE_HOLD_MS) {
+          boxToUse = smoothedFaceBox;
+        } else {
+          smoothedFaceBox = null;
+        }
+
+        if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
+          if (activeFilter === "glasses") {
+            drawGlasses(boxToUse.topLeft, boxToUse.bottomRight);
+          } else if (activeFilter === "helmet") {
+            drawHelmet(boxToUse.topLeft, boxToUse.bottomRight);
+          } else if (activeFilter === "combo") {
+            drawBeard(boxToUse.topLeft, boxToUse.bottomRight);
+          }
+
+          setHudStatus("Live", true, false);
+          setStatus(
+            "AI active",
+            `${modeMeta[activeFilter].label} mode is running with Griffin Hall as the protected background.`,
+            "active"
+          );
+        } else {
+          setHudStatus("Searching", false, false);
+          setStatus(
+            "Camera active",
+            "Step into frame so the system can lock onto a face for live overlay placement.",
+            "active"
+          );
+        }
+
+        renderRAF = requestAnimationFrame(renderFrame);
+      }
+
+      async function startExperience() {
+        if (aiRunning) return;
+
+        try {
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus(
+            "Requesting camera access",
+            "Approve camera permissions to start the live NKU demo.",
+            "idle"
+          );
+          setHudStatus("Loading", false, false);
+
+          await setupCamera();
+
+          setStatus(
+            "Loading AI runtime",
+            "Initializing TensorFlow.js and browser AI models.",
+            "idle"
+          );
+
+          await selectBestBackend();
+
+          faceModel = await blazeface.load();
+
+          try {
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: isMobileUA ? 0.5 : 0.75,
+              quantBytes: 2
+            });
+          } catch (error) {
+            console.warn("BodyPix failed to load; continuing without segmentation.", error);
+            bodyPixModel = null;
+          }
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          faceInterval = setInterval(detectFaceStep, FACE_DETECT_MS);
+          segmentInterval = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFaceStep();
+          await segmentStep();
+
+          setStatus(
+            "AI ready",
+            "Norse Vision Studio is live and ready for your campus showcase.",
+            "active"
+          );
+
+          renderRAF = requestAnimationFrame(renderFrame);
+        } catch (error) {
+          console.error("Startup error:", error);
+
+          setStatus(
+            "Unable to start demo",
+            "Try Chrome or Edge on HTTPS and confirm camera permissions are enabled.",
+            "error"
+          );
+          setHudStatus("Error", false, true);
+
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+        }
+      }
+
+      function captureSnapshot() {
+        if (!videoReady || !canvas.width || !canvas.height) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = canvas.width;
+        snapCanvas.height = canvas.height;
+        const sctx = snapCanvas.getContext("2d");
+
+        sctx.drawImage(canvas, 0, 0);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        snapshotSection.style.display = "block";
+
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const a = document.createElement("a");
+        a.href = dataURL;
+        a.download = `${DOWNLOAD_PREFIX}-${stamp}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setStatus(
+          "Snapshot captured",
+          "Your composited NKU image has been saved locally as a PNG.",
+          "active"
+        );
+      }
+
+      async function toggleFullscreen() {
+        try {
+          if (!document.fullscreenElement) {
+            await stageFrame.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          console.warn("Fullscreen unavailable:", error);
+        }
+      }
+
+      function setFilter(nextFilter) {
+        if (!modeMeta[nextFilter]) return;
+        activeFilter = nextFilter;
+        updateModeUI();
+
+        if (aiRunning) {
+          setStatus(
+            `${modeMeta[nextFilter].label} selected`,
+            modeMeta[nextFilter].description,
+            "active"
+          );
+        } else {
+          setStatus(
+            "Mode updated",
+            `${modeMeta[nextFilter].label} is ready. Start the camera to launch the live stage.`,
+            "idle"
+          );
+        }
+      }
+
+      function handleResize() {
+        if (!videoReady) return;
+        setTimeout(updateCanvasSize, 100);
+      }
+
+      modeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => setFilter(btn.dataset.filter));
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", stopExperience);
+      captureBtn.addEventListener("click", captureSnapshot);
+      fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+      window.addEventListener("resize", handleResize, { passive: true });
+      window.addEventListener("orientationchange", handleResize, { passive: true });
+
+      window.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+
+        if (key === "1") setFilter("glasses");
+        if (key === "2") setFilter("helmet");
+        if (key === "3") setFilter("combo");
+        if (key === "4") setFilter("griffin");
+        if (key === "f") toggleFullscreen();
+      });
+
+      window.addEventListener("beforeunload", () => {
+        stopExperience();
+      });
+
+      updateModeUI();
+      telemetryRuntime.textContent = "Waiting";
+      setHudStatus("Offline", false, false);
+      setStatus(
+        "Ready for launch",
+        "Use Chrome or Edge over HTTPS for the smoothest event demo experience.",
+        "idle"
+      );
+    })();
+  </script>
+</body>
+</html>

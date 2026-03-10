@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Norse Voice + Laugh Mode Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="NKU Norse browser demo with Griffin Hall background replacement, helmet overlay, voice commands, laugh mode, and real canvas recording."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <style>
+    :root {
+      --bg: #0a0f1c;
+      --panel: rgba(16, 20, 32, 0.82);
+      --panel-2: rgba(255, 255, 255, 0.06);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --gold: #f7b718;
+      --gold-dark: #c99200;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(247, 183, 24, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 22%),
+        linear-gradient(180deg, #0b1120 0%, #0a0f1c 100%);
+      color: var(--text);
+    }
+
+    body {
+      padding: 18px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .stage-card {
+      padding: 14px;
+    }
+
+    .control-card {
+      padding: 22px;
+    }
+
+    .stage-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      border-radius: 22px;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+
+    video {
+      display: none;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 1rem;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .primary {
+      background: var(--gold);
+      color: #111;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .success {
+      background: var(--success);
+      color: white;
+    }
+
+    .danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .status-box {
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .value {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(247, 183, 24, 0.12);
+      border: 1px solid rgba(247, 183, 24, 0.24);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .commands {
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .commands li {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      line-height: 1.45;
+    }
+
+    .download-wrap {
+      margin-top: 18px;
+    }
+
+    .download-wrap a {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(247, 183, 24, 0.14);
+      border: 1px solid rgba(247, 183, 24, 0.25);
+    }
+
+    .note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-grid {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card stage-card">
+      <div class="stage-wrap">
+        <canvas id="scene"></canvas>
+      </div>
+
+      <div class="pill-row">
+        <div class="pill">Griffin Hall</div>
+        <div class="pill">Helmet Overlay</div>
+        <div class="pill">Voice Commands</div>
+        <div class="pill">Laugh Mode</div>
+        <div class="pill">Canvas Recording</div>
+      </div>
+    </section>
+
+    <aside class="card control-card">
+      <h1>NKU Norse Voice Demo</h1>
+      <p class="subtitle">
+        Say a command and the full scene changes live. This version composites the
+        final result directly onto canvas so your recording captures the full effect.
+      </p>
+
+      <div class="btn-grid">
+        <button id="startBtn" class="primary">Start Camera + Assets</button>
+        <button id="listenBtn" class="primary">Start Voice Commands</button>
+        <button id="stopListenBtn" class="secondary">Stop Voice Commands</button>
+        <button id="toggleLaughBtn" class="secondary">Toggle Laugh Mode</button>
+        <button id="showHelmetBtn" class="secondary">Show Helmet</button>
+        <button id="hideHelmetBtn" class="secondary">Hide Helmet</button>
+        <button id="recordBtn" class="success">Start Recording</button>
+        <button id="stopRecordBtn" class="danger">Stop Recording</button>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-box">
+          <span class="label">System</span>
+          <div id="systemStatus" class="value">Waiting to start</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Listening</span>
+          <div id="listeningStatus" class="value">Off</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Last Heard</span>
+          <div id="heardStatus" class="value">Nothing yet</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Scene Mode</span>
+          <div id="modeStatus" class="value">Standard</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Recording</span>
+          <div id="recordStatus" class="value">Not recording</div>
+        </div>
+      </div>
+
+      <ul class="commands">
+        <li><strong>“laugh mode”</strong> → toggles laugh mode text and effect</li>
+        <li><strong>“normal mode”</strong> → returns to standard view</li>
+        <li><strong>“show Norse overlay”</strong> → shows helmet + Norse frame</li>
+        <li><strong>“hide Norse overlay”</strong> → hides helmet + Norse frame</li>
+        <li><strong>“record”</strong> → starts recording the final composited canvas</li>
+        <li><strong>“stop recording”</strong> → stops recording</li>
+      </ul>
+
+      <div id="downloadWrap" class="download-wrap"></div>
+
+      <p class="note">
+        Place <strong>griffin-hall.jpg</strong> and <strong>helmet.png</strong> in the same folder
+        as this HTML file. Best tested in Chrome or Edge.
+      </p>
+    </aside>
+  </main>
+
+  <video id="camera" autoplay muted playsinline></video>
+
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const video = document.getElementById("camera");
+
+    const startBtn = document.getElementById("startBtn");
+    const listenBtn = document.getElementById("listenBtn");
+    const stopListenBtn = document.getElementById("stopListenBtn");
+    const toggleLaughBtn = document.getElementById("toggleLaughBtn");
+    const showHelmetBtn = document.getElementById("showHelmetBtn");
+    const hideHelmetBtn = document.getElementById("hideHelmetBtn");
+    const recordBtn = document.getElementById("recordBtn");
+    const stopRecordBtn = document.getElementById("stopRecordBtn");
+
+    const systemStatus = document.getElementById("systemStatus");
+    const listeningStatus = document.getElementById("listeningStatus");
+    const heardStatus = document.getElementById("heardStatus");
+    const modeStatus = document.getElementById("modeStatus");
+    const recordStatus = document.getElementById("recordStatus");
+    const downloadWrap = document.getElementById("downloadWrap");
+
+    const griffinHall = new Image();
+    const helmetImg = new Image();
+
+    griffinHall.src = "griffin-hall.jpg";
+    helmetImg.src = "helmet.png";
+
+    let cameraStream = null;
+    let animationId = null;
+
+    let assetsLoaded = {
+      bg: false,
+      helmet: false
+    };
+
+    let speech = null;
+    let speechEnabled = false;
+    let isListening = false;
+
+    let laughMode = false;
+    let showHelmet = true;
+    let showNorseFrame = true;
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    let flashMessage = "";
+    let flashUntil = 0;
+
+    griffinHall.onload = () => assetsLoaded.bg = true;
+    helmetImg.onload = () => assetsLoaded.helmet = true;
+
+    griffinHall.onerror = () => {
+      systemStatus.textContent = "Could not load griffin-hall.jpg";
+    };
+
+    helmetImg.onerror = () => {
+      systemStatus.textContent = "Could not load helmet.png";
+    };
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawRoundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    async function startApp() {
+      systemStatus.textContent = "Loading camera and assets...";
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true
+        });
+
+        video.srcObject = cameraStream;
+        await video.play();
+
+        resizeCanvas();
+        systemStatus.textContent = "Live";
+        startRenderLoop();
+      } catch (error) {
+        systemStatus.textContent = "Camera access failed";
+        alert("Could not access camera/microphone: " + error.message);
+        console.error(error);
+      }
+    }
+
+    function setFlash(text, duration = 1400) {
+      flashMessage = text;
+      flashUntil = performance.now() + duration;
+    }
+
+    function drawBackground(cw, ch) {
+      if (assetsLoaded.bg) {
+        const imgRatio = griffinHall.width / griffinHall.height;
+        const canvasRatio = cw / ch;
+
+        let drawW, drawH, dx, dy;
+
+        if (imgRatio > canvasRatio) {
+          drawH = ch;
+          drawW = drawH * imgRatio;
+          dx = (cw - drawW) / 2;
+          dy = 0;
+        } else {
+          drawW = cw;
+          drawH = drawW / imgRatio;
+          dx = 0;
+          dy = (ch - drawH) / 2;
+        }
+
+        ctx.drawImage(griffinHall, dx, dy, drawW, drawH);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, ch);
+        grad.addColorStop(0, "#1e293b");
+        grad.addColorStop(1, "#0f172a");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, cw, ch);
+      }
+    }
+
+    function drawCameraWithSimpleBackgroundRemoval(cw, ch) {
+      if (video.readyState < 2) return;
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      tempCanvas.width = 320;
+      tempCanvas.height = Math.floor(320 * (video.videoHeight / video.videoWidth || 0.75));
+
+      tempCtx.save();
+      tempCtx.scale(-1, 1);
+      tempCtx.drawImage(video, -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.restore();
+
+      const frame = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const data = frame.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const brightness = (r + g + b) / 3;
+        const maxChannel = Math.max(r, g, b);
+        const minChannel = Math.min(r, g, b);
+
+        const isWallLike =
+          brightness > 160 &&
+          (maxChannel - minChannel) < 28;
+
+        const isGreenScreenLike =
+          g > 105 &&
+          g > r * 1.15 &&
+          g > b * 1.1;
+
+        if (isWallLike || isGreenScreenLike) {
+          data[i + 3] = 0;
+        }
+      }
+
+      tempCtx.putImageData(frame, 0, 0);
+
+      const videoRatio = tempCanvas.width / tempCanvas.height;
+      const canvasRatio = cw / ch;
+
+      let drawW, drawH, dx, dy;
+
+      if (videoRatio > canvasRatio) {
+        drawH = ch;
+        drawW = drawH * videoRatio;
+        dx = (cw - drawW) / 2;
+        dy = 0;
+      } else {
+        drawW = cw;
+        drawH = drawW / videoRatio;
+        dx = 0;
+        dy = (ch - drawH) / 2;
+      }
+
+      ctx.drawImage(tempCanvas, dx, dy, drawW, drawH);
+    }
+
+    function drawHelmetOverlay(cw, ch) {
+      if (!showHelmet || !assetsLoaded.helmet) return;
+
+      const helmetWidth = cw * 0.42;
+      const helmetHeight = helmetWidth * (helmetImg.height / helmetImg.width);
+      const x = (cw - helmetWidth) / 2;
+      const y = ch * 0.03;
+
+      ctx.drawImage(helmetImg, x, y, helmetWidth, helmetHeight);
+    }
+
+    function drawNorseFrame(cw, ch) {
+      if (!showNorseFrame) return;
+
+      ctx.save();
+
+      const grad = ctx.createLinearGradient(0, 0, cw, ch);
+      grad.addColorStop(0, "rgba(247, 183, 24, 0.26)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0.08)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, cw, ch);
+
+      ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+      ctx.lineWidth = 4;
+      drawRoundedRect(16, 16, cw - 32, ch - 32, 24);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.52)";
+      drawRoundedRect(22, 22, 250, 56, 16);
+      ctx.fill();
+
+      ctx.fillStyle = "#f7b718";
+      ctx.font = "800 28px Inter, Arial";
+      ctx.fillText("NORSE MODE", 40, 58);
+
+      ctx.restore();
+    }
+
+    function drawLaughMode(cw, ch) {
+      if (!laughMode) return;
+
+      ctx.save();
+
+      ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cw / 2, ch / 2, Math.min(cw, ch) * 0.22, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+      drawRoundedRect(cw / 2 - 190, ch - 96, 380, 58, 18);
+      ctx.fill();
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 30px Inter, Arial";
+      ctx.fillText("LAUGH MODE", cw / 2, ch - 58);
+
+      ctx.restore();
+    }
+
+    function drawLiveStatus(cw) {
+      ctx.save();
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.46)";
+      drawRoundedRect(cw - 286, 22, 264, 46, 14);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 18px Inter, Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(
+        isListening ? "Listening for commands..." : "Voice idle",
+        cw - 268,
+        50
+      );
+
+      ctx.restore();
+    }
+
+    function drawFlash(cw, ch) {
+      if (!flashMessage || performance.now() > flashUntil) return;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+      drawRoundedRect(cw / 2 - 190, 28, 380, 54, 16);
+      ctx.fill();
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 24px Inter, Arial";
+      ctx.fillText(flashMessage, cw / 2, 62);
+      ctx.restore();
+    }
+
+    function render() {
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+
+      ctx.clearRect(0, 0, cw, ch);
+
+      drawBackground(cw, ch);
+      drawCameraWithSimpleBackgroundRemoval(cw, ch);
+      drawHelmetOverlay(cw, ch);
+      drawNorseFrame(cw, ch);
+      drawLaughMode(cw, ch);
+      drawLiveStatus(cw);
+      drawFlash(cw, ch);
+
+      animationId = requestAnimationFrame(render);
+    }
+
+    function startRenderLoop() {
+      if (animationId) cancelAnimationFrame(animationId);
+      render();
+    }
+
+    function updateModeStatus() {
+      if (laughMode) {
+        modeStatus.textContent = "Laugh mode";
+      } else if (showNorseFrame || showHelmet) {
+        modeStatus.textContent = "Norse overlay";
+      } else {
+        modeStatus.textContent = "Standard";
+      }
+    }
+
+    function setupSpeech() {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        alert("Speech recognition is not supported in this browser.");
+        return;
+      }
+
+      speech = new SpeechRecognition();
+      speech.continuous = true;
+      speech.interimResults = false;
+      speech.lang = "en-US";
+
+      speech.onstart = () => {
+        isListening = true;
+        listeningStatus.textContent = "On";
+      };
+
+      speech.onend = () => {
+        isListening = false;
+        listeningStatus.textContent = "Off";
+
+        if (speechEnabled) {
+          try {
+            speech.start();
+          } catch (error) {
+            console.warn("Speech restart blocked:", error);
+          }
+        }
+      };
+
+      speech.onerror = (event) => {
+        heardStatus.textContent = "Error: " + event.error;
+      };
+
+      speech.onresult = (event) => {
+        const transcript =
+          event.results[event.results.length - 1][0].transcript
+            .toLowerCase()
+            .trim();
+
+        heardStatus.textContent = transcript;
+        handleVoiceCommand(transcript);
+      };
+    }
+
+    function handleVoiceCommand(text) {
+      if (text.includes("laugh mode")) {
+        laughMode = true;
+        updateModeStatus();
+        setFlash("LAUGH MODE ACTIVATED");
+        return;
+      }
+
+      if (text.includes("normal mode")) {
+        laughMode = false;
+        updateModeStatus();
+        setFlash("STANDARD MODE");
+        return;
+      }
+
+      if (text.includes("show norse overlay")) {
+        showHelmet = true;
+        showNorseFrame = true;
+        updateModeStatus();
+        setFlash("NORSE OVERLAY ON");
+        return;
+      }
+
+      if (text.includes("hide norse overlay")) {
+        showHelmet = false;
+        showNorseFrame = false;
+        updateModeStatus();
+        setFlash("NORSE OVERLAY OFF");
+        return;
+      }
+
+      if (text.includes("record") && !text.includes("stop")) {
+        startRecording();
+        setFlash("RECORDING STARTED");
+        return;
+      }
+
+      if (text.includes("stop recording")) {
+        stopRecording();
+        setFlash("RECORDING STOPPED");
+        return;
+      }
+    }
+
+    function startListening() {
+      if (!speech) setupSpeech();
+      if (!speech) return;
+
+      speechEnabled = true;
+
+      try {
+        speech.start();
+      } catch (error) {
+        console.warn("Speech start warning:", error);
+      }
+    }
+
+    function stopListening() {
+      speechEnabled = false;
+      if (speech) speech.stop();
+    }
+
+    function startRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") return;
+
+      downloadWrap.innerHTML = "";
+
+      const canvasStream = canvas.captureStream(30);
+      const combined = new MediaStream();
+
+      canvasStream.getVideoTracks().forEach(track => combined.addTrack(track));
+
+      if (cameraStream) {
+        cameraStream.getAudioTracks().forEach(track => combined.addTrack(track));
+      }
+
+      recordedChunks = [];
+
+      try {
+        mediaRecorder = new MediaRecorder(combined, {
+          mimeType: "video/webm"
+        });
+      } catch (error) {
+        mediaRecorder = new MediaRecorder(combined);
+      }
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+
+        downloadWrap.innerHTML = `
+          <a href="${url}" download="nku-norse-demo.webm">Download recording</a>
+        `;
+      };
+
+      mediaRecorder.start();
+      recordStatus.textContent = "Recording now";
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        recordStatus.textContent = "Stopped";
+      }
+    }
+
+    startBtn.addEventListener("click", startApp);
+    listenBtn.addEventListener("click", startListening);
+    stopListenBtn.addEventListener("click", stopListening);
+
+    toggleLaughBtn.addEventListener("click", () => {
+      laughMode = !laughMode;
+      updateModeStatus();
+      setFlash(laughMode ? "LAUGH MODE ACTIVATED" : "LAUGH MODE OFF");
+    });
+
+    showHelmetBtn.addEventListener("click", () => {
+      showHelmet = true;
+      showNorseFrame = true;
+      updateModeStatus();
+      setFlash("NORSE OVERLAY ON");
+    });
+
+    hideHelmetBtn.addEventListener("click", () => {
+      showHelmet = false;
+      showNorseFrame = false;
+      updateModeStatus();
+      setFlash("NORSE OVERLAY OFF");
+    });
+
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+
+    window.addEventListener("resize", resizeCanvas);
+
+    resizeCanvas();
+    updateModeStatus();
+  </script>
+</body>
+</html>

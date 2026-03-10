@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Screen Intelligence Layer — Premium Demo</title>
+  <meta
+    name="description"
+    content="A premium browser-based screen share experience with cinematic AI overlays, live tracking, and monetizable interactive demo modes."
+  />
+  <style>
+    :root{
+      --bg:#060b16;
+      --bg2:#0d1324;
+      --panel:rgba(13,19,36,0.82);
+      --panel-border:rgba(255,255,255,0.08);
+      --text:#eef4ff;
+      --muted:#a8b4d6;
+      --accent:#7c3aed;
+      --accent-2:#22c55e;
+      --accent-3:#06b6d4;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --glow:0 0 0 1px rgba(255,255,255,0.04), 0 24px 60px rgba(0,0,0,0.45);
+      --radius:22px;
+    }
+
+    * { box-sizing:border-box; }
+
+    html, body {
+      margin:0;
+      padding:0;
+      min-height:100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(6,182,212,0.12), transparent 26%),
+        radial-gradient(circle at bottom left, rgba(34,197,94,0.08), transparent 22%),
+        linear-gradient(180deg, #050914 0%, #091120 48%, #07101d 100%);
+    }
+
+    body {
+      padding:20px;
+    }
+
+    .shell {
+      max-width: 1500px;
+      margin: 0 auto;
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .panel {
+      background:var(--panel);
+      border:1px solid var(--panel-border);
+      border-radius:var(--radius);
+      box-shadow:var(--glow);
+      backdrop-filter: blur(16px);
+    }
+
+    .sidebar {
+      padding:22px;
+      position:sticky;
+      top:20px;
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:#efe7ff;
+      background:rgba(124,58,237,0.18);
+      border:1px solid rgba(124,58,237,0.32);
+      margin-bottom:14px;
+    }
+
+    h1 {
+      margin:0 0 10px;
+      font-size:30px;
+      line-height:1.05;
+      letter-spacing:-0.02em;
+    }
+
+    .lead {
+      margin:0 0 18px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:15px;
+    }
+
+    .btn-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    button {
+      border:none;
+      border-radius:15px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      transition:transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+    }
+
+    button:hover { transform:translateY(-1px); }
+    button:active { transform:translateY(0); }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+
+    .btn-primary {
+      color:white;
+      background:linear-gradient(135deg, #8b5cf6, #6d28d9);
+      box-shadow:0 14px 28px rgba(124,58,237,.32);
+    }
+
+    .btn-secondary {
+      color:white;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-danger {
+      color:#ffe1e1;
+      background:rgba(239,68,68,0.14);
+      border:1px solid rgba(239,68,68,0.24);
+    }
+
+    .section {
+      margin-top:18px;
+      padding-top:18px;
+      border-top:1px solid rgba(255,255,255,0.08);
+    }
+
+    .section h2 {
+      margin:0 0 12px;
+      font-size:14px;
+      letter-spacing:0.02em;
+    }
+
+    label {
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+      font-weight:700;
+      color:var(--muted);
+    }
+
+    input[type="text"], select, input[type="color"] {
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.06);
+      color:white;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+    }
+
+    input[type="range"] {
+      width:100%;
+      accent-color: var(--accent);
+      cursor:pointer;
+    }
+
+    input[type="color"] {
+      height:48px;
+      padding:6px;
+      cursor:pointer;
+    }
+
+    .range-wrap {
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    .pill-val {
+      min-width:58px;
+      text-align:center;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.08);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .check {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:10px 0;
+      font-size:14px;
+      color:var(--text);
+    }
+
+    .check input {
+      width:18px;
+      height:18px;
+      accent-color:var(--accent);
+    }
+
+    .stats-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .stat-card {
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .stat-label {
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .stat-value {
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:-0.02em;
+    }
+
+    .tip {
+      margin-top:14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:16px;
+      padding:14px;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:13px;
+    }
+
+    .viewer {
+      padding:18px;
+    }
+
+    .viewer-top {
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:center;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .viewer-title {
+      margin:0;
+      font-size:19px;
+      font-weight:900;
+      letter-spacing:-0.02em;
+    }
+
+    .status-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .status-pill {
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.06);
+    }
+
+    .live {
+      color:#dfffea;
+      background:rgba(34,197,94,0.15);
+      border-color:rgba(34,197,94,0.28);
+    }
+
+    .idle {
+      color:#fff0ce;
+      background:rgba(245,158,11,0.14);
+      border-color:rgba(245,158,11,0.22);
+    }
+
+    .stage {
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      overflow:hidden;
+      border-radius:24px;
+      background:
+        linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.10)),
+        #030814;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    video, canvas {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+    }
+
+    #screenVideo {
+      background:#020510;
+    }
+
+    .placeholder {
+      position:absolute;
+      inset:0;
+      z-index:3;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:28px;
+      background:
+        radial-gradient(circle at center, rgba(124,58,237,0.18), transparent 42%);
+    }
+
+    .placeholder-card {
+      max-width:650px;
+      padding:30px;
+      border-radius:28px;
+      background:rgba(7,12,24,0.72);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:var(--glow);
+    }
+
+    .placeholder-card h3 {
+      margin:0 0 10px;
+      font-size:30px;
+      letter-spacing:-0.03em;
+    }
+
+    .placeholder-card p {
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:15px;
+    }
+
+    .tiny {
+      margin-top:10px;
+      font-size:12px;
+      color:#8fa0c7;
+    }
+
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns:1fr; }
+      .sidebar { position:static; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding:12px; }
+      .sidebar, .viewer { padding:15px; }
+      h1 { font-size:25px; }
+      .stats-grid { grid-template-columns:1fr; }
+      .stage { aspect-ratio:4/3; }
+      .placeholder-card h3 { font-size:24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="panel sidebar">
+      <div class="badge">AI Screen Intelligence Demo</div>
+      <h1>Monetizable Screen Overlay Experience</h1>
+      <p class="lead">
+        This version is designed to feel like a premium product demo instead of a basic overlay.
+        It reacts to screen activity, spotlights movement, generates dynamic interface messaging,
+        and makes the experience feel sellable for coaching, training, audits, demos, and creator content.
+      </p>
+
+      <div class="btn-row">
+        <button id="startBtn" class="btn-primary">Share Screen</button>
+        <button id="stopBtn" class="btn-danger" disabled>Stop</button>
+        <button id="demoBurstBtn" class="btn-secondary">Trigger Wow Effect</button>
+      </div>
+
+      <div class="section">
+        <h2>Brand / Product feel</h2>
+        <label for="headlineInput">Headline</label>
+        <input id="headlineInput" type="text" value="AI-Powered Screen Intelligence" />
+
+        <label for="subheadlineInput" style="margin-top:12px;">Subheadline</label>
+        <input id="subheadlineInput" type="text" value="Real-time interaction layer active" />
+
+        <label for="modeSelect" style="margin-top:12px;">Demo mode</label>
+        <select id="modeSelect">
+          <option value="executive">Executive Demo</option>
+          <option value="creator">Creator Mode</option>
+          <option value="training">Training Mode</option>
+          <option value="audit">Audit Mode</option>
+        </select>
+
+        <label for="accentColor" style="margin-top:12px;">Accent color</label>
+        <input id="accentColor" type="color" value="#7c3aed" />
+      </div>
+
+      <div class="section">
+        <h2>Detection tuning</h2>
+
+        <label for="sensitivityRange">Sensitivity</label>
+        <div class="range-wrap">
+          <input id="sensitivityRange" type="range" min="5" max="60" value="18" />
+          <div id="sensitivityVal" class="pill-val">18</div>
+        </div>
+
+        <label for="focusRange">Focus box size</label>
+        <div class="range-wrap">
+          <input id="focusRange" type="range" min="90" max="480" value="230" />
+          <div id="focusVal" class="pill-val">230</div>
+        </div>
+
+        <label class="check">
+          <input id="gridToggle" type="checkbox" checked />
+          <span>Show cinematic grid</span>
+        </label>
+
+        <label class="check">
+          <input id="scanToggle" type="checkbox" checked />
+          <span>Show scan line effect</span>
+        </label>
+
+        <label class="check">
+          <input id="focusToggle" type="checkbox" checked />
+          <span>Show smart focus tracker</span>
+        </label>
+
+        <label class="check">
+          <input id="labelsToggle" type="checkbox" checked />
+          <span>Show AI labels</span>
+        </label>
+
+        <label class="check">
+          <input id="energyToggle" type="checkbox" checked />
+          <span>Show pulse / energy effect</span>
+        </label>
+      </div>
+
+      <div class="section">
+        <h2>Live metrics</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">System state</div>
+            <div class="stat-value" id="stateText">Idle</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Activity level</div>
+            <div class="stat-value" id="activityText">0%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Engagement score</div>
+            <div class="stat-value" id="engagementText">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Shared source</div>
+            <div class="stat-value" id="sourceText" style="font-size:14px;">None</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Resolution</div>
+            <div class="stat-value" id="resolutionText" style="font-size:14px;">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">AI insight</div>
+            <div class="stat-value" id="insightText" style="font-size:14px;">Waiting</div>
+          </div>
+        </div>
+
+        <div class="tip">
+          Best monetization directions for this type of demo:
+          premium presentation overlay tool, UX audit overlay, training walkthrough layer,
+          creator reaction screen, livestream enhancement tool, or sales demo intelligence layer.
+        </div>
+      </div>
+    </aside>
+
+    <section class="panel viewer">
+      <div class="viewer-top">
+        <h2 class="viewer-title">Live Premium Preview</h2>
+        <div class="status-row">
+          <div class="status-pill" id="modePill">Mode: Executive Demo</div>
+          <div class="status-pill idle" id="livePill">Not sharing</div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <video id="screenVideo" autoplay playsinline muted></video>
+        <canvas id="analysisCanvas" hidden></canvas>
+        <canvas id="overlayCanvas"></canvas>
+
+        <div id="placeholder" class="placeholder">
+          <div class="placeholder-card">
+            <h3>Turn a screen share into a product demo</h3>
+            <p>
+              Click <strong>Share Screen</strong> and choose a screen, window, or browser tab.
+              This page will add cinematic AI overlays, activity detection, focus tracking, and
+              dynamic interface messaging so the experience feels premium and sellable.
+            </p>
+            <div class="tiny">
+              Great for founders, consultants, educators, creators, agencies, and enterprise demos.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const demoBurstBtn = document.getElementById("demoBurstBtn");
+
+    const screenVideo = document.getElementById("screenVideo");
+    const overlayCanvas = document.getElementById("overlayCanvas");
+    const analysisCanvas = document.getElementById("analysisCanvas");
+    const overlayCtx = overlayCanvas.getContext("2d");
+    const analysisCtx = analysisCanvas.getContext("2d", { willReadFrequently: true });
+
+    const placeholder = document.getElementById("placeholder");
+
+    const headlineInput = document.getElementById("headlineInput");
+    const subheadlineInput = document.getElementById("subheadlineInput");
+    const modeSelect = document.getElementById("modeSelect");
+    const accentColor = document.getElementById("accentColor");
+
+    const sensitivityRange = document.getElementById("sensitivityRange");
+    const focusRange = document.getElementById("focusRange");
+    const sensitivityVal = document.getElementById("sensitivityVal");
+    const focusVal = document.getElementById("focusVal");
+
+    const gridToggle = document.getElementById("gridToggle");
+    const scanToggle = document.getElementById("scanToggle");
+    const focusToggle = document.getElementById("focusToggle");
+    const labelsToggle = document.getElementById("labelsToggle");
+    const energyToggle = document.getElementById("energyToggle");
+
+    const stateText = document.getElementById("stateText");
+    const activityText = document.getElementById("activityText");
+    const engagementText = document.getElementById("engagementText");
+    const sourceText = document.getElementById("sourceText");
+    const resolutionText = document.getElementById("resolutionText");
+    const insightText = document.getElementById("insightText");
+    const livePill = document.getElementById("livePill");
+    const modePill = document.getElementById("modePill");
+
+    let stream = null;
+    let track = null;
+    let animationId = null;
+    let previousFrame = null;
+    let burstUntil = 0;
+
+    const state = {
+      width: 1280,
+      height: 720,
+      activity: 0,
+      engagement: 0,
+      motionBox: null,
+      lastActivityTime: 0,
+      active: false
+    };
+
+    const insightBank = {
+      executive: [
+        "Presentation energy rising",
+        "Attention zone identified",
+        "High-value focus region detected",
+        "Live interaction signal increasing",
+        "Executive walkthrough mode active"
+      ],
+      creator: [
+        "Creator moment detected",
+        "High-visual-interest region active",
+        "Audience hook potential rising",
+        "Share-worthy movement detected",
+        "Screen energy looks strong"
+      ],
+      training: [
+        "Instructional focus zone detected",
+        "Learner attention region active",
+        "Step-by-step overlay mode active",
+        "Training guidance window stable",
+        "Demo clarity signal improving"
+      ],
+      audit: [
+        "UX review zone detected",
+        "Potential friction area highlighted",
+        "Audit focus locked",
+        "Interaction review active",
+        "Evidence capture region identified"
+      ]
+    };
+
+    function updateRangeLabels() {
+      sensitivityVal.textContent = sensitivityRange.value;
+      focusVal.textContent = focusRange.value;
+    }
+
+    function updateModeLabel() {
+      modePill.textContent = `Mode: ${modeSelect.options[modeSelect.selectedIndex].text}`;
+    }
+
+    function setIdleUI() {
+      stateText.textContent = "Idle";
+      activityText.textContent = "0%";
+      engagementText.textContent = "0";
+      sourceText.textContent = "None";
+      resolutionText.textContent = "—";
+      insightText.textContent = "Waiting";
+      livePill.textContent = "Not sharing";
+      livePill.className = "status-pill idle";
+    }
+
+    function setLiveUI() {
+      livePill.textContent = "Live";
+      livePill.className = "status-pill live";
+    }
+
+    function resizeCanvases(w, h) {
+      state.width = w;
+      state.height = h;
+      overlayCanvas.width = w;
+      overlayCanvas.height = h;
+
+      analysisCanvas.width = Math.max(320, Math.floor(w / 4));
+      analysisCanvas.height = Math.max(180, Math.floor(h / 4));
+
+      resolutionText.textContent = `${w} × ${h}`;
+    }
+
+    function clamp(num, min, max) {
+      return Math.max(min, Math.min(max, num));
+    }
+
+    function hexToRGBA(hex, alpha = 1) {
+      const clean = hex.replace("#", "");
+      const full = clean.length === 3 ? clean.split("").map(x => x + x).join("") : clean;
+      const num = parseInt(full, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    async function startShare() {
+      try {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            frameRate: { ideal: 24, max: 30 }
+          },
+          audio: false
+        });
+
+        stopShare();
+
+        stream = displayStream;
+        track = stream.getVideoTracks()[0];
+        screenVideo.srcObject = stream;
+
+        if (track) {
+          const settings = track.getSettings();
+          const rawLabel = track.label || "Shared screen";
+          sourceText.textContent = rawLabel.length > 26 ? rawLabel.slice(0, 26) + "…" : rawLabel;
+
+          if (settings.width && settings.height) {
+            resizeCanvases(settings.width, settings.height);
+          }
+
+          track.addEventListener("ended", () => {
+            stopShare();
+          });
+        }
+
+        screenVideo.onloadedmetadata = async () => {
+          const w = screenVideo.videoWidth || 1280;
+          const h = screenVideo.videoHeight || 720;
+          resizeCanvases(w, h);
+
+          placeholder.style.display = "none";
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          setLiveUI();
+
+          previousFrame = null;
+          await screenVideo.play();
+          render();
+        };
+      } catch (err) {
+        console.error(err);
+        alert("Screen sharing was canceled or is not supported in this browser.");
+      }
+    }
+
+    function stopShare() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+
+      stream = null;
+      track = null;
+      previousFrame = null;
+      state.motionBox = null;
+      state.activity = 0;
+      state.engagement = 0;
+      state.active = false;
+
+      screenVideo.srcObject = null;
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+      placeholder.style.display = "grid";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+
+      setIdleUI();
+    }
+
+    function triggerBurst() {
+      burstUntil = performance.now() + 2200;
+    }
+
+    function detectMotion() {
+      if (!screenVideo.videoWidth || !screenVideo.videoHeight) return;
+
+      const w = analysisCanvas.width;
+      const h = analysisCanvas.height;
+
+      analysisCtx.drawImage(screenVideo, 0, 0, w, h);
+      const frame = analysisCtx.getImageData(0, 0, w, h);
+      const data = frame.data;
+
+      if (!previousFrame) {
+        previousFrame = new Uint8ClampedArray(data);
+        return;
+      }
+
+      const threshold = Number(sensitivityRange.value);
+      let changed = 0;
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const pr = previousFrame[i];
+        const pg = previousFrame[i + 1];
+        const pb = previousFrame[i + 2];
+
+        const diff = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
+
+        if (diff > threshold) {
+          changed++;
+          const pixelIndex = i / 4;
+          const x = pixelIndex % w;
+          const y = Math.floor(pixelIndex / w);
+
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      previousFrame = new Uint8ClampedArray(data);
+
+      const totalSampled = data.length / 16;
+      const activityPercent = totalSampled ? (changed / totalSampled) * 100 : 0;
+      state.activity = activityPercent;
+
+      if (activityPercent > 1.1) {
+        state.lastActivityTime = performance.now();
+      }
+      state.active = performance.now() - state.lastActivityTime < 900;
+
+      const baseEngagement = Math.min(100, Math.round(activityPercent * 18));
+      const timeBoost = state.active ? 8 : 0;
+      const burstBoost = performance.now() < burstUntil ? 22 : 0;
+      state.engagement = clamp(baseEngagement + timeBoost + burstBoost, 0, 100);
+
+      if (changed > 20 && minX < maxX && minY < maxY) {
+        const sx = state.width / w;
+        const sy = state.height / h;
+
+        const x = minX * sx;
+        const y = minY * sy;
+        const boxW = Number(focusRange.value);
+        const boxH = Number(focusRange.value);
+        const cx = x + ((maxX - minX) * sx) / 2;
+        const cy = y + ((maxY - minY) * sy) / 2;
+
+        state.motionBox = {
+          x: clamp(cx - boxW / 2, 0, Math.max(0, state.width - boxW)),
+          y: clamp(cy - boxH / 2, 0, Math.max(0, state.height - boxH)),
+          width: boxW,
+          height: boxH
+        };
+      }
+
+      activityText.textContent = `${activityPercent.toFixed(1)}%`;
+      engagementText.textContent = `${state.engagement}`;
+      stateText.textContent = state.active ? "Active" : "Monitoring";
+
+      const mode = modeSelect.value;
+      const bank = insightBank[mode];
+      const index = Math.min(bank.length - 1, Math.floor((state.engagement / 100) * bank.length));
+      insightText.textContent = bank[index];
+    }
+
+    function drawGrid(ctx, w, h) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1;
+
+      for (let i = 1; i < 3; i++) {
+        const x = (w / 3) * i;
+        const y = (h / 3) * i;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawScan(ctx, w, h, accent) {
+      const t = performance.now() / 1000;
+      const y = (t * 120) % (h + 100) - 50;
+      const grad = ctx.createLinearGradient(0, y - 50, 0, y + 50);
+      grad.addColorStop(0, hexToRGBA(accent, 0));
+      grad.addColorStop(0.5, hexToRGBA(accent, 0.18));
+      grad.addColorStop(1, hexToRGBA(accent, 0));
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y - 50, w, 100);
+      ctx.restore();
+    }
+
+    function drawCornerFrame(ctx, w, h, accent) {
+      const pad = 26;
+      const len = Math.min(w, h) * 0.065;
+
+      ctx.save();
+      ctx.strokeStyle = hexToRGBA(accent, 0.75);
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      const corners = [
+        [pad, pad, pad + len, pad, pad, pad + len],
+        [w - pad, pad, w - pad - len, pad, w - pad, pad + len],
+        [pad, h - pad, pad + len, h - pad, pad, h - pad - len],
+        [w - pad, h - pad, w - pad - len, h - pad, w - pad, h - pad - len]
+      ];
+
+      corners.forEach(c => {
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[2], c[3]);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[4], c[5]);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    function drawTopBanner(ctx, w, accent) {
+      const x = 22;
+      const y = 22;
+      const bannerW = Math.min(620, w * 0.58);
+      const bannerH = 88;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.85);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, bannerW, bannerH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 28px Inter, Arial, sans-serif";
+      ctx.fillText(headlineInput.value || "AI-Powered Screen Intelligence", x + 16, y + 34);
+
+      ctx.fillStyle = "rgba(255,255,255,0.76)";
+      ctx.font = "600 15px Inter, Arial, sans-serif";
+      ctx.fillText(subheadlineInput.value || "Real-time interaction layer active", x + 16, y + 60);
+
+      ctx.fillStyle = hexToRGBA(accent, 0.9);
+      ctx.font = "700 13px Inter, Arial, sans-serif";
+      ctx.fillText(`ENGAGEMENT ${state.engagement}`, x + 16, y + 79);
+      ctx.restore();
+    }
+
+    function drawModeCard(ctx, w, h, accent) {
+      const cardW = 250;
+      const cardH = 126;
+      const x = w - cardW - 22;
+      const y = 22;
+
+      const modeNames = {
+        executive: "Executive Demo",
+        creator: "Creator Mode",
+        training: "Training Mode",
+        audit: "Audit Mode"
+      };
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.85);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, cardW, cardH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.font = "700 13px Inter, Arial, sans-serif";
+      ctx.fillText("LIVE PRODUCT LAYER", x + 16, y + 24);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 24px Inter, Arial, sans-serif";
+      ctx.fillText(modeNames[modeSelect.value], x + 16, y + 56);
+
+      ctx.fillStyle = hexToRGBA(accent, 1);
+      ctx.font = "900 32px Inter, Arial, sans-serif";
+      ctx.fillText(`${state.activity.toFixed(1)}%`, x + 16, y + 93);
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.font = "600 13px Inter, Arial, sans-serif";
+      ctx.fillText(state.active ? "movement detected" : "tracking stable", x + 92, y + 92);
+
+      ctx.restore();
+    }
+
+    function drawInsightStrip(ctx, w, h, accent) {
+      const stripW = Math.min(700, w - 44);
+      const stripH = 48;
+      const x = 22;
+      const y = h - stripH - 22;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.65);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, stripW, stripH, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = hexToRGBA(accent, 1);
+      ctx.font = "800 13px Inter, Arial, sans-serif";
+      ctx.fillText("AI INSIGHT", x + 16, y + 28);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 15px Inter, Arial, sans-serif";
+      ctx.fillText(insightText.textContent, x + 108, y + 28);
+
+      ctx.restore();
+    }
+
+    function drawFocusBox(ctx, accent) {
+      if (!focusToggle.checked || !state.motionBox) return;
+
+      const { x, y, width, height } = state.motionBox;
+      const pulse = energyToggle.checked && state.active
+        ? Math.sin(performance.now() / 160) * 7
+        : 0;
+
+      ctx.save();
+      ctx.strokeStyle = hexToRGBA(accent, 0.98);
+      ctx.fillStyle = hexToRGBA(accent, 0.08);
+      ctx.shadowColor = hexToRGBA(accent, 0.95);
+      ctx.shadowBlur = 20 + Math.max(0, pulse);
+      ctx.lineWidth = 4;
+
+      roundRect(ctx, x - pulse / 2, y - pulse / 2, width + pulse, height + pulse, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      if (labelsToggle.checked) {
+        const label = modeSelect.value === "audit"
+          ? "Potential review area"
+          : modeSelect.value === "training"
+          ? "Instruction focus zone"
+          : modeSelect.value === "creator"
+          ? "High-interest visual zone"
+          : "Priority attention zone";
+
+        const tagW = 230;
+        const tagH = 34;
+        const tagX = x;
+        const tagY = Math.max(14, y - 42);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(7,12,24,0.92)";
+        ctx.strokeStyle = hexToRGBA(accent, 0.8);
+        ctx.lineWidth = 2;
+        roundRect(ctx, tagX, tagY, tagW, tagH, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "800 13px Inter, Arial, sans-serif";
+        ctx.fillText(label, tagX + 12, tagY + 22);
+      }
+
+      ctx.restore();
+    }
+
+    function drawEnergyPulse(ctx, w, h, accent) {
+      if (!energyToggle.checked) return;
+      if (!state.active && performance.now() > burstUntil) return;
+
+      const t = performance.now() / 160;
+      const r = 16 + (Math.sin(t) + 1) * 4 + (performance.now() < burstUntil ? 12 : 0);
+
+      ctx.save();
+      ctx.fillStyle = hexToRGBA(accent, 0.95);
+      ctx.shadowColor = hexToRGBA(accent, 0.9);
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(w - 28, h - 28, r / 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBurstEffect(ctx, w, h, accent) {
+      if (performance.now() > burstUntil) return;
+
+      const progress = 1 - ((burstUntil - performance.now()) / 2200);
+      const alpha = 0.22 * (1 - progress);
+
+      ctx.save();
+      const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6);
+      grad.addColorStop(0, hexToRGBA(accent, alpha));
+      grad.addColorStop(1, hexToRGBA(accent, 0));
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      for (let i = 0; i < 10; i++) {
+        const lineAlpha = Math.max(0, 0.35 - progress * 0.35);
+        ctx.strokeStyle = hexToRGBA(accent, lineAlpha);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w / 2, h / 2);
+        const angle = (Math.PI * 2 / 10) * i + progress * 0.8;
+        ctx.lineTo(w / 2 + Math.cos(angle) * w * 0.45, h / 2 + Math.sin(angle) * h * 0.45);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+      if (!w || !h) return;
+
+      const accent = accentColor.value;
+
+      overlayCtx.clearRect(0, 0, w, h);
+
+      overlayCtx.fillStyle = "rgba(0,0,0,0.06)";
+      overlayCtx.fillRect(0, 0, w, h);
+
+      if (gridToggle.checked) drawGrid(overlayCtx, w, h);
+      if (scanToggle.checked) drawScan(overlayCtx, w, h, accent);
+
+      drawCornerFrame(overlayCtx, w, h, accent);
+      drawTopBanner(overlayCtx, w, accent);
+      drawModeCard(overlayCtx, w, h, accent);
+      drawInsightStrip(overlayCtx, w, h, accent);
+      drawFocusBox(overlayCtx, accent);
+      drawEnergyPulse(overlayCtx, w, h, accent);
+      drawBurstEffect(overlayCtx, w, h, accent);
+    }
+
+    function render() {
+      detectMotion();
+      drawOverlay();
+      animationId = requestAnimationFrame(render);
+    }
+
+    startBtn.addEventListener("click", startShare);
+    stopBtn.addEventListener("click", stopShare);
+    demoBurstBtn.addEventListener("click", triggerBurst);
+
+    sensitivityRange.addEventListener("input", updateRangeLabels);
+    focusRange.addEventListener("input", updateRangeLabels);
+    modeSelect.addEventListener("change", updateModeLabel);
+
+    updateRangeLabels();
+    updateModeLabel();
+    setIdleUI();
+  </script>
+</body>
+</html>

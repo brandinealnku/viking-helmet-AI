@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Interactive Screen Overlay Demo</title>
+  <meta
+    name="description"
+    content="A browser-based demo that lets a user share their screen and view a live overlay that reacts to activity."
+  />
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(18, 24, 45, 0.88);
+      --panel-border: rgba(255,255,255,0.1);
+      --text: #eef2ff;
+      --muted: #b7c0e0;
+      --accent: #8b5cf6;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 20px 50px rgba(0,0,0,0.35);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(139, 92, 246, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 25%),
+        linear-gradient(180deg, #09101d 0%, #0e1426 100%);
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .sidebar {
+      padding: 22px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d8cfff;
+      background: rgba(139, 92, 246, 0.16);
+      border: 1px solid rgba(139, 92, 246, 0.32);
+      border-radius: 999px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      line-height: 1.08;
+    }
+
+    .lead {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .control-group {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .control-group h2 {
+      font-size: 14px;
+      margin: 0 0 12px;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #6d28d9);
+      color: white;
+      box-shadow: 0 12px 24px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.16);
+      color: #ffd5d5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .field,
+    select,
+    input[type="text"],
+    input[type="range"],
+    input[type="color"] {
+      width: 100%;
+    }
+
+    input[type="text"],
+    select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: white;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="color"] {
+      height: 46px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .value-pill {
+      min-width: 56px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 8px 10px;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .checkbox input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .viewer {
+      padding: 18px;
+    }
+
+    .viewer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .status-wrap {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
+      color: white;
+    }
+
+    .pill-live {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #d8ffe4;
+    }
+
+    .pill-idle {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.26);
+      color: #ffecc3;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 22px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(34, 197, 94, 0.08)),
+        #050814;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #screenVideo {
+      background: #02040a;
+    }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 30px;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, rgba(139, 92, 246, 0.14), transparent 40%);
+    }
+
+    .placeholder-card {
+      max-width: 540px;
+      background: rgba(9, 15, 30, 0.74);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .placeholder-card h3 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .placeholder-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .tips {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 12px;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #9aa7d1;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1080px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .sidebar,
+      .viewer {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .stage {
+        aspect-ratio: 4 / 3;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="panel sidebar">
+      <div class="eyebrow">Screen Share + Live Overlay</div>
+      <h1>Interactive Screen Overlay</h1>
+      <p class="lead">
+        Share a screen, window, or browser tab and this page will place a live
+        overlay on top of the captured content. It can react to movement, add
+        labels, and create a polished demo experience without camera access.
+      </p>
+
+      <div class="btn-row">
+        <button id="startBtn" class="btn-primary">Share Screen</button>
+        <button id="stopBtn" class="btn-danger" disabled>Stop Sharing</button>
+      </div>
+
+      <div class="control-group">
+        <h2>Overlay text</h2>
+        <label for="overlayText">Headline</label>
+        <input
+          id="overlayText"
+          type="text"
+          value="Live Activity Overlay"
+          placeholder="Enter overlay headline"
+        />
+
+        <label for="overlayMode" style="margin-top:12px;">Overlay style</label>
+        <select id="overlayMode">
+          <option value="spotlight">Spotlight box</option>
+          <option value="banner">Banner mode</option>
+          <option value="grid">Grid + stats</option>
+          <option value="minimal">Minimal frame</option>
+        </select>
+
+        <label for="overlayColor" style="margin-top:12px;">Overlay color</label>
+        <input id="overlayColor" type="color" value="#8b5cf6" />
+      </div>
+
+      <div class="control-group">
+        <h2>Motion sensitivity</h2>
+
+        <label for="sensitivityRange">Detection sensitivity</label>
+        <div class="range-row">
+          <input id="sensitivityRange" type="range" min="5" max="60" value="18" />
+          <div class="value-pill" id="sensitivityValue">18</div>
+        </div>
+
+        <label for="boxSizeRange">Highlight box size</label>
+        <div class="range-row">
+          <input id="boxSizeRange" type="range" min="80" max="420" value="220" />
+          <div class="value-pill" id="boxSizeValue">220</div>
+        </div>
+
+        <label class="checkbox">
+          <input id="showMotionBox" type="checkbox" checked />
+          <span>Show motion highlight box</span>
+        </label>
+
+        <label class="checkbox">
+          <input id="showGrid" type="checkbox" checked />
+          <span>Show composition grid</span>
+        </label>
+
+        <label class="checkbox">
+          <input id="showPulse" type="checkbox" checked />
+          <span>Pulse when activity is detected</span>
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h2>Live stats</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Status</div>
+            <div class="stat-value" id="statusText">Idle</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Activity</div>
+            <div class="stat-value" id="activityText">0%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Shared source</div>
+            <div class="stat-value" id="sourceText" style="font-size:14px;">None</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Frame size</div>
+            <div class="stat-value" id="resolutionText" style="font-size:14px;">—</div>
+          </div>
+        </div>
+
+        <div class="tips">
+          Best for demos, guided walkthroughs, UX audits, live presentations,
+          “look here” overlays, and reactive screen experiences.
+        </div>
+
+        <div class="footer-note">
+          This runs in the browser and requires the user to explicitly choose a
+          screen, window, or tab to share.
+        </div>
+      </div>
+    </aside>
+
+    <section class="panel viewer">
+      <div class="viewer-top">
+        <h2 class="viewer-title">Overlay Preview</h2>
+        <div class="status-wrap">
+          <div class="pill" id="modePill">Mode: Spotlight</div>
+          <div class="pill pill-idle" id="livePill">Not sharing</div>
+        </div>
+      </div>
+
+      <div class="stage" id="stage">
+        <video id="screenVideo" autoplay playsinline muted></video>
+        <canvas id="analysisCanvas" hidden></canvas>
+        <canvas id="overlayCanvas"></canvas>
+
+        <div class="placeholder" id="placeholder">
+          <div class="placeholder-card">
+            <h3>Share your screen to begin</h3>
+            <p>
+              Click <strong>Share Screen</strong>, choose what you want to
+              share, and this page will render a live visual overlay on top of
+              the captured content.
+            </p>
+            <p class="mini">
+              Most browsers let you choose a browser tab, window, or full screen.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const screenVideo = document.getElementById("screenVideo");
+    const overlayCanvas = document.getElementById("overlayCanvas");
+    const analysisCanvas = document.getElementById("analysisCanvas");
+    const overlayCtx = overlayCanvas.getContext("2d");
+    const analysisCtx = analysisCanvas.getContext("2d", { willReadFrequently: true });
+    const placeholder = document.getElementById("placeholder");
+
+    const overlayTextInput = document.getElementById("overlayText");
+    const overlayModeSelect = document.getElementById("overlayMode");
+    const overlayColorInput = document.getElementById("overlayColor");
+    const sensitivityRange = document.getElementById("sensitivityRange");
+    const sensitivityValue = document.getElementById("sensitivityValue");
+    const boxSizeRange = document.getElementById("boxSizeRange");
+    const boxSizeValue = document.getElementById("boxSizeValue");
+    const showMotionBox = document.getElementById("showMotionBox");
+    const showGrid = document.getElementById("showGrid");
+    const showPulse = document.getElementById("showPulse");
+
+    const statusText = document.getElementById("statusText");
+    const activityText = document.getElementById("activityText");
+    const sourceText = document.getElementById("sourceText");
+    const resolutionText = document.getElementById("resolutionText");
+    const modePill = document.getElementById("modePill");
+    const livePill = document.getElementById("livePill");
+
+    let displayStream = null;
+    let animationId = null;
+    let previousFrame = null;
+    let sharedTrack = null;
+
+    const state = {
+      width: 1280,
+      height: 720,
+      motionBox: null,
+      activityPercent: 0,
+      isActive: false,
+      lastActiveAt: 0
+    };
+
+    function updateRangeLabels() {
+      sensitivityValue.textContent = sensitivityRange.value;
+      boxSizeValue.textContent = boxSizeRange.value;
+    }
+
+    function updateModePill() {
+      const modeName = overlayModeSelect.options[overlayModeSelect.selectedIndex].text;
+      modePill.textContent = `Mode: ${modeName}`;
+    }
+
+    function updateIdleUi() {
+      statusText.textContent = "Idle";
+      activityText.textContent = "0%";
+      sourceText.textContent = "None";
+      resolutionText.textContent = "—";
+      livePill.textContent = "Not sharing";
+      livePill.className = "pill pill-idle";
+    }
+
+    function updateLiveUi() {
+      livePill.textContent = "Live";
+      livePill.className = "pill pill-live";
+    }
+
+    function resizeCanvases(width, height) {
+      state.width = width;
+      state.height = height;
+      overlayCanvas.width = width;
+      overlayCanvas.height = height;
+      analysisCanvas.width = Math.max(320, Math.floor(width / 4));
+      analysisCanvas.height = Math.max(180, Math.floor(height / 4));
+      resolutionText.textContent = `${width} × ${height}`;
+    }
+
+    async function startScreenShare() {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            frameRate: { ideal: 24, max: 30 }
+          },
+          audio: false
+        });
+
+        stopCurrentShare();
+
+        displayStream = stream;
+        sharedTrack = stream.getVideoTracks()[0];
+        screenVideo.srcObject = stream;
+
+        if (sharedTrack) {
+          const settings = sharedTrack.getSettings();
+          const label = sharedTrack.label || "Screen";
+          sourceText.textContent = label.length > 28 ? label.slice(0, 28) + "…" : label;
+
+          sharedTrack.addEventListener("ended", () => {
+            stopCurrentShare();
+          });
+
+          if (settings.width && settings.height) {
+            resizeCanvases(settings.width, settings.height);
+          }
+        }
+
+        screenVideo.onloadedmetadata = () => {
+          const width = screenVideo.videoWidth || 1280;
+          const height = screenVideo.videoHeight || 720;
+          resizeCanvases(width, height);
+
+          screenVideo.play();
+          placeholder.style.display = "none";
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          updateLiveUi();
+          statusText.textContent = "Monitoring";
+
+          if (animationId) cancelAnimationFrame(animationId);
+          previousFrame = null;
+          renderLoop();
+        };
+      } catch (error) {
+        console.error("Screen share error:", error);
+        alert("Screen sharing was canceled or not available in this browser.");
+      }
+    }
+
+    function stopCurrentShare() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (displayStream) {
+        displayStream.getTracks().forEach(track => track.stop());
+      }
+
+      displayStream = null;
+      sharedTrack = null;
+      screenVideo.srcObject = null;
+      previousFrame = null;
+      state.motionBox = null;
+      state.activityPercent = 0;
+      state.isActive = false;
+
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+      placeholder.style.display = "grid";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      updateIdleUi();
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function hexToRgba(hex, alpha = 1) {
+      const clean = hex.replace("#", "");
+      const full = clean.length === 3
+        ? clean.split("").map(c => c + c).join("")
+        : clean;
+
+      const num = parseInt(full, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function detectMotion() {
+      if (!screenVideo.videoWidth || !screenVideo.videoHeight) return;
+
+      const w = analysisCanvas.width;
+      const h = analysisCanvas.height;
+
+      analysisCtx.drawImage(screenVideo, 0, 0, w, h);
+      const frame = analysisCtx.getImageData(0, 0, w, h);
+      const data = frame.data;
+
+      if (!previousFrame) {
+        previousFrame = new Uint8ClampedArray(data);
+        return;
+      }
+
+      const threshold = Number(sensitivityRange.value);
+      let changedPixels = 0;
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const pr = previousFrame[i];
+        const pg = previousFrame[i + 1];
+        const pb = previousFrame[i + 2];
+
+        const diff = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
+
+        if (diff > threshold) {
+          changedPixels++;
+          const pixelIndex = i / 4;
+          const x = pixelIndex % w;
+          const y = Math.floor(pixelIndex / w);
+
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      previousFrame = new Uint8ClampedArray(data);
+
+      const totalSampled = data.length / 16;
+      const activity = totalSampled ? (changedPixels / totalSampled) * 100 : 0;
+      state.activityPercent = activity;
+
+      const isActiveNow = activity > 1.2;
+      if (isActiveNow) state.lastActiveAt = performance.now();
+      state.isActive = performance.now() - state.lastActiveAt < 800;
+
+      if (changedPixels > 20 && minX < maxX && minY < maxY) {
+        const scaleX = state.width / w;
+        const scaleY = state.height / h;
+
+        const x = minX * scaleX;
+        const y = minY * scaleY;
+        const width = (maxX - minX) * scaleX;
+        const height = (maxY - minY) * scaleY;
+
+        const targetSize = Number(boxSizeRange.value);
+        const cx = x + width / 2;
+        const cy = y + height / 2;
+
+        state.motionBox = {
+          x: clamp(cx - targetSize / 2, 0, Math.max(0, state.width - targetSize)),
+          y: clamp(cy - targetSize / 2, 0, Math.max(0, state.height - targetSize)),
+          width: targetSize,
+          height: targetSize
+        };
+      }
+
+      activityText.textContent = `${activity.toFixed(1)}%`;
+      statusText.textContent = state.isActive ? "Active" : "Monitoring";
+    }
+
+    function drawGrid(ctx, width, height, color) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+
+      for (let i = 1; i < 3; i++) {
+        const x = (width / 3) * i;
+        const y = (height / 3) * i;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawCorners(ctx, width, height, color) {
+      const len = Math.min(width, height) * 0.06;
+      const pad = 26;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      const corners = [
+        [pad, pad, pad + len, pad, pad, pad + len],
+        [width - pad, pad, width - pad - len, pad, width - pad, pad + len],
+        [pad, height - pad, pad + len, height - pad, pad, height - pad - len],
+        [width - pad, height - pad, width - pad - len, height - pad, width - pad, height - pad - len]
+      ];
+
+      corners.forEach(c => {
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[2], c[3]);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[4], c[5]);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    function drawBanner(ctx, width, accent, title, activity) {
+      const pad = 24;
+      const bannerW = Math.min(width * 0.5, 520);
+      const bannerH = 84;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 12, 25, 0.74)";
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      roundRect(ctx, pad, pad, bannerW, bannerH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 28px Inter, Arial, sans-serif";
+      ctx.fillText(title, pad + 18, pad + 35);
+
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.font = "500 15px Inter, Arial, sans-serif";
+      ctx.fillText(`Activity ${activity.toFixed(1)}%`, pad + 18, pad + 60);
+      ctx.restore();
+    }
+
+    function drawStatsCard(ctx, width, height, accent, activity) {
+      const cardW = 220;
+      const cardH = 110;
+      const x = width - cardW - 24;
+      const y = 24;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(10, 14, 28, 0.72)";
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, cardW, cardH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.font = "600 14px Inter, Arial, sans-serif";
+      ctx.fillText("Live Overlay", x + 16, y + 26);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 32px Inter, Arial, sans-serif";
+      ctx.fillText(`${activity.toFixed(1)}%`, x + 16, y + 64);
+
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.font = "500 14px Inter, Arial, sans-serif";
+      ctx.fillText(state.isActive ? "Motion detected" : "Low movement", x + 16, y + 88);
+
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function drawMotionHighlight(ctx, accent) {
+      if (!state.motionBox || !showMotionBox.checked) return;
+
+      const { x, y, width, height } = state.motionBox;
+      const pulseSize = showPulse.checked && state.isActive
+        ? Math.sin(performance.now() / 160) * 8
+        : 0;
+
+      ctx.save();
+
+      ctx.fillStyle = hexToRgba(overlayColorInput.value, 0.08);
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 18 + Math.max(0, pulseSize);
+
+      roundRect(ctx, x - pulseSize / 2, y - pulseSize / 2, width + pulseSize, height + pulseSize, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = accent;
+      ctx.font = "700 15px Inter, Arial, sans-serif";
+      const label = state.isActive ? "Activity detected" : "Tracked region";
+      ctx.fillText(label, x + 12, Math.max(24, y - 10));
+
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      const width = overlayCanvas.width;
+      const height = overlayCanvas.height;
+      if (!width || !height) return;
+
+      overlayCtx.clearRect(0, 0, width, height);
+
+      const accent = overlayColorInput.value;
+      const softAccent = hexToRgba(accent, 0.25);
+      const title = overlayTextInput.value.trim() || "Live Activity Overlay";
+
+      overlayCtx.fillStyle = hexToRgba("#000000", 0.08);
+      overlayCtx.fillRect(0, 0, width, height);
+
+      if (showGrid.checked) {
+        drawGrid(overlayCtx, width, height, "rgba(255,255,255,0.08)");
+      }
+
+      const mode = overlayModeSelect.value;
+
+      if (mode === "spotlight") {
+        drawCorners(overlayCtx, width, height, softAccent);
+        drawBanner(overlayCtx, width, accent, title, state.activityPercent);
+        drawStatsCard(overlayCtx, width, height, accent, state.activityPercent);
+      } else if (mode === "banner") {
+        drawBanner(overlayCtx, width, accent, title, state.activityPercent);
+      } else if (mode === "grid") {
+        drawCorners(overlayCtx, width, height, softAccent);
+        drawStatsCard(overlayCtx, width, height, accent, state.activityPercent);
+      } else if (mode === "minimal") {
+        overlayCtx.save();
+        overlayCtx.strokeStyle = softAccent;
+        overlayCtx.lineWidth = 3;
+        roundRect(overlayCtx, 12, 12, width - 24, height - 24, 24);
+        overlayCtx.stroke();
+
+        overlayCtx.fillStyle = "rgba(255,255,255,0.9)";
+        overlayCtx.font = "700 20px Inter, Arial, sans-serif";
+        overlayCtx.fillText(title, 28, 42);
+        overlayCtx.restore();
+      }
+
+      drawMotionHighlight(overlayCtx, accent);
+
+      if (showPulse.checked && state.isActive) {
+        const radius = 18 + (Math.sin(performance.now() / 140) + 1) * 6;
+        overlayCtx.save();
+        overlayCtx.fillStyle = hexToRgba(accent, 0.95);
+        overlayCtx.shadowColor = accent;
+        overlayCtx.shadowBlur = 18;
+        overlayCtx.beginPath();
+        overlayCtx.arc(width - 30, height - 30, radius / 3, 0, Math.PI * 2);
+        overlayCtx.fill();
+        overlayCtx.restore();
+      }
+    }
+
+    function renderLoop() {
+      detectMotion();
+      drawOverlay();
+      animationId = requestAnimationFrame(renderLoop);
+    }
+
+    startBtn.addEventListener("click", startScreenShare);
+    stopBtn.addEventListener("click", stopCurrentShare);
+
+    overlayModeSelect.addEventListener("change", updateModePill);
+    sensitivityRange.addEventListener("input", updateRangeLabels);
+    boxSizeRange.addEventListener("input", updateRangeLabels);
+
+    updateRangeLabels();
+    updateModePill();
+    updateIdleUi();
+  </script>
+</body>
+</html>

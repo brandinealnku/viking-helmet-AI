@@ -25,19 +25,14 @@
       --nku-gold: #ffc72c;
       --nku-gold-soft: rgba(255, 199, 44, 0.16);
       --nku-black: #111111;
-      --nku-charcoal: #1a1a1a;
       --ink: #e9edf5;
       --muted: #9ca3af;
-      --panel: rgba(12, 14, 18, 0.78);
-      --panel-strong: rgba(10, 12, 16, 0.92);
       --line: rgba(255, 255, 255, 0.10);
       --glow: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 80px rgba(0,0,0,0.38);
       --radius-xl: 28px;
       --radius-lg: 20px;
-      --radius-md: 14px;
       --success: #22c55e;
       --danger: #f87171;
-      --info: #60a5fa;
       --bg:
         radial-gradient(circle at top left, rgba(255,199,44,0.10), transparent 26%),
         radial-gradient(circle at top right, rgba(96,165,250,0.08), transparent 24%),
@@ -45,9 +40,7 @@
       color-scheme: dark;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -59,9 +52,7 @@
       text-rendering: optimizeLegibility;
     }
 
-    .page-shell {
-      max-width: 1440px;
-    }
+    .page-shell { max-width: 1440px; }
 
     .topbar {
       display: flex;
@@ -89,8 +80,7 @@
       border-radius: 14px;
       display: grid;
       place-items: center;
-      background:
-        linear-gradient(135deg, rgba(255,199,44,1), rgba(255,214,102,0.96));
+      background: linear-gradient(135deg, rgba(255,199,44,1), rgba(255,214,102,0.96));
       color: #111;
       font-weight: 900;
       font-size: 1rem;
@@ -98,9 +88,7 @@
       flex: 0 0 auto;
     }
 
-    .brand-copy {
-      min-width: 0;
-    }
+    .brand-copy { min-width: 0; }
 
     .brand-kicker {
       margin: 0;
@@ -256,9 +244,7 @@
     }
 
     .how-list li:last-child,
-    .feature-list li:last-child {
-      border-bottom: 0;
-    }
+    .feature-list li:last-child { border-bottom: 0; }
 
     .step-num {
       width: 28px;
@@ -296,9 +282,7 @@
       line-height: 1.45;
     }
 
-    .stage-panel {
-      padding: 1rem;
-    }
+    .stage-panel { padding: 1rem; }
 
     .stage-frame {
       position: relative;
@@ -442,9 +426,7 @@
       align-items: end;
     }
 
-    .hero-callout {
-      max-width: 760px;
-    }
+    .hero-callout { max-width: 760px; }
 
     .hero-kicker {
       margin: 0 0 0.3rem;
@@ -553,9 +535,7 @@
       box-shadow: 0 0 0 6px rgba(248,113,113,0.16);
     }
 
-    .status-copy {
-      min-width: 0;
-    }
+    .status-copy { min-width: 0; }
 
     .status-title {
       margin: 0;
@@ -604,9 +584,7 @@
       box-shadow: 0 16px 34px rgba(255,199,44,0.18);
     }
 
-    .btn-nku:hover {
-      color: #111;
-    }
+    .btn-nku:hover { color: #111; }
 
     .btn-ghost {
       background: rgba(255,255,255,0.04);
@@ -695,9 +673,7 @@
       line-height: 1.35;
     }
 
-    .snapshot-wrap {
-      display: none;
-    }
+    .snapshot-wrap { display: none; }
 
     .snapshot-card {
       margin-top: 1rem;
@@ -779,35 +755,16 @@
     }
 
     @media (max-width: 1200px) {
-      .hero-grid {
-        grid-template-columns: 320px minmax(0, 1fr);
-      }
-
-      .stage-frame {
-        min-height: 680px;
-      }
+      .hero-grid { grid-template-columns: 320px minmax(0, 1fr); }
+      .stage-frame { min-height: 680px; }
     }
 
     @media (max-width: 991.98px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .side-panel {
-        position: static;
-      }
-
-      .stage-frame {
-        min-height: 620px;
-      }
-
-      .mode-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .hud-bottom {
-        grid-template-columns: 1fr;
-      }
+      .hero-grid { grid-template-columns: 1fr; }
+      .side-panel { position: static; }
+      .stage-frame { min-height: 620px; }
+      .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hud-bottom { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 767.98px) {
@@ -821,14 +778,9 @@
         padding: 0.9rem;
       }
 
-      .topbar-meta {
-        justify-content: flex-start;
-      }
-
+      .topbar-meta { justify-content: flex-start; }
       .side-panel,
-      .stage-panel {
-        padding: 0.9rem;
-      }
+      .stage-panel { padding: 0.9rem; }
 
       .stage-frame {
         min-height: 560px;
@@ -847,61 +799,36 @@
         bottom: 0.75rem;
       }
 
-      .hero-title {
-        font-size: 1.28rem;
-      }
-
-      .telemetry {
-        grid-template-columns: 1fr 1fr;
-      }
+      .hero-title { font-size: 1.28rem; }
+      .telemetry { grid-template-columns: 1fr 1fr; }
 
       .control-row {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .action-row {
-        justify-content: stretch;
-      }
-
-      .action-row .btn {
-        width: 100%;
-      }
+      .action-row { justify-content: stretch; }
+      .action-row .btn { width: 100%; }
     }
 
     @media (max-width: 520px) {
-      .brand-title {
-        font-size: 1rem;
-      }
-
+      .brand-title { font-size: 1rem; }
       .mini-grid,
       .telemetry,
-      .mode-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .stage-frame {
-        min-height: 520px;
-      }
+      .mode-grid { grid-template-columns: 1fr; }
+      .stage-frame { min-height: 520px; }
 
       .hud-pill {
         font-size: 0.64rem;
         padding: 0.5rem 0.7rem;
       }
 
-      .hero-sub {
-        font-size: 0.82rem;
-      }
+      .hero-sub { font-size: 0.82rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .stage-loader {
-        animation: none;
-      }
-
-      * {
-        scroll-behavior: auto !important;
-      }
+      .stage-loader { animation: none; }
+      * { scroll-behavior: auto !important; }
     }
   </style>
 </head>
@@ -981,7 +908,7 @@
           </li>
           <li>
             <span class="feature-dot" aria-hidden="true"></span>
-            <span>Presentation-ready UI gives the demo a showcase feel instead of a rough prototype feel.</span>
+            <span>Captured images now include the same cinematic overlay shown on the live feed.</span>
           </li>
           <li>
             <span class="feature-dot" aria-hidden="true"></span>
@@ -1203,6 +1130,7 @@
 
       let activeFilter = "glasses";
       let activeBackend = "unknown";
+      let currentTrackingLocked = false;
 
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
@@ -1285,6 +1213,7 @@
       function setHudStatus(text, tracking = false, error = false) {
         hudStatusText.textContent = text;
         telemetryTracking.textContent = tracking ? "Face Locked" : "Searching";
+        currentTrackingLocked = tracking;
 
         hudStatusDot.classList.remove("live", "error");
         if (error) {
@@ -1386,6 +1315,7 @@
         smoothedFaceBox = null;
         lastFaceSeen = 0;
         lastSegmentation = null;
+        currentTrackingLocked = false;
       }
 
       function stopExperience() {
@@ -1464,7 +1394,7 @@
         return { x1, y1, x2, y2, width, height, cx, cy };
       }
 
-      function drawGlasses(topLeft, bottomRight) {
+      function drawGlasses(targetCtx, topLeft, bottomRight) {
         if (!glassesReady || !isValidBox(topLeft, bottomRight)) return;
 
         const { x1, y1, width, height, cx } = getFaceMetrics(topLeft, bottomRight);
@@ -1472,7 +1402,7 @@
         const overlayHeight = overlayWidth * (glassesImg.naturalHeight / glassesImg.naturalWidth);
         const eyeLineY = y1 + height * 0.43;
 
-        ctx.drawImage(
+        targetCtx.drawImage(
           glassesImg,
           cx - overlayWidth / 2,
           eyeLineY - overlayHeight / 2,
@@ -1481,16 +1411,21 @@
         );
       }
 
-      function drawHelmet(topLeft, bottomRight) {
+      function drawHelmet(targetCtx, topLeft, bottomRight) {
         if (!helmetReady || !isValidBox(topLeft, bottomRight)) return;
 
         const { y1, width, height, cx } = getFaceMetrics(topLeft, bottomRight);
-        const overlayWidth = width * 1.44;
+        const overlayWidth = width * 1.46;
         const overlayHeight = overlayWidth * (helmetImg.naturalHeight / helmetImg.naturalWidth);
 
-        const helmetCenterY = y1 + height * 0.06;
+        /*
+          moved up significantly from the prior version.
+          negative multiplier lifts the helmet so it sits on the head
+          instead of the center of the face.
+        */
+        const helmetCenterY = y1 - height * 0.18;
 
-        ctx.drawImage(
+        targetCtx.drawImage(
           helmetImg,
           cx - overlayWidth / 2,
           helmetCenterY - overlayHeight / 2,
@@ -1499,7 +1434,7 @@
         );
       }
 
-      function drawBeard(topLeft, bottomRight) {
+      function drawBeard(targetCtx, topLeft, bottomRight) {
         if (!beardReady || !isValidBox(topLeft, bottomRight)) return;
 
         const { width, height, cx, cy } = getFaceMetrics(topLeft, bottomRight);
@@ -1507,7 +1442,7 @@
         const overlayHeight = overlayWidth * (beardImg.naturalHeight / beardImg.naturalWidth);
         const overlayCenterY = cy - height * 0.02;
 
-        ctx.drawImage(
+        targetCtx.drawImage(
           beardImg,
           cx - overlayWidth / 2,
           overlayCenterY - overlayHeight / 2,
@@ -1537,6 +1472,228 @@
         }
 
         targetCtx.drawImage(image, drawX, drawY, drawW, drawH);
+      }
+
+      function drawRoundedRect(targetCtx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        targetCtx.beginPath();
+        targetCtx.moveTo(x + radius, y);
+        targetCtx.lineTo(x + w - radius, y);
+        targetCtx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        targetCtx.lineTo(x + w, y + h - radius);
+        targetCtx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        targetCtx.lineTo(x + radius, y + h);
+        targetCtx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        targetCtx.lineTo(x, y + radius);
+        targetCtx.quadraticCurveTo(x, y, x + radius, y);
+        targetCtx.closePath();
+      }
+
+      function fitText(targetCtx, text, maxWidth, startSize, minSize = 16, fontWeight = 800, fontFamily = "Inter, Arial, sans-serif") {
+        let size = startSize;
+        while (size >= minSize) {
+          targetCtx.font = `${fontWeight} ${size}px ${fontFamily}`;
+          if (targetCtx.measureText(text).width <= maxWidth) return size;
+          size -= 1;
+        }
+        return minSize;
+      }
+
+      function drawPill(targetCtx, opts) {
+        const {
+          x, y, text, dotColor = null, paddingX = 22, height = 48,
+          bg = "rgba(11,14,18,0.56)", border = "rgba(255,255,255,0.12)",
+          textColor = "#ffffff", letterSpacing = 1.8, fontSize = 16
+        } = opts;
+
+        targetCtx.save();
+        targetCtx.font = `800 ${fontSize}px Inter, Arial, sans-serif`;
+        const textWidth = targetCtx.measureText(text).width;
+        const dotSpace = dotColor ? 24 : 0;
+        const width = paddingX * 2 + textWidth + dotSpace;
+
+        targetCtx.fillStyle = bg;
+        targetCtx.strokeStyle = border;
+        targetCtx.lineWidth = 1;
+        drawRoundedRect(targetCtx, x, y, width, height, height / 2);
+        targetCtx.fill();
+        targetCtx.stroke();
+
+        let tx = x + paddingX;
+        if (dotColor) {
+          targetCtx.beginPath();
+          targetCtx.fillStyle = dotColor;
+          targetCtx.arc(x + paddingX + 6, y + height / 2, 6, 0, Math.PI * 2);
+          targetCtx.fill();
+
+          if (dotColor === "#22c55e") {
+            targetCtx.beginPath();
+            targetCtx.fillStyle = "rgba(34,197,94,0.15)";
+            targetCtx.arc(x + paddingX + 6, y + height / 2, 14, 0, Math.PI * 2);
+            targetCtx.fill();
+          }
+
+          tx += 24;
+        }
+
+        targetCtx.fillStyle = textColor;
+        targetCtx.font = `800 ${fontSize}px Inter, Arial, sans-serif`;
+        targetCtx.textBaseline = "middle";
+        targetCtx.fillText(text, tx, y + height / 2);
+
+        targetCtx.restore();
+      }
+
+      function drawTelemetryCard(targetCtx, opts) {
+        const { x, y, w, h, label, value } = opts;
+
+        targetCtx.save();
+        targetCtx.fillStyle = "rgba(11,14,18,0.56)";
+        targetCtx.strokeStyle = "rgba(255,255,255,0.12)";
+        targetCtx.lineWidth = 1;
+        drawRoundedRect(targetCtx, x, y, w, h, 18);
+        targetCtx.fill();
+        targetCtx.stroke();
+
+        targetCtx.fillStyle = "#adb7c4";
+        targetCtx.font = "800 13px Inter, Arial, sans-serif";
+        targetCtx.textBaseline = "top";
+        targetCtx.fillText(label.toUpperCase(), x + 18, y + 16);
+
+        const fitted = fitText(targetCtx, value, w - 36, 22, 16, 900);
+        targetCtx.fillStyle = "#ffffff";
+        targetCtx.font = `900 ${fitted}px Inter, Arial, sans-serif`;
+        targetCtx.fillText(value, x + 18, y + 42);
+
+        targetCtx.restore();
+      }
+
+      function drawHudOverlay(targetCtx, width, height) {
+        const pad = Math.max(16, width * 0.02);
+
+        targetCtx.save();
+
+        const topGrad = targetCtx.createLinearGradient(0, 0, 0, height * 0.28);
+        topGrad.addColorStop(0, "rgba(0,0,0,0.62)");
+        topGrad.addColorStop(1, "rgba(0,0,0,0)");
+        targetCtx.fillStyle = topGrad;
+        targetCtx.fillRect(0, 0, width, height * 0.28);
+
+        const bottomGrad = targetCtx.createLinearGradient(0, height, 0, height - height * 0.38);
+        bottomGrad.addColorStop(0, "rgba(0,0,0,0.72)");
+        bottomGrad.addColorStop(1, "rgba(0,0,0,0)");
+        targetCtx.fillStyle = bottomGrad;
+        targetCtx.fillRect(0, height - height * 0.38, width, height * 0.38);
+
+        const pillHeight = Math.max(38, Math.round(height * 0.05));
+        const pillFont = Math.max(11, Math.round(height * 0.020));
+
+        drawPill(targetCtx, {
+          x: pad,
+          y: pad,
+          text: "NKU INNOVATION DEMO",
+          height: pillHeight,
+          fontSize: pillFont
+        });
+
+        const statusText = aiRunning ? hudStatusText.textContent.toUpperCase() : "OFFLINE";
+        const statusDotColor = currentTrackingLocked ? "#22c55e" : (aiRunning ? "#ffffff" : "#f87171");
+
+        targetCtx.font = `800 ${pillFont}px Inter, Arial, sans-serif`;
+        const statusTextWidth = targetCtx.measureText(statusText).width;
+        const statusWidth = 22 * 2 + statusTextWidth + 24;
+        drawPill(targetCtx, {
+          x: width - pad - statusWidth,
+          y: pad,
+          text: statusText,
+          dotColor: statusDotColor,
+          height: pillHeight,
+          fontSize: pillFont
+        });
+
+        const bottomPad = pad;
+        const telemetryAreaW = Math.min(width * 0.37, 360);
+        const leftW = width - (pad * 3) - telemetryAreaW;
+        const baseY = height - bottomPad;
+
+        targetCtx.fillStyle = "#f5d979";
+        targetCtx.font = `800 ${Math.max(12, Math.round(height * 0.014))}px Inter, Arial, sans-serif`;
+        targetCtx.textBaseline = "alphabetic";
+        targetCtx.fillText("LIVE BROWSER EXPERIENCE", pad, baseY - 132);
+
+        const titleSize = fitText(targetCtx, "Norse Vision Studio", leftW, Math.max(26, Math.round(height * 0.048)), 18, 900);
+        targetCtx.fillStyle = "#ffffff";
+        targetCtx.font = `900 ${titleSize}px Inter, Arial, sans-serif`;
+        targetCtx.fillText("Norse Vision Studio", pad, baseY - 90);
+
+        const subText = hudModeDescription.textContent;
+        targetCtx.fillStyle = "#d8dee7";
+        const subSize = Math.max(13, Math.round(height * 0.016));
+        targetCtx.font = `500 ${subSize}px Inter, Arial, sans-serif`;
+        const subMaxWidth = leftW;
+        const words = subText.split(" ");
+        let line = "";
+        let lineY = baseY - 56;
+        const lineHeight = subSize * 1.35;
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line ? `${line} ${words[i]}` : words[i];
+          if (targetCtx.measureText(testLine).width > subMaxWidth && line) {
+            targetCtx.fillText(line, pad, lineY);
+            line = words[i];
+            lineY += lineHeight;
+            if (lineY > baseY - 10) break;
+          } else {
+            line = testLine;
+          }
+        }
+        if (line && lineY <= baseY - 10) {
+          targetCtx.fillText(line, pad, lineY);
+        }
+
+        const cardGap = 12;
+        const cardW = (telemetryAreaW - cardGap) / 2;
+        const cardH = 82;
+        const cardsX = width - pad - telemetryAreaW;
+        const cardsY = height - pad - (cardH * 2 + cardGap);
+
+        drawTelemetryCard(targetCtx, {
+          x: cardsX,
+          y: cardsY,
+          w: cardW,
+          h: cardH,
+          label: "Mode",
+          value: telemetryMode.textContent
+        });
+
+        drawTelemetryCard(targetCtx, {
+          x: cardsX + cardW + cardGap,
+          y: cardsY,
+          w: cardW,
+          h: cardH,
+          label: "Tracking",
+          value: telemetryTracking.textContent
+        });
+
+        drawTelemetryCard(targetCtx, {
+          x: cardsX,
+          y: cardsY + cardH + cardGap,
+          w: cardW,
+          h: cardH,
+          label: "Background",
+          value: "Griffin Hall"
+        });
+
+        drawTelemetryCard(targetCtx, {
+          x: cardsX + cardW + cardGap,
+          y: cardsY + cardH + cardGap,
+          w: cardW,
+          h: cardH,
+          label: "Runtime",
+          value: telemetryRuntime.textContent
+        });
+
+        targetCtx.restore();
       }
 
       async function detectFaceStep() {
@@ -1577,12 +1734,8 @@
         }
       }
 
-      function drawBaseComposite() {
-        const logicalW = canvas.width;
-        const logicalH = canvas.height;
-        if (!logicalW || !logicalH) return;
-
-        ctx.clearRect(0, 0, logicalW, logicalH);
+      function drawBaseComposite(targetCtx, logicalW, logicalH) {
+        targetCtx.clearRect(0, 0, logicalW, logicalH);
 
         if (bgReady && bodyPixModel && lastSegmentation) {
           tempCtx.clearRect(0, 0, logicalW, logicalH);
@@ -1610,18 +1763,30 @@
             }
           }
 
-          ctx.putImageData(frameImageData, 0, 0);
+          targetCtx.putImageData(frameImageData, 0, 0);
         } else if (bgReady) {
-          drawBackgroundCover(bgImage, ctx, logicalW, logicalH);
+          drawBackgroundCover(bgImage, targetCtx, logicalW, logicalH);
         } else {
-          ctx.drawImage(video, 0, 0, logicalW, logicalH);
+          targetCtx.drawImage(video, 0, 0, logicalW, logicalH);
+        }
+      }
+
+      function drawActiveFilter(targetCtx, boxToUse) {
+        if (!boxToUse || !isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) return;
+
+        if (activeFilter === "glasses") {
+          drawGlasses(targetCtx, boxToUse.topLeft, boxToUse.bottomRight);
+        } else if (activeFilter === "helmet") {
+          drawHelmet(targetCtx, boxToUse.topLeft, boxToUse.bottomRight);
+        } else if (activeFilter === "combo") {
+          drawBeard(targetCtx, boxToUse.topLeft, boxToUse.bottomRight);
         }
       }
 
       function renderFrame() {
         if (!aiRunning || !videoReady) return;
 
-        drawBaseComposite();
+        drawBaseComposite(ctx, canvas.width, canvas.height);
 
         let boxToUse = null;
         const now = performance.now();
@@ -1636,13 +1801,7 @@
         }
 
         if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
-          if (activeFilter === "glasses") {
-            drawGlasses(boxToUse.topLeft, boxToUse.bottomRight);
-          } else if (activeFilter === "helmet") {
-            drawHelmet(boxToUse.topLeft, boxToUse.bottomRight);
-          } else if (activeFilter === "combo") {
-            drawBeard(boxToUse.topLeft, boxToUse.bottomRight);
-          }
+          drawActiveFilter(ctx, boxToUse);
 
           setHudStatus("Live", true, false);
           setStatus(
@@ -1742,7 +1901,22 @@
         snapCanvas.height = canvas.height;
         const sctx = snapCanvas.getContext("2d");
 
-        sctx.drawImage(canvas, 0, 0);
+        drawBaseComposite(sctx, snapCanvas.width, snapCanvas.height);
+
+        let boxToUse = null;
+        const now = performance.now();
+
+        if (latestFaceBox) {
+          boxToUse = smoothBox(smoothedFaceBox || latestFaceBox, latestFaceBox, SMOOTH_ALPHA);
+        } else if (smoothedFaceBox && now - lastFaceSeen < FACE_HOLD_MS) {
+          boxToUse = smoothedFaceBox;
+        }
+
+        if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
+          drawActiveFilter(sctx, boxToUse);
+        }
+
+        drawHudOverlay(sctx, snapCanvas.width, snapCanvas.height);
 
         const dataURL = snapCanvas.toDataURL("image/png");
         snapshotPreview.src = dataURL;
@@ -1758,7 +1932,7 @@
 
         setStatus(
           "Snapshot captured",
-          "Your composited NKU image has been saved locally as a PNG.",
+          "Your composited NKU image with cinematic overlay has been saved locally as a PNG.",
           "active"
         );
       }

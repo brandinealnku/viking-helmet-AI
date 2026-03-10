@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Norse AI Filter – Griffin Hall Trackable Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="NKU Norse AI Filter – browser-based AI demo with Griffin Hall background, stable overlays, and trackable social-friendly exports."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --text: #111827;
+      --muted: #6b7280;
+      --soft-border: #e5e7eb;
+      --soft-bg: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --shadow-soft:
+        0 22px 70px rgba(15, 23, 42, 0.08),
+        0 3px 12px rgba(15, 23, 42, 0.06);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, #ffffff 0%, #f4f6f8 35%, #eef2f7 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-shell {
+      max-width: 1180px;
+    }
+
+    .brand-bar {
+      border: 1px solid rgba(229, 231, 235, 0.95);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border-radius: 1.25rem;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .main-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(229, 231, 235, 0.95);
+      border-radius: 1.5rem;
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.77rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+
+    .hero-title {
+      font-size: clamp(1.85rem, 2.5vw, 2.45rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-lead {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .mini-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .mini-badge {
+      background: #fff7dd;
+      color: #7a5200;
+      border: 1px solid #f8e4a0;
+      padding: 0.32rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .info-card {
+      border: 1px solid var(--soft-border);
+      border-radius: 1rem;
+      background: #ffffff;
+      padding: 1rem;
+      height: 100%;
+    }
+
+    .info-card h2 {
+      font-size: 0.86rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .step-list li {
+      display: flex;
+      gap: 0.7rem;
+      margin-bottom: 0.75rem;
+      color: #374151;
+      line-height: 1.45;
+    }
+
+    .step-num {
+      width: 1.4rem;
+      flex: 0 0 1.4rem;
+      text-align: right;
+      color: #9a6b00;
+      font-weight: 900;
+    }
+
+    .demo-panel {
+      border: 1px solid var(--soft-border);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+      border-radius: 1.25rem;
+      padding: 1rem;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: #e5e7eb;
+      isolation: isolate;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #video {
+      opacity: 0;
+    }
+
+    #overlay {
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        linear-gradient(
+          110deg,
+          #edf1f5 8%,
+          #f7f9fb 18%,
+          #edf1f5 33%
+        );
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position-x: -200%;
+      }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .screen-top-fade {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+    }
+
+    .screen-bottom-fade {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 34%;
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0));
+    }
+
+    .screen-pill,
+    .screen-status {
+      position: absolute;
+      top: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.44rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.46);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(10px);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-pill {
+      left: 0.9rem;
+    }
+
+    .screen-status {
+      right: 0.9rem;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 700;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 0.95rem;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.68rem;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+      font-weight: 900;
+      opacity: 0.92;
+      margin-bottom: 0.2rem;
+    }
+
+    .screen-title {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.32rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .screen-sub {
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      opacity: 0.95;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .status-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d1d5db;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .status-dot.active {
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
+    }
+
+    .status-dot.error {
+      background: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
+    }
+
+    .status-text {
+      color: #334155;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .status-hint {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin: 0;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35rem;
+      background: #f6f8fa;
+      border: 1px solid #e5e7eb;
+      border-radius: 1rem;
+      padding: 0.25rem;
+    }
+
+    .filter-btn {
+      border: 0;
+      background: transparent;
+      color: #4b5563;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .filter-btn.active {
+      background: #ffffff;
+      color: #111827;
+      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.9);
+    }
+
+    .filter-btn:focus-visible,
+    .btn:focus-visible,
+    .share-copy-btn:focus-visible {
+      outline: 2px solid #1d4ed8;
+      outline-offset: 2px;
+    }
+
+    .filter-thumb {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      border-radius: 0.65rem;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      padding: 0.12rem;
+      flex: 0 0 auto;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.65rem;
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      font-weight: 800;
+      padding-inline: 1.2rem;
+    }
+
+    #captureBtn {
+      background: var(--nku-gold);
+      border-color: var(--nku-gold);
+      color: var(--nku-black);
+    }
+
+    #captureBtn:hover:not(:disabled) {
+      background: #e9ab00;
+      border-color: #e9ab00;
+      color: #111111;
+    }
+
+    #captureBtn:disabled,
+    #stopBtn:disabled,
+    #copyShareBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .preview-card {
+      display: none;
+      border: 1px solid var(--soft-border);
+      border-radius: 1rem;
+      background: #ffffff;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 460px;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    #snapshotPreview {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .share-box {
+      margin-top: 0.85rem;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.95rem;
+      padding: 0.85rem;
+    }
+
+    .share-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .share-url {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break: break-all;
+      color: #0f172a;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.8rem;
+      padding: 0.75rem;
+      font-size: 0.88rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .share-copy-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 0.5rem 0.9rem;
+      font-weight: 800;
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    .tiny-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 0.12rem 0.35rem;
+      border-radius: 0.35rem;
+      color: #1f2937;
+    }
+
+    @media (max-width: 991px) {
+      .app-shell {
+        padding-inline: 0.85rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .brand-bar {
+        border-radius: 1rem;
+      }
+
+      .filter-group {
+        justify-content: flex-start;
+      }
+
+      .filter-btn {
+        width: 100%;
+        justify-content: flex-start;
+        border-radius: 1rem;
+      }
+
+      .controls-row {
+        justify-content: stretch;
+      }
+
+      .controls-row .btn {
+        width: 100%;
+      }
+
+      .screen-title {
+        max-width: 75%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .video-skeleton {
+        animation: none;
+      }
+
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4 py-lg-5 app-shell">
+    <header class="brand-bar p-3 p-lg-4 mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <div class="brand-pill">
+            <span>NKU</span>
+            <span>Norse AI</span>
+          </div>
+          <div class="brand-sub">Griffin Hall background · Browser AI · Social-friendly exports</div>
+        </div>
+        <div class="brand-sub">Trackable showcase edition</div>
+      </div>
+    </header>
+
+    <main class="main-card p-3 p-lg-4">
+      <div class="row g-4 align-items-start">
+        <section class="col-lg-5">
+          <div class="mini-badges">
+            <div class="mini-badge">Client-side AI</div>
+            <div class="mini-badge">Private background</div>
+            <div class="mini-badge">Trackable exports</div>
+          </div>
+
+          <div class="eyebrow">Real-time browser AR demo</div>
+          <h1 class="hero-title">NKU Norse AI Filter</h1>
+          <p class="hero-lead">
+            This version keeps Griffin Hall behind the user in every mode, adds smoother face tracking,
+            and exports a social-friendly selfie with a visible share code so reposts can still point back to your experience.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="info-card">
+                <h2>Try it out</h2>
+                <ol class="step-list">
+                  <li><span class="step-num">1.</span><span>Click <strong>Start Camera &amp; AI</strong>.</span></li>
+                  <li><span class="step-num">2.</span><span>Choose <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>Griffin Only</strong>.</span></li>
+                  <li><span class="step-num">3.</span><span>Capture a selfie. The saved image includes a visible export ID and share URL path.</span></li>
+                  <li><span class="step-num">4.</span><span>Copy the share link and use it in your social caption.</span></li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="info-card">
+                <h2>What this version adds</h2>
+                <p class="tiny-note mb-2">
+                  • Griffin Hall background replacement with BodyPix<br />
+                  • Stable overlays with BlazeFace smoothing<br />
+                  • Visible export footer for social reposts<br />
+                  • Placeholder event logging to a backend endpoint
+                </p>
+                <p class="tiny-note mb-0">
+                  To make tracking live, replace <code>TRACKING_ENDPOINT</code> and <code>PUBLIC_BASE_URL</code> in the script with your real values.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="col-lg-7">
+          <div class="demo-panel">
+            <div id="videoContainer" aria-label="Live AI demo area">
+              <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+              <video
+                id="video"
+                autoplay
+                muted
+                playsinline
+                aria-hidden="true"
+              ></video>
+
+              <canvas
+                id="overlay"
+                role="img"
+                aria-label="Live AI-filtered camera preview"
+              ></canvas>
+
+              <div class="screen-ui" aria-hidden="true">
+                <div class="screen-top-fade"></div>
+                <div class="screen-bottom-fade"></div>
+
+                <div class="screen-pill">⚡ NKU Browser AI</div>
+
+                <div class="screen-status">
+                  <span id="screenStatusDot" class="screen-status-dot"></span>
+                  <span id="screenStatusText">Offline</span>
+                </div>
+
+                <div class="screen-footer">
+                  <div class="screen-kicker">Live browser demo</div>
+                  <h2 class="screen-title">Norse Overlay Experience</h2>
+                  <div class="screen-sub">Griffin Hall background · Camera + Canvas + TensorFlow.js</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-row my-3" aria-live="polite">
+              <div class="status-left">
+                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to launch the demo.</span>
+              </div>
+              <p class="status-hint">Best results: HTTPS, bright lighting, and a recent version of Chrome or Edge.</p>
+            </div>
+
+            <div class="d-flex justify-content-center mb-3">
+              <div class="filter-group" role="radiogroup" aria-label="Filter selection">
+                <button class="filter-btn active" type="button" data-filter="glasses" role="radio" aria-checked="true">
+                  <img src="glasses.png" alt="Glasses filter preview" class="filter-thumb" />
+                  <span>Glasses</span>
+                </button>
+
+                <button class="filter-btn" type="button" data-filter="helmet" role="radio" aria-checked="false">
+                  <img src="helmet.png" alt="Helmet filter preview" class="filter-thumb" />
+                  <span>Helmet</span>
+                </button>
+
+                <button class="filter-btn" type="button" data-filter="combo" role="radio" aria-checked="false">
+                  <img src="beard.png" alt="Viking combo filter preview" class="filter-thumb" />
+                  <span>Viking Combo</span>
+                </button>
+
+                <button class="filter-btn" type="button" data-filter="griffin" role="radio" aria-checked="false">
+                  <img src="griffin-hall.jpg" alt="Griffin Hall background preview" class="filter-thumb" />
+                  <span>Griffin Only</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="controls-row mb-2">
+              <button id="startBtn" type="button" class="btn btn-outline-secondary btn-pill">
+                🚀 Start Camera &amp; AI
+              </button>
+              <button id="captureBtn" type="button" class="btn btn-pill" disabled>
+                📸 Capture Trackable Selfie
+              </button>
+              <button id="stopBtn" type="button" class="btn btn-outline-danger btn-pill" disabled>
+                ⏹️ Turn Camera Off
+              </button>
+            </div>
+
+            <section id="previewCard" class="preview-card" aria-live="polite">
+              <h2 class="h6 mb-3">Your Norse snapshot</h2>
+
+              <div class="preview-image-wrapper mb-3">
+                <img id="snapshotPreview" alt="NKU Norse AI snapshot preview" />
+              </div>
+
+              <div class="share-box">
+                <div class="share-label">Share link for captions</div>
+                <div id="shareUrlText" class="share-url">Not generated yet</div>
+                <button id="copyShareBtn" class="share-copy-btn" type="button" disabled>
+                  Copy Share Link
+                </button>
+              </div>
+
+              <p class="tiny-note mt-3 mb-0">
+                The saved PNG includes a visible export ID and short URL path so it still points back to your project after reposting.
+              </p>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <footer class="pt-4 mt-4 border-top">
+        <p class="tiny-note mb-0">
+          Camera processing stays in the browser. Tracking only occurs if you connect a real endpoint and use the share link.
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // =========================
+      // CONFIG
+      // =========================
+      const APP_LABEL = "NKU_Norse_AI";
+      const PUBLIC_BASE_URL = "https://yourdomain.com/r/";
+      const TRACKING_ENDPOINT = "";
+      const CAMPAIGN_NAME = "nku-norse-showcase";
+
+      // =========================
+      // DOM
+      // =========================
+      const video = document.getElementById("video");
+      const overlayCanvas = document.getElementById("overlay");
+      const ctx = overlayCanvas.getContext("2d", { willReadFrequently: true });
+
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const copyShareBtn = document.getElementById("copyShareBtn");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+      const screenStatusDot = document.getElementById("screenStatusDot");
+
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const previewCard = document.getElementById("previewCard");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+      const shareUrlText = document.getElementById("shareUrlText");
+
+      const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+
+      // =========================
+      // STATE
+      // =========================
+      let mediaStream = null;
+      let aiRunning = false;
+      let videoReady = false;
+      let activeFilter = "glasses";
+
+      let faceModel = null;
+      let bodyPixModel = null;
+
+      let latestFaceBox = null;
+      let smoothedFaceBox = null;
+      let lastFaceTime = 0;
+      let lastSegmentation = null;
+
+      let renderRaf = null;
+      let faceTimer = null;
+      let segmentTimer = null;
+
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+
+      let latestExportId = "";
+      let latestShareUrl = "";
+
+      // =========================
+      // CONSTANTS
+      // =========================
+      const FACE_HOLD_MS = 350;
+      const FACE_DETECT_MS = 90;
+      const SEGMENT_MS = 180;
+      const SMOOTH_ALPHA = 0.16;
+
+      // =========================
+      // OFFSCREEN CANVASES
+      // =========================
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      const bgCanvas = document.createElement("canvas");
+      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+
+      // =========================
+      // ASSETS
+      // =========================
+      const bgImage = new Image();
+      const glassesImg = new Image();
+      const helmetImg = new Image();
+      const comboImg = new Image();
+
+      let bgReady = false;
+      let glassesReady = false;
+      let helmetReady = false;
+      let comboReady = false;
+
+      bgImage.src = "griffin-hall.jpg";
+      bgImage.onload = () => { bgReady = true; };
+      bgImage.onerror = () => console.warn("Could not load griffin-hall.jpg");
+
+      glassesImg.src = "glasses.png";
+      glassesImg.onload = () => { glassesReady = true; };
+      glassesImg.onerror = () => console.warn("Could not load glasses.png");
+
+      helmetImg.src = "helmet.png";
+      helmetImg.onload = () => { helmetReady = true; };
+      helmetImg.onerror = () => console.warn("Could not load helmet.png");
+
+      comboImg.src = "beard.png";
+      comboImg.onload = () => { comboReady = true; };
+      comboImg.onerror = () => console.warn("Could not load beard.png");
+
+      // =========================
+      // UTIL
+      // =========================
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setScreenStatus(text, locked = false) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", locked);
+      }
+
+      function updateFilterButtons(selected) {
+        filterButtons.forEach((btn) => {
+          const active = btn.dataset.filter === selected;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-checked", active ? "true" : "false");
+        });
+      }
+
+      function safeNowIso() {
+        return new Date().toISOString();
+      }
+
+      function generateExportId(prefix = "NKU") {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let body = "";
+        for (let i = 0; i < 6; i++) {
+          body += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return `${prefix}-${body}`;
+      }
+
+      function buildShareUrl(exportId) {
+        return `${PUBLIC_BASE_URL}${encodeURIComponent(exportId)}`;
+      }
+
+      async function trackEvent(eventName, payload = {}) {
+        if (!TRACKING_ENDPOINT) return;
+
+        try {
+          await fetch(TRACKING_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              event: eventName,
+              timestamp: safeNowIso(),
+              campaign: CAMPAIGN_NAME,
+              userAgent: navigator.userAgent,
+              filter: activeFilter,
+              ...payload
+            })
+          });
+        } catch (error) {
+          console.warn("Tracking failed:", error);
+        }
+      }
+
+      function isValidPoint(pt) {
+        return Array.isArray(pt) &&
+          pt.length >= 2 &&
+          Number.isFinite(pt[0]) &&
+          Number.isFinite(pt[1]);
+      }
+
+      function isValidBox(topLeft, bottomRight) {
+        if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        return (x2 - x1) > 0 && (y2 - y1) > 0;
+      }
+
+      function smoothBox(oldBox, newBox, alpha) {
+        if (!oldBox) return newBox;
+        const [ox1, oy1] = oldBox.topLeft;
+        const [ox2, oy2] = oldBox.bottomRight;
+        const [nx1, ny1] = newBox.topLeft;
+        const [nx2, ny2] = newBox.bottomRight;
+
+        return {
+          topLeft: [
+            ox1 + alpha * (nx1 - ox1),
+            oy1 + alpha * (ny1 - oy1)
+          ],
+          bottomRight: [
+            ox2 + alpha * (nx2 - ox2),
+            oy2 + alpha * (ny2 - oy2)
+          ]
+        };
+      }
+
+      async function pickBestBackend() {
+        const candidates = ["webgl", "wasm", "cpu"];
+        for (const backend of candidates) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              return tf.getBackend();
+            }
+          } catch (error) {
+            console.warn("Backend unavailable:", backend, error);
+          }
+        }
+        await tf.ready();
+        return tf.getBackend();
+      }
+
+      function stopLoops() {
+        if (renderRaf) cancelAnimationFrame(renderRaf);
+        renderRaf = null;
+
+        if (faceTimer) clearInterval(faceTimer);
+        faceTimer = null;
+
+        if (segmentTimer) clearInterval(segmentTimer);
+        segmentTimer = null;
+      }
+
+      function resetTrackingUi() {
+        latestExportId = "";
+        latestShareUrl = "";
+        shareUrlText.textContent = "Not generated yet";
+        copyShareBtn.disabled = true;
+      }
+
+      // =========================
+      // CAMERA
+      // =========================
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("getUserMedia not supported");
+        }
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: "user",
+            width: { ideal: 960 },
+            height: { ideal: 720 }
+          }
+        });
+
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+
+            const width = video.videoWidth || 640;
+            const height = video.videoHeight || 480;
+
+            overlayCanvas.width = width;
+            overlayCanvas.height = height;
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            bgCanvas.width = width;
+            bgCanvas.height = height;
+
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+      }
+
+      function stopCamera() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        aiRunning = false;
+        videoReady = false;
+        latestFaceBox = null;
+        smoothedFaceBox = null;
+        lastFaceTime = 0;
+        lastSegmentation = null;
+
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        videoSkeleton.style.display = "block";
+
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setStatus("Camera turned off. Click Start Camera & AI to launch again.", "idle");
+        setScreenStatus("Offline", false);
+      }
+
+      // =========================
+      // FACE / SEGMENTATION
+      // =========================
+      async function detectFaceStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+            latestFaceBox = {
+              topLeft: face.topLeft,
+              bottomRight: face.bottomRight
+            };
+            lastFaceTime = performance.now();
+          } else if ((performance.now() - lastFaceTime) > FACE_HOLD_MS) {
+            latestFaceBox = null;
+          }
+        } catch (error) {
+          console.error("Face detect error:", error);
+        }
+      }
+
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+        try {
+          lastSegmentation = await bodyPixModel.segmentPerson(video, {
+            internalResolution: "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: 1
+          });
+        } catch (error) {
+          console.warn("BodyPix segmentation error:", error);
+          lastSegmentation = null;
+        }
+      }
+
+      // =========================
+      // DRAWING
+      // =========================
+      function drawBackgroundComposite() {
+        const w = overlayCanvas.width;
+        const h = overlayCanvas.height;
+
+        if (bgReady && bodyPixModel && lastSegmentation) {
+          tempCtx.clearRect(0, 0, w, h);
+          tempCtx.drawImage(video, 0, 0, w, h);
+
+          const frameImageData = tempCtx.getImageData(0, 0, w, h);
+          const framePixels = frameImageData.data;
+          const mask = lastSegmentation.data;
+
+          bgCtx.clearRect(0, 0, w, h);
+          bgCtx.drawImage(bgImage, 0, 0, w, h);
+          const bgImageData = bgCtx.getImageData(0, 0, w, h);
+          const bgPixels = bgImageData.data;
+
+          const total = Math.min(mask.length, framePixels.length / 4);
+
+          for (let i = 0; i < total; i++) {
+            const offset = i * 4;
+            if (mask[i] === 0) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = 255;
+            }
+          }
+
+          ctx.putImageData(frameImageData, 0, 0);
+        } else if (bgReady) {
+          ctx.drawImage(bgImage, 0, 0, w, h);
+        } else {
+          ctx.drawImage(video, 0, 0, w, h);
+        }
+      }
+
+      function drawGlasses(topLeft, bottomRight) {
+        if (!glassesReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        const width = faceWidth * 1.12;
+        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
+        const height = width * aspect;
+
+        const centerX = x1 + faceWidth / 2;
+        const eyeLineY = y1 + faceHeight * 0.42;
+
+        ctx.drawImage(
+          glassesImg,
+          centerX - width / 2,
+          eyeLineY - height / 2,
+          width,
+          height
+        );
+      }
+
+      function drawHelmet(topLeft, bottomRight) {
+        if (!helmetReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        const width = faceWidth * 1.34;
+        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+        const height = width * aspect;
+
+        const centerX = x1 + faceWidth / 2;
+        const anchorY = y1 + faceHeight * 0.16;
+
+        ctx.drawImage(
+          helmetImg,
+          centerX - width / 2,
+          anchorY - height,
+          width,
+          height
+        );
+      }
+
+      function drawCombo(topLeft, bottomRight) {
+        if (!comboReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        const width = faceWidth * 1.62;
+        const aspect = comboImg.naturalHeight / comboImg.naturalWidth;
+        const height = width * aspect;
+
+        const centerX = x1 + faceWidth / 2;
+        const foreheadY = y1 + faceHeight * 0.05;
+        const centerY = foreheadY + height * 0.28;
+
+        ctx.drawImage(
+          comboImg,
+          centerX - width / 2,
+          centerY - height / 2,
+          width,
+          height
+        );
+      }
+
+      function drawLiveFooterOverlay() {
+        const w = overlayCanvas.width;
+        const h = overlayCanvas.height;
+
+        const footerHeight = Math.max(46, Math.round(h * 0.085));
+
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+        ctx.fillRect(0, h - footerHeight, w, footerHeight);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.textBaseline = "middle";
+
+        const leftPadding = Math.round(w * 0.025);
+        const lineY = h - footerHeight / 2;
+
+        const bigFont = Math.max(14, Math.round(w * 0.022));
+        const smallFont = Math.max(11, Math.round(w * 0.016));
+
+        ctx.font = `700 ${bigFont}px system-ui, sans-serif`;
+        ctx.fillText("NKU Norse AI", leftPadding, lineY - 8);
+
+        ctx.font = `500 ${smallFont}px system-ui, sans-serif`;
+        ctx.fillText("Griffin Hall Edition", leftPadding, lineY + 11);
+
+        ctx.textAlign = "right";
+        ctx.font = `700 ${smallFont}px system-ui, sans-serif`;
+        ctx.fillText("Built in the browser", w - leftPadding, lineY + 1);
+        ctx.restore();
+      }
+
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        drawBackgroundComposite();
+
+        let boxToUse = null;
+        const now = performance.now();
+
+        if (latestFaceBox) {
+          smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+          boxToUse = smoothedFaceBox;
+        } else if (smoothedFaceBox && (now - lastFaceTime) < FACE_HOLD_MS) {
+          boxToUse = smoothedFaceBox;
+        } else {
+          smoothedFaceBox = null;
+        }
+
+        if (boxToUse) {
+          const { topLeft, bottomRight } = boxToUse;
+
+          if (activeFilter === "glasses") {
+            drawGlasses(topLeft, bottomRight);
+            setStatus("AI is running: glasses filter with Griffin Hall background.", "active");
+          } else if (activeFilter === "helmet") {
+            drawHelmet(topLeft, bottomRight);
+            setStatus("AI is running: helmet filter with Griffin Hall background.", "active");
+          } else if (activeFilter === "combo") {
+            drawCombo(topLeft, bottomRight);
+            setStatus("AI is running: Viking combo with Griffin Hall background.", "active");
+          } else {
+            setStatus("AI is running: Griffin Hall background mode.", "active");
+          }
+
+          setScreenStatus("Face Locked", true);
+        } else {
+          setStatus("Griffin Hall background is active — step into frame.", "active");
+          setScreenStatus("Searching…", false);
+        }
+
+        drawLiveFooterOverlay();
+        renderRaf = requestAnimationFrame(renderFrame);
+      }
+
+      // =========================
+      // EXPORT
+      // =========================
+      function drawExportFooter(exportCtx, exportCanvas, exportId, shareUrl) {
+        const w = exportCanvas.width;
+        const h = exportCanvas.height;
+        const footerHeight = Math.max(90, Math.round(h * 0.14));
+        const padX = Math.round(w * 0.03);
+
+        exportCtx.save();
+
+        exportCtx.fillStyle = "rgba(0, 0, 0, 0.76)";
+        exportCtx.fillRect(0, h - footerHeight, w, footerHeight);
+
+        exportCtx.fillStyle = "#f7b718";
+        exportCtx.font = `800 ${Math.max(18, Math.round(w * 0.03))}px system-ui, sans-serif`;
+        exportCtx.textBaseline = "top";
+        exportCtx.fillText("NKU NORSE AI", padX, h - footerHeight + 14);
+
+        exportCtx.fillStyle = "#ffffff";
+        exportCtx.font = `700 ${Math.max(14, Math.round(w * 0.022))}px system-ui, sans-serif`;
+        exportCtx.fillText("Griffin Hall Edition", padX, h - footerHeight + 46);
+
+        exportCtx.font = `600 ${Math.max(12, Math.round(w * 0.018))}px system-ui, sans-serif`;
+        exportCtx.fillText(`ID: ${exportId}`, padX, h - footerHeight + 70);
+
+        exportCtx.textAlign = "right";
+        exportCtx.fillStyle = "#ffffff";
+        exportCtx.font = `700 ${Math.max(12, Math.round(w * 0.017))}px system-ui, sans-serif`;
+        exportCtx.fillText("Try the live demo", w - padX, h - footerHeight + 18);
+
+        exportCtx.font = `600 ${Math.max(11, Math.round(w * 0.015))}px ui-monospace, monospace`;
+        exportCtx.fillText(shareUrl.replace(/^https?:\/\//, ""), w - padX, h - footerHeight + 48);
+
+        exportCtx.restore();
+      }
+
+      async function captureSnapshot() {
+        if (!videoReady || !overlayCanvas.width || !overlayCanvas.height) return;
+
+        const exportId = generateExportId("NKU");
+        const shareUrl = buildShareUrl(exportId);
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = overlayCanvas.width;
+        snapCanvas.height = overlayCanvas.height;
+
+        const snapCtx = snapCanvas.getContext("2d");
+        snapCtx.drawImage(overlayCanvas, 0, 0);
+        drawExportFooter(snapCtx, snapCanvas, exportId, shareUrl);
+
+        const dataUrl = snapCanvas.toDataURL("image/png");
+        const timestamp = safeNowIso().replace(/[:.]/g, "-");
+
+        snapshotPreview.src = dataUrl;
+        previewCard.style.display = "block";
+
+        latestExportId = exportId;
+        latestShareUrl = shareUrl;
+        shareUrlText.textContent = shareUrl;
+        copyShareBtn.disabled = false;
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = dataUrl;
+        downloadLink.download = `${APP_LABEL}-${exportId}-${timestamp}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        setStatus(`Snapshot saved locally with export ID ${exportId}.`, "active");
+
+        await trackEvent("snapshot_created", {
+          exportId,
+          shareUrl,
+          mediaType: "png"
+        });
+      }
+
+      async function copyShareLink() {
+        if (!latestShareUrl) return;
+
+        try {
+          await navigator.clipboard.writeText(latestShareUrl);
+          copyShareBtn.textContent = "Copied!";
+          setTimeout(() => {
+            copyShareBtn.textContent = "Copy Share Link";
+          }, 1400);
+
+          await trackEvent("share_link_copied", {
+            exportId: latestExportId,
+            shareUrl: latestShareUrl
+          });
+        } catch (error) {
+          console.warn("Clipboard copy failed:", error);
+          setStatus("Could not copy the share link on this device.", "error");
+        }
+      }
+
+      // =========================
+      // STARTUP
+      // =========================
+      async function startExperience() {
+        if (aiRunning) return;
+
+        try {
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
+          resetTrackingUi();
+
+          await setupCamera();
+
+          setStatus("Loading AI models…", "idle");
+          await pickBestBackend();
+
+          faceModel = await blazeface.load();
+
+          try {
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: 0.75,
+              quantBytes: 2
+            });
+          } catch (error) {
+            console.warn("BodyPix failed to load. Background replacement may be limited.", error);
+            bodyPixModel = null;
+          }
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          faceTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
+          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFaceStep();
+          await segmentStep();
+
+          renderRaf = requestAnimationFrame(renderFrame);
+          setStatus("AI is ready. Griffin Hall is active in every mode.", "active");
+
+          await trackEvent("session_started", {
+            backend: tf.getBackend ? tf.getBackend() : "unknown"
+          });
+        } catch (error) {
+          console.error("Init error:", error);
+
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus(
+            "This browser or device may not fully support the demo. Try Chrome or Edge over HTTPS.",
+            "error"
+          );
+          setScreenStatus("Offline", false);
+        }
+      }
+
+      // =========================
+      // EVENTS
+      // =========================
+      filterButtons.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          activeFilter = btn.dataset.filter;
+          updateFilterButtons(activeFilter);
+
+          if (activeFilter === "glasses") {
+            setStatus("Glasses filter selected. Griffin Hall stays behind you.", aiRunning ? "active" : "idle");
+          } else if (activeFilter === "helmet") {
+            setStatus("Helmet filter selected. Griffin Hall stays behind you.", aiRunning ? "active" : "idle");
+          } else if (activeFilter === "combo") {
+            setStatus("Viking combo selected. Griffin Hall stays behind you.", aiRunning ? "active" : "idle");
+          } else {
+            setStatus("Griffin Hall only mode selected.", aiRunning ? "active" : "idle");
+          }
+
+          await trackEvent("filter_changed", {
+            selectedFilter: activeFilter
+          });
+        });
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", captureSnapshot);
+      stopBtn.addEventListener("click", async () => {
+        await trackEvent("session_stopped", {});
+        stopCamera();
+      });
+      copyShareBtn.addEventListener("click", copyShareLink);
+
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+
+      setScreenStatus("Offline", false);
+    })();
+  </script>
+</body>
+</html>

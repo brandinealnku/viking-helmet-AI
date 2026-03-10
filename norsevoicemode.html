@@ -17,7 +17,6 @@
   <style>
     :root {
       --bg: #0a0f1c;
-      --panel: rgba(16, 20, 32, 0.84);
       --panel2: rgba(255, 255, 255, 0.06);
       --text: #f8fafc;
       --muted: #cbd5e1;
@@ -556,21 +555,24 @@
 
       if (smoothedFace) {
         const mirroredFaceX = video.videoWidth - (smoothedFace.x + smoothedFace.width);
-
+      
         const faceCanvasX = dx + (mirroredFaceX / video.videoWidth) * drawW;
         const faceCanvasY = dy + (smoothedFace.y / video.videoHeight) * drawH;
         const faceCanvasW = (smoothedFace.width / video.videoWidth) * drawW;
         const faceCanvasH = (smoothedFace.height / video.videoHeight) * drawH;
-
+      
         hw = faceCanvasW * 1.95;
         hh = hw * (helmetImg.height / helmetImg.width);
+      
         hx = faceCanvasX + faceCanvasW / 2 - hw / 2;
-        hy = faceCanvasY - faceCanvasH * 1.12;
+      
+        // higher helmet position
+        hy = faceCanvasY - faceCanvasH * 1.38;
       } else {
         hw = cw * 0.42;
         hh = hw * (helmetImg.height / helmetImg.width);
         hx = (cw - hw) / 2;
-        hy = ch * 0.04;
+        hy = ch * 0.01;
       }
 
       ctx.drawImage(helmetImg, hx, hy, hw, hh);

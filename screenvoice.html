@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Intelligence Studio</title>
+  <meta
+    name="description"
+    content="Premium browser-based screen share demo with voice commands, composited recording, and guided AI callouts."
+  />
+  <style>
+    :root {
+      --bg: #060b16;
+      --bg2: #0f172a;
+      --panel: rgba(12, 18, 34, 0.82);
+      --panel-border: rgba(255,255,255,0.08);
+      --text: #edf2ff;
+      --muted: #a8b4d6;
+      --accent: #7c3aed;
+      --accent2: #06b6d4;
+      --success: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --radius: 22px;
+      --shadow: 0 24px 60px rgba(0,0,0,0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,0.16), transparent 26%),
+        radial-gradient(circle at top right, rgba(6,182,212,0.10), transparent 24%),
+        linear-gradient(180deg, #040811 0%, #08111f 48%, #091221 100%);
+    }
+
+    body {
+      padding: 18px;
+    }
+
+    .app {
+      max-width: 1520px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .sidebar {
+      padding: 22px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(124,58,237,0.16);
+      border: 1px solid rgba(124,58,237,0.3);
+      color: #efe8ff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 31px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 15px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      color: white;
+      box-shadow: 0 12px 28px rgba(124,58,237,.32);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: white;
+    }
+
+    .btn-danger {
+      background: rgba(239,68,68,.14);
+      border: 1px solid rgba(239,68,68,.22);
+      color: #ffe1e1;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    select,
+    input[type="color"] {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.06);
+      color: white;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      height: 48px;
+      padding: 6px;
+      cursor: pointer;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pill-value {
+      min-width: 56px;
+      text-align: center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .tip {
+      margin-top: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .viewer {
+      padding: 18px;
+    }
+
+    .viewer-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .live {
+      background: rgba(34,197,94,.15);
+      border-color: rgba(34,197,94,.25);
+      color: #dfffea;
+    }
+
+    .idle {
+      background: rgba(245,158,11,.14);
+      border-color: rgba(245,158,11,.24);
+      color: #fff0ce;
+    }
+
+    .recording {
+      background: rgba(239,68,68,.18);
+      border-color: rgba(239,68,68,.28);
+      color: #ffdada;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08)),
+        #030814;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #screenVideo {
+      background: #020510;
+    }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 26px;
+      background:
+        radial-gradient(circle at center, rgba(124,58,237,0.18), transparent 42%);
+    }
+
+    .placeholder-card {
+      max-width: 700px;
+      padding: 30px;
+      border-radius: 28px;
+      background: rgba(7,12,24,.74);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+    }
+
+    .placeholder-card h3 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      letter-spacing: -0.03em;
+    }
+
+    .placeholder-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .tiny {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8fa0c7;
+    }
+
+    .downloads {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .downloads a {
+      color: #dcd6ff;
+      text-decoration: none;
+      font-weight: 700;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: inline-block;
+    }
+
+    .voice-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .voice-list span {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: block;
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .sidebar, .viewer { padding: 15px; }
+      h1 { font-size: 25px; }
+      .stats { grid-template-columns: 1fr; }
+      .stage { aspect-ratio: 4 / 3; }
+      .placeholder-card h3 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="panel sidebar">
+      <div class="badge">Screen Intelligence Studio</div>
+      <h1>Live Screen + Voice + Recording Demo</h1>
+      <p class="lead">
+        Share a screen, control the experience with your voice, record the final composited output,
+        and display guided AI-style callouts that make this feel like a real product demo.
+      </p>
+
+      <div class="btn-row">
+        <button id="shareBtn" class="btn-primary">Share Screen</button>
+        <button id="stopShareBtn" class="btn-danger" disabled>Stop Share</button>
+        <button id="voiceBtn" class="btn-secondary">Start Voice</button>
+      </div>
+
+      <div class="btn-row">
+        <button id="recordBtn" class="btn-primary" disabled>Start Recording</button>
+        <button id="stopRecordBtn" class="btn-danger" disabled>Stop Recording</button>
+        <button id="burstBtn" class="btn-secondary">Trigger Wow</button>
+      </div>
+
+      <div class="section">
+        <h2>Branding</h2>
+
+        <label for="headlineInput">Headline</label>
+        <input id="headlineInput" type="text" value="AI-Powered Screen Intelligence" />
+
+        <label for="subheadlineInput" style="margin-top:12px;">Subheadline</label>
+        <input id="subheadlineInput" type="text" value="Real-time interaction layer active" />
+
+        <label for="modeSelect" style="margin-top:12px;">Mode</label>
+        <select id="modeSelect">
+          <option value="executive">Executive Demo</option>
+          <option value="creator">Creator Mode</option>
+          <option value="training">Training Mode</option>
+          <option value="audit">Audit Mode</option>
+        </select>
+
+        <label for="accentColor" style="margin-top:12px;">Accent</label>
+        <input id="accentColor" type="color" value="#7c3aed" />
+      </div>
+
+      <div class="section">
+        <h2>Detection</h2>
+
+        <label for="sensitivityRange">Sensitivity</label>
+        <div class="range-row">
+          <input id="sensitivityRange" type="range" min="5" max="60" value="18" />
+          <div id="sensitivityVal" class="pill-value">18</div>
+        </div>
+
+        <label for="focusRange">Focus box size</label>
+        <div class="range-row">
+          <input id="focusRange" type="range" min="100" max="500" value="240" />
+          <div id="focusVal" class="pill-value">240</div>
+        </div>
+
+        <label class="check">
+          <input id="gridToggle" type="checkbox" checked />
+          <span>Show grid</span>
+        </label>
+        <label class="check">
+          <input id="scanToggle" type="checkbox" checked />
+          <span>Show scan line</span>
+        </label>
+        <label class="check">
+          <input id="focusToggle" type="checkbox" checked />
+          <span>Show focus tracker</span>
+        </label>
+        <label class="check">
+          <input id="labelsToggle" type="checkbox" checked />
+          <span>Show guided callouts</span>
+        </label>
+        <label class="check">
+          <input id="energyToggle" type="checkbox" checked />
+          <span>Show pulse energy</span>
+        </label>
+      </div>
+
+      <div class="section">
+        <h2>Live metrics</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">State</div>
+            <div class="stat-value" id="stateText">Idle</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Activity</div>
+            <div class="stat-value" id="activityText">0%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Engagement</div>
+            <div class="stat-value" id="engagementText">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Insight</div>
+            <div class="stat-value" id="insightText" style="font-size:14px;">Waiting</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Source</div>
+            <div class="stat-value" id="sourceText" style="font-size:14px;">None</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Resolution</div>
+            <div class="stat-value" id="resolutionText" style="font-size:14px;">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Voice</div>
+            <div class="stat-value" id="voiceStateText" style="font-size:14px;">Off</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Recording</div>
+            <div class="stat-value" id="recordStateText" style="font-size:14px;">Off</div>
+          </div>
+        </div>
+
+        <div class="tip">
+          This demo works best on Chrome or Edge over HTTPS or localhost. Voice commands rely on browser speech recognition support.
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Voice commands</h2>
+        <div class="voice-list">
+          <span>“start recording” / “stop recording”</span>
+          <span>“audit mode” / “training mode” / “creator mode” / “executive mode”</span>
+          <span>“show grid” / “hide grid”</span>
+          <span>“show labels” / “hide labels”</span>
+          <span>“show focus” / “hide focus”</span>
+          <span>“wow effect” / “highlight” / “clear callouts”</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Downloads</h2>
+        <div id="downloads" class="downloads"></div>
+      </div>
+    </aside>
+
+    <section class="panel viewer">
+      <div class="viewer-top">
+        <h2 class="viewer-title">Live Product Preview</h2>
+        <div class="status-row">
+          <div id="modePill" class="status-pill">Mode: Executive Demo</div>
+          <div id="livePill" class="status-pill idle">Not sharing</div>
+          <div id="recPill" class="status-pill">Recorder idle</div>
+          <div id="voicePill" class="status-pill">Voice off</div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <video id="screenVideo" autoplay playsinline muted></video>
+        <canvas id="analysisCanvas" hidden></canvas>
+        <canvas id="overlayCanvas"></canvas>
+
+        <div id="placeholder" class="placeholder">
+          <div class="placeholder-card">
+            <h3>Turn screen sharing into a premium demo</h3>
+            <p>
+              Click <strong>Share Screen</strong>, then choose a screen, window, or tab.
+              This page adds a polished AI-style overlay, voice commands, guided callouts,
+              and composited recording from the final canvas.
+            </p>
+            <div class="tiny">
+              Great for training demos, UX audits, presentations, founder pitches, and creator walkthroughs.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const shareBtn = document.getElementById("shareBtn");
+    const stopShareBtn = document.getElementById("stopShareBtn");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const recordBtn = document.getElementById("recordBtn");
+    const stopRecordBtn = document.getElementById("stopRecordBtn");
+    const burstBtn = document.getElementById("burstBtn");
+
+    const screenVideo = document.getElementById("screenVideo");
+    const overlayCanvas = document.getElementById("overlayCanvas");
+    const analysisCanvas = document.getElementById("analysisCanvas");
+    const overlayCtx = overlayCanvas.getContext("2d");
+    const analysisCtx = analysisCanvas.getContext("2d", { willReadFrequently: true });
+
+    const placeholder = document.getElementById("placeholder");
+    const downloads = document.getElementById("downloads");
+
+    const headlineInput = document.getElementById("headlineInput");
+    const subheadlineInput = document.getElementById("subheadlineInput");
+    const modeSelect = document.getElementById("modeSelect");
+    const accentColor = document.getElementById("accentColor");
+
+    const sensitivityRange = document.getElementById("sensitivityRange");
+    const focusRange = document.getElementById("focusRange");
+    const sensitivityVal = document.getElementById("sensitivityVal");
+    const focusVal = document.getElementById("focusVal");
+
+    const gridToggle = document.getElementById("gridToggle");
+    const scanToggle = document.getElementById("scanToggle");
+    const focusToggle = document.getElementById("focusToggle");
+    const labelsToggle = document.getElementById("labelsToggle");
+    const energyToggle = document.getElementById("energyToggle");
+
+    const stateText = document.getElementById("stateText");
+    const activityText = document.getElementById("activityText");
+    const engagementText = document.getElementById("engagementText");
+    const insightText = document.getElementById("insightText");
+    const sourceText = document.getElementById("sourceText");
+    const resolutionText = document.getElementById("resolutionText");
+    const voiceStateText = document.getElementById("voiceStateText");
+    const recordStateText = document.getElementById("recordStateText");
+
+    const modePill = document.getElementById("modePill");
+    const livePill = document.getElementById("livePill");
+    const recPill = document.getElementById("recPill");
+    const voicePill = document.getElementById("voicePill");
+
+    let screenStream = null;
+    let screenTrack = null;
+    let animationId = null;
+    let previousFrame = null;
+    let burstUntil = 0;
+
+    let recorder = null;
+    let recorderChunks = [];
+    let canvasStream = null;
+    let mixedAudioContext = null;
+    let mixedAudioDestination = null;
+    let voiceRecognition = null;
+    let voiceEnabled = false;
+    let restartingVoice = false;
+
+    const state = {
+      width: 1280,
+      height: 720,
+      activity: 0,
+      engagement: 0,
+      motionBox: null,
+      active: false,
+      lastActivityTime: 0,
+      callouts: [],
+      lastGuidedCalloutTime: 0,
+      lastVoiceCommand: "",
+      customMessage: "",
+      customMessageUntil: 0
+    };
+
+    const insightBank = {
+      executive: [
+        "Presentation ready",
+        "Attention zone detected",
+        "High-value area active",
+        "Executive signal rising",
+        "Demo energy strong"
+      ],
+      creator: [
+        "Visual hook detected",
+        "Creator moment rising",
+        "High-interest region active",
+        "Share-worthy movement",
+        "Audience energy strong"
+      ],
+      training: [
+        "Instruction focus stable",
+        "Learning zone active",
+        "Step-by-step guidance ready",
+        "Training attention rising",
+        "Onboarding flow clear"
+      ],
+      audit: [
+        "Review area detected",
+        "Potential friction zone",
+        "UX focus locked",
+        "Audit evidence active",
+        "Interaction hotspot rising"
+      ]
+    };
+
+    const guidedTemplates = {
+      executive: [
+        "Key attention zone identified",
+        "This area is drawing focus",
+        "Premium interaction signal detected",
+        "Audience-facing moment highlighted"
+      ],
+      creator: [
+        "This region has creator energy",
+        "Strong visual hook detected",
+        "Highlight-worthy screen moment",
+        "Audience attention likely here"
+      ],
+      training: [
+        "Guide the user here next",
+        "This step appears important",
+        "Instructional focus area detected",
+        "Use this region for onboarding"
+      ],
+      audit: [
+        "Potential usability review point",
+        "This area may need attention",
+        "Interaction hotspot flagged",
+        "Consider auditing this flow"
+      ]
+    };
+
+    function updateRangeLabels() {
+      sensitivityVal.textContent = sensitivityRange.value;
+      focusVal.textContent = focusRange.value;
+    }
+
+    function updateModePill() {
+      modePill.textContent = `Mode: ${modeSelect.options[modeSelect.selectedIndex].text}`;
+    }
+
+    function setIdleUi() {
+      stateText.textContent = "Idle";
+      activityText.textContent = "0%";
+      engagementText.textContent = "0";
+      insightText.textContent = "Waiting";
+      sourceText.textContent = "None";
+      resolutionText.textContent = "—";
+      recordStateText.textContent = "Off";
+      livePill.textContent = "Not sharing";
+      livePill.className = "status-pill idle";
+      recPill.textContent = "Recorder idle";
+      recPill.className = "status-pill";
+    }
+
+    function setLiveUi() {
+      livePill.textContent = "Live";
+      livePill.className = "status-pill live";
+    }
+
+    function setVoiceUi(on) {
+      voiceEnabled = on;
+      voiceStateText.textContent = on ? "On" : "Off";
+      voicePill.textContent = on ? "Voice on" : "Voice off";
+      voicePill.className = on ? "status-pill live" : "status-pill";
+      voiceBtn.textContent = on ? "Stop Voice" : "Start Voice";
+    }
+
+    function setRecordingUi(on) {
+      recordStateText.textContent = on ? "On" : "Off";
+      recPill.textContent = on ? "Recording" : "Recorder idle";
+      recPill.className = on ? "status-pill recording" : "status-pill";
+      recordBtn.disabled = on || !screenStream;
+      stopRecordBtn.disabled = !on;
+    }
+
+    function resizeCanvases(w, h) {
+      state.width = w;
+      state.height = h;
+      overlayCanvas.width = w;
+      overlayCanvas.height = h;
+      analysisCanvas.width = Math.max(320, Math.floor(w / 4));
+      analysisCanvas.height = Math.max(180, Math.floor(h / 4));
+      resolutionText.textContent = `${w} × ${h}`;
+    }
+
+    function clamp(num, min, max) {
+      return Math.max(min, Math.min(max, num));
+    }
+
+    function hexToRGBA(hex, alpha = 1) {
+      const clean = hex.replace("#", "");
+      const full = clean.length === 3 ? clean.split("").map(c => c + c).join("") : clean;
+      const num = parseInt(full, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function addCallout(text, x, y, lifespan = 4000) {
+      state.callouts.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        text,
+        x,
+        y,
+        createdAt: performance.now(),
+        lifespan
+      });
+    }
+
+    function clearCallouts() {
+      state.callouts = [];
+    }
+
+    function addCenteredMessage(text, lifespan = 2600) {
+      state.customMessage = text;
+      state.customMessageUntil = performance.now() + lifespan;
+    }
+
+    function triggerBurst() {
+      burstUntil = performance.now() + 2200;
+      addCenteredMessage("Wow effect triggered", 1600);
+    }
+
+    async function startShare() {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 24, max: 30 } },
+          audio: true
+        });
+
+        stopShare();
+
+        screenStream = stream;
+        screenTrack = stream.getVideoTracks()[0];
+        screenVideo.srcObject = screenStream;
+
+        if (screenTrack) {
+          const settings = screenTrack.getSettings();
+          const label = screenTrack.label || "Shared screen";
+          sourceText.textContent = label.length > 24 ? label.slice(0, 24) + "…" : label;
+
+          if (settings.width && settings.height) {
+            resizeCanvases(settings.width, settings.height);
+          }
+
+          screenTrack.addEventListener("ended", () => {
+            stopShare();
+          });
+        }
+
+        screenVideo.onloadedmetadata = async () => {
+          const w = screenVideo.videoWidth || 1280;
+          const h = screenVideo.videoHeight || 720;
+          resizeCanvases(w, h);
+
+          placeholder.style.display = "none";
+          shareBtn.disabled = true;
+          stopShareBtn.disabled = false;
+          recordBtn.disabled = false;
+          setLiveUi();
+
+          previousFrame = null;
+          await screenVideo.play();
+          renderLoop();
+          addCenteredMessage("Screen share connected", 1800);
+        };
+      } catch (err) {
+        console.error(err);
+        alert("Screen sharing was canceled or not supported.");
+      }
+    }
+
+    function stopShare() {
+      stopRecording();
+
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+      }
+
+      screenStream = null;
+      screenTrack = null;
+      previousFrame = null;
+      screenVideo.srcObject = null;
+      state.motionBox = null;
+      state.activity = 0;
+      state.engagement = 0;
+      state.active = false;
+      state.callouts = [];
+      state.customMessage = "";
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+      placeholder.style.display = "grid";
+      shareBtn.disabled = false;
+      stopShareBtn.disabled = true;
+      recordBtn.disabled = true;
+      stopRecordBtn.disabled = true;
+      setIdleUi();
+    }
+
+    function detectMotion() {
+      if (!screenVideo.videoWidth || !screenVideo.videoHeight) return;
+
+      const w = analysisCanvas.width;
+      const h = analysisCanvas.height;
+
+      analysisCtx.drawImage(screenVideo, 0, 0, w, h);
+      const frame = analysisCtx.getImageData(0, 0, w, h);
+      const data = frame.data;
+
+      if (!previousFrame) {
+        previousFrame = new Uint8ClampedArray(data);
+        return;
+      }
+
+      const threshold = Number(sensitivityRange.value);
+      let changed = 0;
+      let minX = w;
+      let minY = h;
+      let maxX = 0;
+      let maxY = 0;
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const pr = previousFrame[i];
+        const pg = previousFrame[i + 1];
+        const pb = previousFrame[i + 2];
+
+        const diff = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
+
+        if (diff > threshold) {
+          changed++;
+          const pixelIndex = i / 4;
+          const x = pixelIndex % w;
+          const y = Math.floor(pixelIndex / w);
+
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      previousFrame = new Uint8ClampedArray(data);
+
+      const totalSampled = data.length / 16;
+      const activityPercent = totalSampled ? (changed / totalSampled) * 100 : 0;
+      state.activity = activityPercent;
+
+      if (activityPercent > 1.1) {
+        state.lastActivityTime = performance.now();
+      }
+      state.active = performance.now() - state.lastActivityTime < 900;
+
+      const baseEngagement = Math.min(100, Math.round(activityPercent * 18));
+      const activeBoost = state.active ? 10 : 0;
+      const burstBoost = performance.now() < burstUntil ? 20 : 0;
+      state.engagement = clamp(baseEngagement + activeBoost + burstBoost, 0, 100);
+
+      if (changed > 20 && minX < maxX && minY < maxY) {
+        const sx = state.width / w;
+        const sy = state.height / h;
+        const cx = (minX + (maxX - minX) / 2) * sx;
+        const cy = (minY + (maxY - minY) / 2) * sy;
+        const size = Number(focusRange.value);
+
+        state.motionBox = {
+          x: clamp(cx - size / 2, 0, Math.max(0, state.width - size)),
+          y: clamp(cy - size / 2, 0, Math.max(0, state.height - size)),
+          width: size,
+          height: size
+        };
+      }
+
+      activityText.textContent = `${activityPercent.toFixed(1)}%`;
+      engagementText.textContent = `${state.engagement}`;
+      stateText.textContent = state.active ? "Active" : "Monitoring";
+
+      const bank = insightBank[modeSelect.value];
+      const idx = Math.min(bank.length - 1, Math.floor((state.engagement / 100) * bank.length));
+      insightText.textContent = bank[idx];
+    }
+
+    function maybeGenerateGuidedCallout() {
+      const now = performance.now();
+      if (!labelsToggle.checked) return;
+      if (!state.motionBox) return;
+      if (now - state.lastGuidedCalloutTime < 2800) return;
+      if (!state.active && state.engagement < 20) return;
+
+      const templates = guidedTemplates[modeSelect.value];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      addCallout(
+        text,
+        state.motionBox.x + 12,
+        Math.max(20, state.motionBox.y - 46),
+        4200
+      );
+      state.lastGuidedCalloutTime = now;
+    }
+
+    function drawGrid(ctx, w, h) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 3; i++) {
+        const x = (w / 3) * i;
+        const y = (h / 3) * i;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawScan(ctx, w, h, accent) {
+      const t = performance.now() / 1000;
+      const y = (t * 120) % (h + 120) - 60;
+      const grad = ctx.createLinearGradient(0, y - 60, 0, y + 60);
+      grad.addColorStop(0, hexToRGBA(accent, 0));
+      grad.addColorStop(0.5, hexToRGBA(accent, 0.16));
+      grad.addColorStop(1, hexToRGBA(accent, 0));
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y - 60, w, 120);
+      ctx.restore();
+    }
+
+    function drawCornerFrame(ctx, w, h, accent) {
+      const pad = 26;
+      const len = Math.min(w, h) * 0.065;
+
+      ctx.save();
+      ctx.strokeStyle = hexToRGBA(accent, 0.75);
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      const corners = [
+        [pad, pad, pad + len, pad, pad, pad + len],
+        [w - pad, pad, w - pad - len, pad, w - pad, pad + len],
+        [pad, h - pad, pad + len, h - pad, pad, h - pad - len],
+        [w - pad, h - pad, w - pad - len, h - pad, w - pad, h - pad - len]
+      ];
+
+      corners.forEach(c => {
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[2], c[3]);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[4], c[5]);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
+    function drawTopBanner(ctx, w, accent) {
+      const x = 22;
+      const y = 22;
+      const bannerW = Math.min(640, w * 0.6);
+      const bannerH = 90;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.9);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, bannerW, bannerH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 28px Inter, Arial, sans-serif";
+      ctx.fillText(headlineInput.value || "AI-Powered Screen Intelligence", x + 16, y + 34);
+
+      ctx.fillStyle = "rgba(255,255,255,0.76)";
+      ctx.font = "600 15px Inter, Arial, sans-serif";
+      ctx.fillText(subheadlineInput.value || "Real-time interaction layer active", x + 16, y + 60);
+
+      ctx.fillStyle = hexToRGBA(accent, 0.95);
+      ctx.font = "700 13px Inter, Arial, sans-serif";
+      ctx.fillText(`ENGAGEMENT ${state.engagement}`, x + 16, y + 79);
+      ctx.restore();
+    }
+
+    function drawModeCard(ctx, w, accent) {
+      const cardW = 250;
+      const cardH = 128;
+      const x = w - cardW - 22;
+      const y = 22;
+
+      const modeLabels = {
+        executive: "Executive Demo",
+        creator: "Creator Mode",
+        training: "Training Mode",
+        audit: "Audit Mode"
+      };
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.85);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, cardW, cardH, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.font = "700 13px Inter, Arial, sans-serif";
+      ctx.fillText("LIVE PRODUCT LAYER", x + 16, y + 24);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 24px Inter, Arial, sans-serif";
+      ctx.fillText(modeLabels[modeSelect.value], x + 16, y + 56);
+
+      ctx.fillStyle = hexToRGBA(accent, 1);
+      ctx.font = "900 32px Inter, Arial, sans-serif";
+      ctx.fillText(`${state.activity.toFixed(1)}%`, x + 16, y + 93);
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.font = "600 13px Inter, Arial, sans-serif";
+      ctx.fillText(state.active ? "activity detected" : "tracking stable", x + 92, y + 92);
+
+      ctx.restore();
+    }
+
+    function drawInsightStrip(ctx, w, h, accent) {
+      const stripW = Math.min(720, w - 44);
+      const stripH = 48;
+      const x = 22;
+      const y = h - stripH - 22;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.72)";
+      ctx.strokeStyle = hexToRGBA(accent, 0.65);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, stripW, stripH, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = hexToRGBA(accent, 1);
+      ctx.font = "800 13px Inter, Arial, sans-serif";
+      ctx.fillText("AI INSIGHT", x + 16, y + 28);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 15px Inter, Arial, sans-serif";
+      ctx.fillText(insightText.textContent, x + 108, y + 28);
+
+      ctx.restore();
+    }
+
+    function drawFocusBox(ctx, accent) {
+      if (!focusToggle.checked || !state.motionBox) return;
+
+      const { x, y, width, height } = state.motionBox;
+      const pulse = energyToggle.checked && state.active ? Math.sin(performance.now() / 160) * 7 : 0;
+
+      ctx.save();
+      ctx.strokeStyle = hexToRGBA(accent, 0.98);
+      ctx.fillStyle = hexToRGBA(accent, 0.08);
+      ctx.shadowColor = hexToRGBA(accent, 0.95);
+      ctx.shadowBlur = 20 + Math.max(0, pulse);
+      ctx.lineWidth = 4;
+
+      roundRect(ctx, x - pulse / 2, y - pulse / 2, width + pulse, height + pulse, 20);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCallouts(ctx, accent) {
+      const now = performance.now();
+      state.callouts = state.callouts.filter(item => now - item.createdAt < item.lifespan);
+
+      state.callouts.forEach(item => {
+        const age = now - item.createdAt;
+        const fade = 1 - age / item.lifespan;
+        const width = Math.min(320, Math.max(180, item.text.length * 7 + 40));
+        const height = 38;
+
+        ctx.save();
+        ctx.fillStyle = hexToRGBA("#07101d", 0.88 * fade);
+        ctx.strokeStyle = hexToRGBA(accent, 0.9 * fade);
+        ctx.lineWidth = 2;
+        roundRect(ctx, item.x, item.y, width, height, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = hexToRGBA(accent, 0.8 * fade);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(item.x + 14, item.y + height);
+        ctx.lineTo(item.x + 4, item.y + height + 14);
+        ctx.stroke();
+
+        ctx.fillStyle = hexToRGBA("#ffffff", fade);
+        ctx.font = "800 13px Inter, Arial, sans-serif";
+        ctx.fillText(item.text, item.x + 12, item.y + 24);
+        ctx.restore();
+      });
+    }
+
+    function drawEnergyPulse(ctx, w, h, accent) {
+      if (!energyToggle.checked) return;
+      if (!state.active && performance.now() > burstUntil) return;
+
+      const t = performance.now() / 160;
+      const r = 16 + (Math.sin(t) + 1) * 4 + (performance.now() < burstUntil ? 12 : 0);
+
+      ctx.save();
+      ctx.fillStyle = hexToRGBA(accent, 0.96);
+      ctx.shadowColor = hexToRGBA(accent, 0.9);
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(w - 28, h - 28, r / 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBurstEffect(ctx, w, h, accent) {
+      if (performance.now() > burstUntil) return;
+
+      const progress = 1 - ((burstUntil - performance.now()) / 2200);
+      const alpha = 0.22 * (1 - progress);
+
+      ctx.save();
+      const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6);
+      grad.addColorStop(0, hexToRGBA(accent, alpha));
+      grad.addColorStop(1, hexToRGBA(accent, 0));
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      for (let i = 0; i < 10; i++) {
+        const lineAlpha = Math.max(0, 0.35 - progress * 0.35);
+        ctx.strokeStyle = hexToRGBA(accent, lineAlpha);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w / 2, h / 2);
+        const angle = (Math.PI * 2 / 10) * i + progress * 0.8;
+        ctx.lineTo(w / 2 + Math.cos(angle) * w * 0.45, h / 2 + Math.sin(angle) * h * 0.45);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawVoiceCommandBanner(ctx, w) {
+      if (!state.lastVoiceCommand) return;
+      const text = `VOICE: ${state.lastVoiceCommand}`;
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.78)";
+      ctx.strokeStyle = "rgba(255,255,255,0.14)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, w - 300, 164, 278, 38, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 13px Inter, Arial, sans-serif";
+      ctx.fillText(text, w - 286, 188);
+      ctx.restore();
+    }
+
+    function drawCenteredMessage(ctx, w, h) {
+      if (!state.customMessage || performance.now() > state.customMessageUntil) return;
+      const text = state.customMessage;
+      const width = Math.min(420, text.length * 9 + 40);
+      const x = (w - width) / 2;
+      const y = h * 0.18;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(7,12,24,0.86)";
+      ctx.strokeStyle = hexToRGBA(accentColor.value, 0.85);
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, width, 48, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 16px Inter, Arial, sans-serif";
+      ctx.fillText(text, x + 16, y + 30);
+      ctx.restore();
+    }
+
+    function drawRecordingBadge(ctx, w, accent) {
+      if (!recorder || recorder.state !== "recording") return;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(12, 6, 10, 0.84)";
+      ctx.strokeStyle = hexToRGBA("#ef4444", 0.95);
+      ctx.lineWidth = 2;
+      roundRect(ctx, w - 180, 164, 158, 38, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(w - 160, 183, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 13px Inter, Arial, sans-serif";
+      ctx.fillText("REC COMPOSITED", w - 145, 188);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      const w = overlayCanvas.width;
+      const h = overlayCanvas.height;
+      if (!w || !h) return;
+
+      const accent = accentColor.value;
+      overlayCtx.clearRect(0, 0, w, h);
+
+      overlayCtx.fillStyle = "rgba(0,0,0,0.05)";
+      overlayCtx.fillRect(0, 0, w, h);
+
+      if (gridToggle.checked) drawGrid(overlayCtx, w, h);
+      if (scanToggle.checked) drawScan(overlayCtx, w, h, accent);
+
+      drawCornerFrame(overlayCtx, w, h, accent);
+      drawTopBanner(overlayCtx, w, accent);
+      drawModeCard(overlayCtx, w, accent);
+      drawInsightStrip(overlayCtx, w, h, accent);
+      drawFocusBox(overlayCtx, accent);
+      drawCallouts(overlayCtx, accent);
+      drawEnergyPulse(overlayCtx, w, h, accent);
+      drawBurstEffect(overlayCtx, w, h, accent);
+      drawVoiceCommandBanner(overlayCtx, w);
+      drawRecordingBadge(overlayCtx, w, accent);
+      drawCenteredMessage(overlayCtx, w, h);
+    }
+
+    function renderLoop() {
+      detectMotion();
+      maybeGenerateGuidedCallout();
+      drawOverlay();
+      animationId = requestAnimationFrame(renderLoop);
+    }
+
+    async function buildRecorderStream() {
+      if (!overlayCanvas.captureStream) {
+        throw new Error("Canvas captureStream is not supported in this browser.");
+      }
+
+      canvasStream = overlayCanvas.captureStream(30);
+
+      const tracks = [...canvasStream.getVideoTracks()];
+
+      const screenAudioTracks = screenStream ? screenStream.getAudioTracks() : [];
+      if (screenAudioTracks.length) {
+        mixedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        mixedAudioDestination = mixedAudioContext.createMediaStreamDestination();
+
+        const source = mixedAudioContext.createMediaStreamSource(
+          new MediaStream(screenAudioTracks)
+        );
+        source.connect(mixedAudioDestination);
+
+        mixedAudioDestination.stream.getAudioTracks().forEach(track => tracks.push(track));
+      }
+
+      return new MediaStream(tracks);
+    }
+
+    function getBestMimeType() {
+      const options = [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm"
+      ];
+      return options.find(type => MediaRecorder.isTypeSupported(type)) || "";
+    }
+
+    async function startRecording() {
+      if (!screenStream) {
+        alert("Share your screen first.");
+        return;
+      }
+
+      if (recorder && recorder.state === "recording") return;
+
+      try {
+        const stream = await buildRecorderStream();
+        const mimeType = getBestMimeType();
+
+        recorderChunks = [];
+        recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+        recorder.ondataavailable = event => {
+          if (event.data && event.data.size > 0) {
+            recorderChunks.push(event.data);
+          }
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(recorderChunks, { type: mimeType || "video/webm" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          a.href = url;
+          a.download = `screen-intelligence-demo-${ts}.webm`;
+          a.textContent = `Download recording ${new Date().toLocaleTimeString()}`;
+          downloads.prepend(a);
+
+          if (canvasStream) {
+            canvasStream.getTracks().forEach(track => track.stop());
+            canvasStream = null;
+          }
+
+          if (mixedAudioContext) {
+            mixedAudioContext.close();
+            mixedAudioContext = null;
+            mixedAudioDestination = null;
+          }
+
+          setRecordingUi(false);
+          addCenteredMessage("Recording ready to download", 2200);
+        };
+
+        recorder.start(250);
+        setRecordingUi(true);
+        addCenteredMessage("Recording started", 1600);
+      } catch (err) {
+        console.error(err);
+        alert("Recording could not start in this browser.");
+      }
+    }
+
+    function stopRecording() {
+      if (recorder && recorder.state === "recording") {
+        recorder.stop();
+      } else {
+        setRecordingUi(false);
+      }
+    }
+
+    function parseVoiceCommand(rawText) {
+      const text = rawText.trim().toLowerCase();
+      state.lastVoiceCommand = text;
+      addCenteredMessage(`Voice: ${text}`, 1400);
+
+      if (text.includes("start recording")) {
+        startRecording();
+        return;
+      }
+      if (text.includes("stop recording")) {
+        stopRecording();
+        return;
+      }
+      if (text.includes("audit mode")) {
+        modeSelect.value = "audit";
+        updateModePill();
+        addCenteredMessage("Audit mode active", 1600);
+        return;
+      }
+      if (text.includes("training mode")) {
+        modeSelect.value = "training";
+        updateModePill();
+        addCenteredMessage("Training mode active", 1600);
+        return;
+      }
+      if (text.includes("creator mode")) {
+        modeSelect.value = "creator";
+        updateModePill();
+        addCenteredMessage("Creator mode active", 1600);
+        return;
+      }
+      if (text.includes("executive mode")) {
+        modeSelect.value = "executive";
+        updateModePill();
+        addCenteredMessage("Executive mode active", 1600);
+        return;
+      }
+      if (text.includes("show grid")) {
+        gridToggle.checked = true;
+        return;
+      }
+      if (text.includes("hide grid")) {
+        gridToggle.checked = false;
+        return;
+      }
+      if (text.includes("show labels")) {
+        labelsToggle.checked = true;
+        return;
+      }
+      if (text.includes("hide labels")) {
+        labelsToggle.checked = false;
+        return;
+      }
+      if (text.includes("show focus")) {
+        focusToggle.checked = true;
+        return;
+      }
+      if (text.includes("hide focus")) {
+        focusToggle.checked = false;
+        return;
+      }
+      if (text.includes("wow effect") || text.includes("trigger wow")) {
+        triggerBurst();
+        return;
+      }
+      if (text.includes("highlight")) {
+        if (state.motionBox) {
+          addCallout(
+            "Manual highlight placed",
+            state.motionBox.x + 8,
+            Math.max(20, state.motionBox.y - 48),
+            4200
+          );
+        } else {
+          addCallout("Highlight requested", state.width * 0.35, state.height * 0.35, 3000);
+        }
+        return;
+      }
+      if (text.includes("clear callouts")) {
+        clearCallouts();
+        return;
+      }
+    }
+
+    function startVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        alert("Speech recognition is not supported in this browser.");
+        return;
+      }
+
+      if (voiceRecognition) return;
+
+      voiceRecognition = new SR();
+      voiceRecognition.continuous = true;
+      voiceRecognition.interimResults = false;
+      voiceRecognition.lang = "en-US";
+
+      voiceRecognition.onstart = () => {
+        setVoiceUi(true);
+      };
+
+      voiceRecognition.onresult = event => {
+        const result = event.results[event.results.length - 1];
+        if (!result || !result[0]) return;
+        parseVoiceCommand(result[0].transcript);
+      };
+
+      voiceRecognition.onerror = event => {
+        console.warn("Voice recognition error:", event.error);
+      };
+
+      voiceRecognition.onend = () => {
+        if (restartingVoice) {
+          restartingVoice = false;
+          return;
+        }
+
+        if (voiceEnabled && voiceRecognition) {
+          try {
+            voiceRecognition.start();
+          } catch (err) {
+            console.warn(err);
+          }
+        } else {
+          voiceRecognition = null;
+          setVoiceUi(false);
+        }
+      };
+
+      try {
+        voiceRecognition.start();
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function stopVoice() {
+      if (!voiceRecognition) {
+        setVoiceUi(false);
+        return;
+      }
+      voiceEnabled = false;
+      restartingVoice = true;
+      voiceRecognition.stop();
+      voiceRecognition = null;
+      setVoiceUi(false);
+    }
+
+    shareBtn.addEventListener("click", startShare);
+    stopShareBtn.addEventListener("click", stopShare);
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+    burstBtn.addEventListener("click", triggerBurst);
+
+    voiceBtn.addEventListener("click", () => {
+      if (voiceEnabled || voiceRecognition) {
+        stopVoice();
+      } else {
+        startVoice();
+      }
+    });
+
+    modeSelect.addEventListener("change", updateModePill);
+    sensitivityRange.addEventListener("input", updateRangeLabels);
+    focusRange.addEventListener("input", updateRangeLabels);
+
+    updateRangeLabels();
+    updateModePill();
+    setIdleUi();
+    setVoiceUi(false);
+    setRecordingUi(false);
+  </script>
+</body>
+</html>

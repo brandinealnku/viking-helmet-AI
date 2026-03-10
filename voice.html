@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Norse Voice Command Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Browser-based voice command demo with camera, Norse overlay, dark mode, laugh mode, and recording."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: rgba(255, 255, 255, 0.8);
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #f7b718;
+      --accent-dark: #c98e00;
+      --danger: #dc2626;
+      --success: #059669;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+      --border: rgba(17, 24, 39, 0.08);
+    }
+
+    body.dark {
+      --bg: #0b1020;
+      --panel: rgba(17, 24, 39, 0.78);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #f7b718;
+      --accent-dark: #d9a10c;
+      --danger: #f87171;
+      --success: #34d399;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(247, 183, 24, 0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .viewer-card {
+      padding: 14px;
+    }
+
+    .controls-card {
+      padding: 22px;
+    }
+
+    .title {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .video-shell {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #video {
+      transform: scaleX(-1);
+      background: #000;
+    }
+
+    #overlay {
+      pointer-events: none;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 0;
+    }
+
+    .badge {
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      background: rgba(247, 183, 24, 0.12);
+      color: var(--text);
+      border: 1px solid rgba(247, 183, 24, 0.25);
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .status-box {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0 18px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #111;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .success {
+      background: var(--success);
+      color: white;
+    }
+
+    .command-list {
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .command-list li {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .download-wrap {
+      margin-top: 16px;
+    }
+
+    .download-wrap a {
+      display: inline-block;
+      text-decoration: none;
+      font-weight: 800;
+      color: var(--text);
+      background: rgba(247, 183, 24, 0.16);
+      border: 1px solid rgba(247, 183, 24, 0.28);
+      padding: 12px 14px;
+      border-radius: 14px;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 960px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card viewer-card">
+      <div class="video-shell">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+
+      <div class="badge-row">
+        <div class="badge">Voice + Camera Demo</div>
+        <div class="badge">Norse Overlay</div>
+        <div class="badge">Recording</div>
+        <div class="badge">Live Commands</div>
+      </div>
+    </section>
+
+    <aside class="card controls-card">
+      <h1 class="title">Voice-Controlled Norse Demo</h1>
+      <p class="subtitle">
+        Speak a command and let the webpage react live. Great starter version for
+        connecting voice control to your AI + AR showcase experience.
+      </p>
+
+      <div class="button-grid">
+        <button id="startCamBtn" class="primary">Start Camera</button>
+        <button id="startVoiceBtn" class="primary">Start Voice Commands</button>
+        <button id="stopVoiceBtn" class="secondary">Stop Voice Commands</button>
+        <button id="toggleDarkBtn" class="secondary">Toggle Dark Mode</button>
+        <button id="recordBtn" class="success">Start Recording</button>
+        <button id="stopRecordBtn" class="danger">Stop Recording</button>
+        <button id="showOverlayBtn" class="secondary">Show Norse Overlay</button>
+        <button id="hideOverlayBtn" class="secondary">Hide Norse Overlay</button>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-box">
+          <span class="label">Listening</span>
+          <div id="listeningStatus" class="value">Off</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Last Heard</span>
+          <div id="heardText" class="value">Nothing yet</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Mode</span>
+          <div id="modeStatus" class="value">Standard</div>
+        </div>
+
+        <div class="status-box">
+          <span class="label">Recording</span>
+          <div id="recordingStatus" class="value">Not recording</div>
+        </div>
+      </div>
+
+      <ul class="command-list">
+        <li><strong>“laugh mode”</strong> → shows laugh mode overlay</li>
+        <li><strong>“dark mode”</strong> → turns on dark mode</li>
+        <li><strong>“light mode”</strong> → turns on light mode</li>
+        <li><strong>“record”</strong> → starts video recording</li>
+        <li><strong>“stop recording”</strong> → stops recording</li>
+        <li><strong>“show Norse overlay”</strong> → turns on Norse overlay</li>
+        <li><strong>“hide Norse overlay”</strong> → turns it off</li>
+      </ul>
+
+      <div id="downloadWrap" class="download-wrap"></div>
+
+      <p class="footer-note">
+        Best tested in Chrome or Edge. Microphone and camera permissions are required.
+      </p>
+    </aside>
+  </main>
+
+  <script>
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const ctx = overlay.getContext("2d");
+
+    const startCamBtn = document.getElementById("startCamBtn");
+    const startVoiceBtn = document.getElementById("startVoiceBtn");
+    const stopVoiceBtn = document.getElementById("stopVoiceBtn");
+    const toggleDarkBtn = document.getElementById("toggleDarkBtn");
+    const recordBtn = document.getElementById("recordBtn");
+    const stopRecordBtn = document.getElementById("stopRecordBtn");
+    const showOverlayBtn = document.getElementById("showOverlayBtn");
+    const hideOverlayBtn = document.getElementById("hideOverlayBtn");
+
+    const listeningStatus = document.getElementById("listeningStatus");
+    const heardText = document.getElementById("heardText");
+    const modeStatus = document.getElementById("modeStatus");
+    const recordingStatus = document.getElementById("recordingStatus");
+    const downloadWrap = document.getElementById("downloadWrap");
+
+    let cameraStream = null;
+    let recognition = null;
+    let recognitionEnabled = false;
+    let isListening = false;
+
+    let currentMode = "standard";
+    let showNorseOverlay = false;
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let combinedStream = null;
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    async function startCamera() {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true
+        });
+
+        video.srcObject = cameraStream;
+
+        await video.play();
+        resizeCanvas();
+        drawLoop();
+      } catch (error) {
+        alert("Could not access camera/microphone: " + error.message);
+        console.error(error);
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = overlay.getBoundingClientRect();
+      overlay.width = Math.max(1, Math.floor(rect.width * devicePixelRatio));
+      overlay.height = Math.max(1, Math.floor(rect.height * devicePixelRatio));
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      if (mode === "dark") {
+        document.body.classList.add("dark");
+        modeStatus.textContent = "Dark mode";
+      } else if (mode === "light") {
+        document.body.classList.remove("dark");
+        modeStatus.textContent = "Light mode";
+      } else if (mode === "laugh") {
+        modeStatus.textContent = "Laugh mode";
+      } else {
+        modeStatus.textContent = "Standard";
+      }
+    }
+
+    function drawRoundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawOverlay() {
+      const width = overlay.clientWidth;
+      const height = overlay.clientHeight;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const isDark = document.body.classList.contains("dark");
+
+      if (showNorseOverlay) {
+        ctx.save();
+
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, "rgba(247, 183, 24, 0.30)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0.12)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.lineWidth = 4;
+        drawRoundedRect(18, 18, width - 36, height - 36, 24);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+        drawRoundedRect(22, 22, 260, 58, 16);
+        ctx.fill();
+
+        ctx.fillStyle = "#f7b718";
+        ctx.font = "800 28px Inter, Arial";
+        ctx.fillText("NORSE MODE", 42, 58);
+
+        ctx.restore();
+      }
+
+      if (currentMode === "laugh") {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        drawRoundedRect(width / 2 - 150, height - 96, 300, 56, 16);
+        ctx.fill();
+
+        ctx.font = "800 28px Inter, Arial";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("LAUGH MODE", width / 2, height - 58);
+
+        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(width / 2, height / 2, Math.min(width, height) * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const topText = isListening ? "Listening for voice commands..." : "Voice commands idle";
+      ctx.save();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+      drawRoundedRect(width - 300, 22, 278, 48, 14);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 18px Inter, Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(topText, width - 282, 52);
+      ctx.restore();
+    }
+
+    function drawLoop() {
+      if (video.readyState >= 2) {
+        drawOverlay();
+      }
+      requestAnimationFrame(drawLoop);
+    }
+
+    function setupSpeechRecognition() {
+      if (!SpeechRecognition) {
+        alert("Speech recognition is not supported in this browser.");
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        isListening = true;
+        listeningStatus.textContent = "On";
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        listeningStatus.textContent = "Off";
+
+        if (recognitionEnabled) {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.warn("Recognition restart prevented:", e);
+          }
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("Speech recognition error:", event.error);
+        heardText.textContent = "Error: " + event.error;
+      };
+
+      recognition.onresult = (event) => {
+        const lastResult = event.results[event.results.length - 1];
+        const transcript = lastResult[0].transcript.toLowerCase().trim();
+
+        heardText.textContent = transcript;
+        handleVoiceCommand(transcript);
+      };
+    }
+
+    function handleVoiceCommand(transcript) {
+      if (transcript.includes("laugh mode")) {
+        setMode("laugh");
+        flashModeMessage("Laugh mode activated");
+        return;
+      }
+
+      if (transcript.includes("dark mode")) {
+        document.body.classList.add("dark");
+        setMode("dark");
+        flashModeMessage("Dark mode activated");
+        return;
+      }
+
+      if (transcript.includes("light mode")) {
+        document.body.classList.remove("dark");
+        setMode("light");
+        flashModeMessage("Light mode activated");
+        return;
+      }
+
+      if (transcript.includes("record")) {
+        if (!transcript.includes("stop")) {
+          startRecording();
+          flashModeMessage("Recording started");
+          return;
+        }
+      }
+
+      if (transcript.includes("stop recording")) {
+        stopRecording();
+        flashModeMessage("Recording stopped");
+        return;
+      }
+
+      if (transcript.includes("show norse overlay")) {
+        showNorseOverlay = true;
+        flashModeMessage("Norse overlay on");
+        return;
+      }
+
+      if (transcript.includes("hide norse overlay")) {
+        showNorseOverlay = false;
+        flashModeMessage("Norse overlay off");
+        return;
+      }
+    }
+
+    function flashModeMessage(message) {
+      modeStatus.textContent = message;
+      setTimeout(() => {
+        if (currentMode === "laugh") {
+          modeStatus.textContent = "Laugh mode";
+        } else if (document.body.classList.contains("dark")) {
+          modeStatus.textContent = "Dark mode";
+        } else if (currentMode === "light") {
+          modeStatus.textContent = "Light mode";
+        } else {
+          modeStatus.textContent = "Standard";
+        }
+      }, 1600);
+    }
+
+    function getCanvasStream() {
+      return overlay.captureStream(30);
+    }
+
+    function buildCombinedStream() {
+      const canvasStream = getCanvasStream();
+      const combined = new MediaStream();
+
+      const videoTracks = canvasStream.getVideoTracks();
+      videoTracks.forEach(track => combined.addTrack(track));
+
+      if (cameraStream) {
+        const audioTracks = cameraStream.getAudioTracks();
+        audioTracks.forEach(track => combined.addTrack(track));
+      }
+
+      return combined;
+    }
+
+    function startRecording() {
+      if (!cameraStream) {
+        alert("Please start the camera first.");
+        return;
+      }
+
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        return;
+      }
+
+      downloadWrap.innerHTML = "";
+      recordedChunks = [];
+      combinedStream = buildCombinedStream();
+
+      try {
+        mediaRecorder = new MediaRecorder(combinedStream, {
+          mimeType: "video/webm"
+        });
+      } catch (error) {
+        console.warn("Falling back to default recorder settings.", error);
+        mediaRecorder = new MediaRecorder(combinedStream);
+      }
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+
+        downloadWrap.innerHTML = `
+          <a href="${url}" download="norse-voice-demo.webm">Download recording</a>
+        `;
+      };
+
+      mediaRecorder.start();
+      recordingStatus.textContent = "Recording now";
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        recordingStatus.textContent = "Stopped";
+      }
+    }
+
+    startCamBtn.addEventListener("click", startCamera);
+
+    startVoiceBtn.addEventListener("click", async () => {
+      if (!recognition) {
+        setupSpeechRecognition();
+      }
+
+      if (!recognition) return;
+
+      recognitionEnabled = true;
+
+      try {
+        recognition.start();
+      } catch (error) {
+        console.warn("Recognition start issue:", error);
+      }
+    });
+
+    stopVoiceBtn.addEventListener("click", () => {
+      recognitionEnabled = false;
+      if (recognition) {
+        recognition.stop();
+      }
+    });
+
+    toggleDarkBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      if (document.body.classList.contains("dark")) {
+        setMode("dark");
+      } else {
+        setMode("light");
+      }
+    });
+
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+
+    showOverlayBtn.addEventListener("click", () => {
+      showNorseOverlay = true;
+    });
+
+    hideOverlayBtn.addEventListener("click", () => {
+      showNorseOverlay = false;
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    video.addEventListener("loadedmetadata", () => {
+      resizeCanvas();
+    });
+  </script>
+</body>
+</html>

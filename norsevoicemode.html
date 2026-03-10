@@ -2,32 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse Voice + Laugh Mode Demo</title>
+  <title>NKU Norse AI Voice Demo — Segmentation Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="NKU Norse browser demo with Griffin Hall background replacement, helmet overlay, voice commands, laugh mode, and real canvas recording."
+    content="NKU Norse AI demo with Griffin Hall background replacement, AI body segmentation, helmet overlay, voice commands, laugh mode, and canvas recording."
   />
   <meta name="theme-color" content="#111111" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 
   <style>
     :root {
       --bg: #0a0f1c;
-      --panel: rgba(16, 20, 32, 0.82);
-      --panel-2: rgba(255, 255, 255, 0.06);
+      --panel: rgba(16, 20, 32, 0.84);
+      --panel2: rgba(255, 255, 255, 0.06);
       --text: #f8fafc;
       --muted: #cbd5e1;
       --gold: #f7b718;
-      --gold-dark: #c99200;
       --success: #10b981;
       --danger: #ef4444;
       --border: rgba(255, 255, 255, 0.1);
       --shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -35,21 +36,21 @@
       min-height: 100%;
       font-family: Inter, Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(247, 183, 24, 0.15), transparent 28%),
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 22%),
+        radial-gradient(circle at top left, rgba(247, 183, 24, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 22%),
         linear-gradient(180deg, #0b1120 0%, #0a0f1c 100%);
       color: var(--text);
     }
 
     body {
-      padding: 18px;
+      padding: 16px;
     }
 
     .app {
       max-width: 1280px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.18fr 0.82fr;
       gap: 18px;
       align-items: start;
     }
@@ -62,20 +63,15 @@
       backdrop-filter: blur(14px);
     }
 
-    .stage-card {
-      padding: 14px;
-    }
-
-    .control-card {
-      padding: 22px;
-    }
+    .stage-card { padding: 14px; }
+    .control-card { padding: 22px; }
 
     .stage-wrap {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 10;
-      overflow: hidden;
       border-radius: 22px;
+      overflow: hidden;
       background: #000;
       border: 1px solid rgba(255,255,255,0.08);
     }
@@ -102,7 +98,6 @@
       margin: 0 0 18px;
       color: var(--muted);
       line-height: 1.55;
-      font-size: 1rem;
     }
 
     .btn-grid {
@@ -119,37 +114,20 @@
       font-size: 0.98rem;
       font-weight: 800;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.2s ease;
+      transition: transform 0.15s ease;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
 
-    button:active {
-      transform: translateY(0);
-    }
-
-    .primary {
-      background: var(--gold);
-      color: #111;
-    }
-
+    .primary { background: var(--gold); color: #111; }
     .secondary {
       background: rgba(255,255,255,0.08);
       color: var(--text);
       border: 1px solid var(--border);
     }
-
-    .success {
-      background: var(--success);
-      color: white;
-    }
-
-    .danger {
-      background: var(--danger);
-      color: white;
-    }
+    .success { background: var(--success); color: white; }
+    .danger { background: var(--danger); color: white; }
 
     .status-grid {
       display: grid;
@@ -160,7 +138,7 @@
     .status-box {
       border-radius: 16px;
       padding: 14px 16px;
-      background: var(--panel-2);
+      background: var(--panel2);
       border: 1px solid var(--border);
     }
 
@@ -178,22 +156,6 @@
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.45;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .pill {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(247, 183, 24, 0.12);
-      border: 1px solid rgba(247, 183, 24, 0.24);
-      font-size: 0.9rem;
-      font-weight: 800;
     }
 
     .commands {
@@ -235,17 +197,9 @@
     }
 
     @media (max-width: 980px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
-
-      .btn-grid {
-        grid-template-columns: 1fr;
-      }
-
-      body {
-        padding: 12px;
-      }
+      .app { grid-template-columns: 1fr; }
+      .btn-grid { grid-template-columns: 1fr; }
+      body { padding: 12px; }
     }
   </style>
 </head>
@@ -255,30 +209,22 @@
       <div class="stage-wrap">
         <canvas id="scene"></canvas>
       </div>
-
-      <div class="pill-row">
-        <div class="pill">Griffin Hall</div>
-        <div class="pill">Helmet Overlay</div>
-        <div class="pill">Voice Commands</div>
-        <div class="pill">Laugh Mode</div>
-        <div class="pill">Canvas Recording</div>
-      </div>
     </section>
 
     <aside class="card control-card">
-      <h1>NKU Norse Voice Demo</h1>
+      <h1>NKU Norse AI Voice Demo</h1>
       <p class="subtitle">
-        Say a command and the full scene changes live. This version composites the
-        final result directly onto canvas so your recording captures the full effect.
+        This version uses AI person segmentation for cleaner Griffin Hall background replacement,
+        plus improved helmet positioning, voice commands, laugh mode, and full canvas recording.
       </p>
 
       <div class="btn-grid">
-        <button id="startBtn" class="primary">Start Camera + Assets</button>
+        <button id="startBtn" class="primary">Start Demo</button>
         <button id="listenBtn" class="primary">Start Voice Commands</button>
         <button id="stopListenBtn" class="secondary">Stop Voice Commands</button>
         <button id="toggleLaughBtn" class="secondary">Toggle Laugh Mode</button>
-        <button id="showHelmetBtn" class="secondary">Show Helmet</button>
-        <button id="hideHelmetBtn" class="secondary">Hide Helmet</button>
+        <button id="showOverlayBtn" class="secondary">Show Norse Overlay</button>
+        <button id="hideOverlayBtn" class="secondary">Hide Norse Overlay</button>
         <button id="recordBtn" class="success">Start Recording</button>
         <button id="stopRecordBtn" class="danger">Stop Recording</button>
       </div>
@@ -288,22 +234,18 @@
           <span class="label">System</span>
           <div id="systemStatus" class="value">Waiting to start</div>
         </div>
-
         <div class="status-box">
           <span class="label">Listening</span>
           <div id="listeningStatus" class="value">Off</div>
         </div>
-
         <div class="status-box">
           <span class="label">Last Heard</span>
           <div id="heardStatus" class="value">Nothing yet</div>
         </div>
-
         <div class="status-box">
           <span class="label">Scene Mode</span>
           <div id="modeStatus" class="value">Standard</div>
         </div>
-
         <div class="status-box">
           <span class="label">Recording</span>
           <div id="recordStatus" class="value">Not recording</div>
@@ -311,19 +253,19 @@
       </div>
 
       <ul class="commands">
-        <li><strong>“laugh mode”</strong> → toggles laugh mode text and effect</li>
-        <li><strong>“normal mode”</strong> → returns to standard view</li>
-        <li><strong>“show Norse overlay”</strong> → shows helmet + Norse frame</li>
-        <li><strong>“hide Norse overlay”</strong> → hides helmet + Norse frame</li>
-        <li><strong>“record”</strong> → starts recording the final composited canvas</li>
-        <li><strong>“stop recording”</strong> → stops recording</li>
+        <li><strong>“laugh mode”</strong> → turn on laugh mode</li>
+        <li><strong>“normal mode”</strong> → return to standard mode</li>
+        <li><strong>“show Norse overlay”</strong> → show helmet and frame</li>
+        <li><strong>“hide Norse overlay”</strong> → hide helmet and frame</li>
+        <li><strong>“record”</strong> → start full canvas recording</li>
+        <li><strong>“stop recording”</strong> → stop recording</li>
       </ul>
 
       <div id="downloadWrap" class="download-wrap"></div>
 
       <p class="note">
-        Place <strong>griffin-hall.jpg</strong> and <strong>helmet.png</strong> in the same folder
-        as this HTML file. Best tested in Chrome or Edge.
+        Keep <strong>griffin-hall.jpg</strong> and <strong>helmet.png</strong> in the same folder.
+        Chrome or Edge is best. Good lighting helps the segmentation look much better.
       </p>
     </aside>
   </main>
@@ -332,15 +274,15 @@
 
   <script>
     const canvas = document.getElementById("scene");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContext("2d");
     const video = document.getElementById("camera");
 
     const startBtn = document.getElementById("startBtn");
     const listenBtn = document.getElementById("listenBtn");
     const stopListenBtn = document.getElementById("stopListenBtn");
     const toggleLaughBtn = document.getElementById("toggleLaughBtn");
-    const showHelmetBtn = document.getElementById("showHelmetBtn");
-    const hideHelmetBtn = document.getElementById("hideHelmetBtn");
+    const showOverlayBtn = document.getElementById("showOverlayBtn");
+    const hideOverlayBtn = document.getElementById("hideOverlayBtn");
     const recordBtn = document.getElementById("recordBtn");
     const stopRecordBtn = document.getElementById("stopRecordBtn");
 
@@ -352,18 +294,18 @@
     const downloadWrap = document.getElementById("downloadWrap");
 
     const griffinHall = new Image();
-    const helmetImg = new Image();
-
     griffinHall.src = "griffin-hall.jpg";
+
+    const helmetImg = new Image();
     helmetImg.src = "helmet.png";
 
-    let cameraStream = null;
-    let animationId = null;
+    let stream = null;
+    let segmenter = null;
+    let faceModel = null;
+    let latestMaskCanvas = null;
 
-    let assetsLoaded = {
-      bg: false,
-      helmet: false
-    };
+    let renderHandle = null;
+    let segmentationBusy = false;
 
     let speech = null;
     let speechEnabled = false;
@@ -371,24 +313,16 @@
 
     let laughMode = false;
     let showHelmet = true;
-    let showNorseFrame = true;
+    let showFrame = true;
 
     let mediaRecorder = null;
     let recordedChunks = [];
 
-    let flashMessage = "";
+    let flashText = "";
     let flashUntil = 0;
 
-    griffinHall.onload = () => assetsLoaded.bg = true;
-    helmetImg.onload = () => assetsLoaded.helmet = true;
-
-    griffinHall.onerror = () => {
-      systemStatus.textContent = "Could not load griffin-hall.jpg";
-    };
-
-    helmetImg.onerror = () => {
-      systemStatus.textContent = "Could not load helmet.png";
-    };
+    let lastFace = null;
+    let smoothedFace = null;
 
     function resizeCanvas() {
       const rect = canvas.getBoundingClientRect();
@@ -408,11 +342,39 @@
       ctx.closePath();
     }
 
-    async function startApp() {
-      systemStatus.textContent = "Loading camera and assets...";
+    function setFlash(text, duration = 1400) {
+      flashText = text;
+      flashUntil = performance.now() + duration;
+    }
 
+    function updateModeStatus() {
+      if (laughMode) modeStatus.textContent = "Laugh mode";
+      else if (showHelmet || showFrame) modeStatus.textContent = "Norse overlay";
+      else modeStatus.textContent = "Standard";
+    }
+
+    async function loadModels() {
+      systemStatus.textContent = "Loading AI models...";
+
+      await tf.setBackend("webgl");
+
+      segmenter = await bodySegmentation.createSegmenter(
+        bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
+        {
+          runtime: "tfjs",
+          modelType: "general"
+        }
+      );
+
+      faceModel = await blazeface.load();
+
+      systemStatus.textContent = "AI models loaded";
+    }
+
+    async function startDemo() {
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
+        systemStatus.textContent = "Starting camera...";
+        stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
             width: { ideal: 1280 },
@@ -421,31 +383,27 @@
           audio: true
         });
 
-        video.srcObject = cameraStream;
+        video.srcObject = stream;
         await video.play();
+
+        await loadModels();
 
         resizeCanvas();
         systemStatus.textContent = "Live";
-        startRenderLoop();
+        startLoops();
       } catch (error) {
-        systemStatus.textContent = "Camera access failed";
-        alert("Could not access camera/microphone: " + error.message);
         console.error(error);
+        systemStatus.textContent = "Startup failed";
+        alert("Could not start demo: " + error.message);
       }
     }
 
-    function setFlash(text, duration = 1400) {
-      flashMessage = text;
-      flashUntil = performance.now() + duration;
-    }
-
     function drawBackground(cw, ch) {
-      if (assetsLoaded.bg) {
+      if (griffinHall.complete && griffinHall.naturalWidth > 0) {
         const imgRatio = griffinHall.width / griffinHall.height;
         const canvasRatio = cw / ch;
 
         let drawW, drawH, dx, dy;
-
         if (imgRatio > canvasRatio) {
           drawH = ch;
           drawW = drawH * imgRatio;
@@ -468,53 +426,13 @@
       }
     }
 
-    function drawCameraWithSimpleBackgroundRemoval(cw, ch) {
+    function drawSegmentedPerson(cw, ch) {
       if (video.readyState < 2) return;
 
-      const tempCanvas = document.createElement("canvas");
-      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
-
-      tempCanvas.width = 320;
-      tempCanvas.height = Math.floor(320 * (video.videoHeight / video.videoWidth || 0.75));
-
-      tempCtx.save();
-      tempCtx.scale(-1, 1);
-      tempCtx.drawImage(video, -tempCanvas.width, 0, tempCanvas.width, tempCanvas.height);
-      tempCtx.restore();
-
-      const frame = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-      const data = frame.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        const brightness = (r + g + b) / 3;
-        const maxChannel = Math.max(r, g, b);
-        const minChannel = Math.min(r, g, b);
-
-        const isWallLike =
-          brightness > 160 &&
-          (maxChannel - minChannel) < 28;
-
-        const isGreenScreenLike =
-          g > 105 &&
-          g > r * 1.15 &&
-          g > b * 1.1;
-
-        if (isWallLike || isGreenScreenLike) {
-          data[i + 3] = 0;
-        }
-      }
-
-      tempCtx.putImageData(frame, 0, 0);
-
-      const videoRatio = tempCanvas.width / tempCanvas.height;
+      const videoRatio = video.videoWidth / video.videoHeight;
       const canvasRatio = cw / ch;
 
       let drawW, drawH, dx, dy;
-
       if (videoRatio > canvasRatio) {
         drawH = ch;
         drawW = drawH * videoRatio;
@@ -527,28 +445,145 @@
         dy = (ch - drawH) / 2;
       }
 
-      ctx.drawImage(tempCanvas, dx, dy, drawW, drawH);
+      ctx.save();
+
+      if (latestMaskCanvas) {
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, -dx - drawW, dy, drawW, drawH);
+        ctx.globalCompositeOperation = "destination-in";
+        ctx.scale(-1, 1);
+        ctx.drawImage(latestMaskCanvas, dx, dy, drawW, drawH);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, -dx - drawW, dy, drawW, drawH);
+        ctx.restore();
+      }
+
+      ctx.restore();
     }
 
-    function drawHelmetOverlay(cw, ch) {
-      if (!showHelmet || !assetsLoaded.helmet) return;
+    async function updateSegmentation() {
+      if (!segmenter || !video.videoWidth || segmentationBusy) return;
+      segmentationBusy = true;
 
-      const helmetWidth = cw * 0.42;
-      const helmetHeight = helmetWidth * (helmetImg.height / helmetImg.width);
-      const x = (cw - helmetWidth) / 2;
-      const y = ch * 0.03;
+      try {
+        const people = await segmenter.segmentPeople(video, {
+          multiSegmentation: false,
+          segmentBodyParts: false,
+          flipHorizontal: true,
+          internalResolution: "medium",
+          segmentationThreshold: 0.7
+        });
 
-      ctx.drawImage(helmetImg, x, y, helmetWidth, helmetHeight);
+        if (people && people.length > 0) {
+          latestMaskCanvas = await bodySegmentation.toBinaryMask(
+            people,
+            { r: 255, g: 255, b: 255, a: 255 },
+            { r: 0, g: 0, b: 0, a: 0 },
+            false,
+            0
+          );
+        }
+      } catch (error) {
+        console.warn("Segmentation update issue:", error);
+      } finally {
+        segmentationBusy = false;
+      }
     }
 
-    function drawNorseFrame(cw, ch) {
-      if (!showNorseFrame) return;
+    async function updateFaceTracking() {
+      if (!faceModel || !video.videoWidth) return;
+
+      try {
+        const faces = await faceModel.estimateFaces(video, false);
+        if (faces && faces.length > 0) {
+          lastFace = faces[0];
+          smoothFaceData();
+        }
+      } catch (error) {
+        console.warn("Face tracking issue:", error);
+      }
+    }
+
+    function smoothFaceData() {
+      if (!lastFace) return;
+
+      const [x1, y1] = lastFace.topLeft;
+      const [x2, y2] = lastFace.bottomRight;
+
+      const box = {
+        x: x1,
+        y: y1,
+        width: x2 - x1,
+        height: y2 - y1
+      };
+
+      if (!smoothedFace) {
+        smoothedFace = { ...box };
+        return;
+      }
+
+      const alpha = 0.25;
+      smoothedFace.x = smoothedFace.x + (box.x - smoothedFace.x) * alpha;
+      smoothedFace.y = smoothedFace.y + (box.y - smoothedFace.y) * alpha;
+      smoothedFace.width = smoothedFace.width + (box.width - smoothedFace.width) * alpha;
+      smoothedFace.height = smoothedFace.height + (box.height - smoothedFace.height) * alpha;
+    }
+
+    function drawHelmet(cw, ch) {
+      if (!showHelmet || !helmetImg.complete || helmetImg.naturalWidth === 0) return;
+
+      const videoRatio = video.videoWidth / video.videoHeight;
+      const canvasRatio = cw / ch;
+
+      let drawW, drawH, dx, dy;
+      if (videoRatio > canvasRatio) {
+        drawH = ch;
+        drawW = drawH * videoRatio;
+        dx = (cw - drawW) / 2;
+        dy = 0;
+      } else {
+        drawW = cw;
+        drawH = drawW / videoRatio;
+        dx = 0;
+        dy = (ch - drawH) / 2;
+      }
+
+      let hx, hy, hw, hh;
+
+      if (smoothedFace) {
+        const mirroredFaceX = video.videoWidth - (smoothedFace.x + smoothedFace.width);
+
+        const faceCanvasX = dx + (mirroredFaceX / video.videoWidth) * drawW;
+        const faceCanvasY = dy + (smoothedFace.y / video.videoHeight) * drawH;
+        const faceCanvasW = (smoothedFace.width / video.videoWidth) * drawW;
+        const faceCanvasH = (smoothedFace.height / video.videoHeight) * drawH;
+
+        hw = faceCanvasW * 1.95;
+        hh = hw * (helmetImg.height / helmetImg.width);
+        hx = faceCanvasX + faceCanvasW / 2 - hw / 2;
+        hy = faceCanvasY - faceCanvasH * 1.12;
+      } else {
+        hw = cw * 0.42;
+        hh = hw * (helmetImg.height / helmetImg.width);
+        hx = (cw - hw) / 2;
+        hy = ch * 0.04;
+      }
+
+      ctx.drawImage(helmetImg, hx, hy, hw, hh);
+    }
+
+    function drawFrame(cw, ch) {
+      if (!showFrame) return;
 
       ctx.save();
 
       const grad = ctx.createLinearGradient(0, 0, cw, ch);
       grad.addColorStop(0, "rgba(247, 183, 24, 0.26)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0.08)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0.06)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, cw, ch);
 
@@ -580,7 +615,7 @@
       ctx.stroke();
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-      drawRoundedRect(cw / 2 - 190, ch - 96, 380, 58, 18);
+      drawRoundedRect(cw / 2 - 200, ch - 96, 400, 58, 18);
       ctx.fill();
 
       ctx.textAlign = "center";
@@ -593,7 +628,6 @@
 
     function drawLiveStatus(cw) {
       ctx.save();
-
       ctx.fillStyle = "rgba(0, 0, 0, 0.46)";
       drawRoundedRect(cw - 286, 22, 264, 46, 14);
       ctx.fill();
@@ -606,22 +640,21 @@
         cw - 268,
         50
       );
-
       ctx.restore();
     }
 
-    function drawFlash(cw, ch) {
-      if (!flashMessage || performance.now() > flashUntil) return;
+    function drawFlash(cw) {
+      if (!flashText || performance.now() > flashUntil) return;
 
       ctx.save();
       ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-      drawRoundedRect(cw / 2 - 190, 28, 380, 54, 16);
+      drawRoundedRect(cw / 2 - 200, 28, 400, 54, 16);
       ctx.fill();
 
       ctx.textAlign = "center";
       ctx.fillStyle = "#ffffff";
       ctx.font = "800 24px Inter, Arial";
-      ctx.fillText(flashMessage, cw / 2, 62);
+      ctx.fillText(flashText, cw / 2, 62);
       ctx.restore();
     }
 
@@ -630,31 +663,23 @@
       const ch = canvas.clientHeight;
 
       ctx.clearRect(0, 0, cw, ch);
-
       drawBackground(cw, ch);
-      drawCameraWithSimpleBackgroundRemoval(cw, ch);
-      drawHelmetOverlay(cw, ch);
-      drawNorseFrame(cw, ch);
+      drawSegmentedPerson(cw, ch);
+      drawHelmet(cw, ch);
+      drawFrame(cw, ch);
       drawLaughMode(cw, ch);
       drawLiveStatus(cw);
-      drawFlash(cw, ch);
+      drawFlash(cw);
 
-      animationId = requestAnimationFrame(render);
+      renderHandle = requestAnimationFrame(render);
     }
 
-    function startRenderLoop() {
-      if (animationId) cancelAnimationFrame(animationId);
+    function startLoops() {
+      if (renderHandle) cancelAnimationFrame(renderHandle);
       render();
-    }
 
-    function updateModeStatus() {
-      if (laughMode) {
-        modeStatus.textContent = "Laugh mode";
-      } else if (showNorseFrame || showHelmet) {
-        modeStatus.textContent = "Norse overlay";
-      } else {
-        modeStatus.textContent = "Standard";
-      }
+      setInterval(updateSegmentation, 120);
+      setInterval(updateFaceTracking, 120);
     }
 
     function setupSpeech() {
@@ -679,13 +704,8 @@
       speech.onend = () => {
         isListening = false;
         listeningStatus.textContent = "Off";
-
         if (speechEnabled) {
-          try {
-            speech.start();
-          } catch (error) {
-            console.warn("Speech restart blocked:", error);
-          }
+          try { speech.start(); } catch (e) {}
         }
       };
 
@@ -694,13 +714,11 @@
       };
 
       speech.onresult = (event) => {
-        const transcript =
-          event.results[event.results.length - 1][0].transcript
-            .toLowerCase()
-            .trim();
-
-        heardStatus.textContent = transcript;
-        handleVoiceCommand(transcript);
+        const text = event.results[event.results.length - 1][0].transcript
+          .toLowerCase()
+          .trim();
+        heardStatus.textContent = text;
+        handleVoiceCommand(text);
       };
     }
 
@@ -721,7 +739,7 @@
 
       if (text.includes("show norse overlay")) {
         showHelmet = true;
-        showNorseFrame = true;
+        showFrame = true;
         updateModeStatus();
         setFlash("NORSE OVERLAY ON");
         return;
@@ -729,7 +747,7 @@
 
       if (text.includes("hide norse overlay")) {
         showHelmet = false;
-        showNorseFrame = false;
+        showFrame = false;
         updateModeStatus();
         setFlash("NORSE OVERLAY OFF");
         return;
@@ -744,7 +762,6 @@
       if (text.includes("stop recording")) {
         stopRecording();
         setFlash("RECORDING STOPPED");
-        return;
       }
     }
 
@@ -753,12 +770,7 @@
       if (!speech) return;
 
       speechEnabled = true;
-
-      try {
-        speech.start();
-      } catch (error) {
-        console.warn("Speech start warning:", error);
-      }
+      try { speech.start(); } catch (e) {}
     }
 
     function stopListening() {
@@ -770,39 +782,31 @@
       if (mediaRecorder && mediaRecorder.state === "recording") return;
 
       downloadWrap.innerHTML = "";
-
       const canvasStream = canvas.captureStream(30);
       const combined = new MediaStream();
 
       canvasStream.getVideoTracks().forEach(track => combined.addTrack(track));
-
-      if (cameraStream) {
-        cameraStream.getAudioTracks().forEach(track => combined.addTrack(track));
+      if (stream) {
+        stream.getAudioTracks().forEach(track => combined.addTrack(track));
       }
 
       recordedChunks = [];
 
       try {
-        mediaRecorder = new MediaRecorder(combined, {
-          mimeType: "video/webm"
-        });
+        mediaRecorder = new MediaRecorder(combined, { mimeType: "video/webm" });
       } catch (error) {
         mediaRecorder = new MediaRecorder(combined);
       }
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          recordedChunks.push(event.data);
-        }
+        if (event.data && event.data.size > 0) recordedChunks.push(event.data);
       };
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
-
-        downloadWrap.innerHTML = `
-          <a href="${url}" download="nku-norse-demo.webm">Download recording</a>
-        `;
+        downloadWrap.innerHTML =
+          `<a href="${url}" download="nku-norse-ai-demo.webm">Download recording</a>`;
       };
 
       mediaRecorder.start();
@@ -816,7 +820,7 @@
       }
     }
 
-    startBtn.addEventListener("click", startApp);
+    startBtn.addEventListener("click", startDemo);
     listenBtn.addEventListener("click", startListening);
     stopListenBtn.addEventListener("click", stopListening);
 
@@ -826,16 +830,16 @@
       setFlash(laughMode ? "LAUGH MODE ACTIVATED" : "LAUGH MODE OFF");
     });
 
-    showHelmetBtn.addEventListener("click", () => {
+    showOverlayBtn.addEventListener("click", () => {
       showHelmet = true;
-      showNorseFrame = true;
+      showFrame = true;
       updateModeStatus();
       setFlash("NORSE OVERLAY ON");
     });
 
-    hideHelmetBtn.addEventListener("click", () => {
+    hideOverlayBtn.addEventListener("click", () => {
       showHelmet = false;
-      showNorseFrame = false;
+      showFrame = false;
       updateModeStatus();
       setFlash("NORSE OVERLAY OFF");
     });

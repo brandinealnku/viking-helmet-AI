@@ -590,7 +590,7 @@
                 </li>
                 <li>
                   <span class="nk-step-num">3.</span>
-                  <span>The helmet sits lower, combo mode uses the full-face beard image only, and the live feed fills the preview correctly.</span>
+                  <span>The helmet is now anchored higher using face landmarks so it sits on the head instead of across the middle of the face.</span>
                 </li>
               </ol>
             </section>
@@ -817,7 +817,9 @@
       const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
 
       let latestFaceBox = null;
+      let latestLandmarks = null;
       let smoothedFaceBox = null;
+      let smoothedLandmarks = null;
       let lastFaceTime = 0;
       let lastSegmentation = null;
 
@@ -832,6 +834,7 @@
 
       const FACE_HOLD_MS = 380;
       const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+      const LANDMARK_SMOOTH_ALPHA = isMobileUA ? 0.28 : 0.22;
       const FACE_DETECT_MS = isMobileUA ? 120 : 90;
       const SEGMENT_MS = isMobileUA ? 240 : 180;
 
@@ -994,7 +997,9 @@
         videoReady = false;
         aiRunning = false;
         latestFaceBox = null;
+        latestLandmarks = null;
         smoothedFaceBox = null;
+        smoothedLandmarks = null;
         lastFaceTime = 0;
         lastSegmentation = null;
 
@@ -1048,6 +1053,22 @@
         };
       }
 
+      function smoothLandmarks(oldLandmarks, newLandmarks, alpha) {
+        if (!Array.isArray(newLandmarks) || newLandmarks.length === 0) return null;
+        if (!Array.isArray(oldLandmarks) || oldLandmarks.length !== newLandmarks.length) {
+          return newLandmarks.map((pt) => [pt[0], pt[1]]);
+        }
+
+        return newLandmarks.map((pt, index) => {
+          const oldPt = oldLandmarks[index];
+          if (!isValidPoint(oldPt) || !isValidPoint(pt)) return [pt[0], pt[1]];
+          return [
+            oldPt[0] + alpha * (pt[0] - oldPt[0]),
+            oldPt[1] + alpha * (pt[1] - oldPt[1])
+          ];
+        });
+      }
+
       function getFaceMetrics(topLeft, bottomRight) {
         const [x1, y1] = topLeft;
         const [x2, y2] = bottomRight;
@@ -1059,7 +1080,7 @@
         return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
       }
 
-      function drawGlassesOnFace(topLeft, bottomRight) {
+      function drawGlassesOnFace(topLeft, bottomRight, landmarks = null) {
         if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) return;
 
         const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
@@ -1067,7 +1088,16 @@
         const overlayWidth = faceWidth * 1.12;
         const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
-        const eyeLineY = y1 + faceHeight * 0.43;
+
+        let eyeLineY = y1 + faceHeight * 0.43;
+
+        if (Array.isArray(landmarks) && landmarks.length >= 2) {
+          const leftEye = landmarks[0];
+          const rightEye = landmarks[1];
+          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+          }
+        }
 
         ctx.drawImage(
           glassesImg,
@@ -1078,22 +1108,33 @@
         );
       }
 
-      function drawHelmetOnFace(topLeft, bottomRight) {
+      function drawHelmetOnFace(topLeft, bottomRight, landmarks = null) {
         if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) return;
 
         const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
 
-        const overlayWidth = faceWidth * 1.44;
+        const overlayWidth = faceWidth * 1.55;
         const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
 
-        // Lowered further so the helmet sits down on the head more naturally
-        const helmetCenterY = y1 + faceHeight * 0.06;
+        let eyeLineY = y1 + faceHeight * 0.38;
+
+        if (Array.isArray(landmarks) && landmarks.length >= 2) {
+          const leftEye = landmarks[0];
+          const rightEye = landmarks[1];
+
+          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+          }
+        }
+
+        const drawX = centerX - overlayWidth / 2;
+        const drawY = eyeLineY - overlayHeight * 0.58;
 
         ctx.drawImage(
           helmetImg,
-          centerX - overlayWidth / 2,
-          helmetCenterY - overlayHeight / 2,
+          drawX,
+          drawY,
           overlayWidth,
           overlayHeight
         );
@@ -1104,12 +1145,9 @@
 
         const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(topLeft, bottomRight);
 
-        // beard.png is treated as the full-face combo overlay
         const overlayWidth = faceWidth * 1.42;
         const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
         const overlayHeight = overlayWidth * aspect;
-
-        // Slight upward nudge to center the image over the detected face more naturally
         const overlayCenterY = centerY - faceHeight * 0.02;
 
         ctx.drawImage(
@@ -1122,7 +1160,6 @@
       }
 
       function drawComboOnFace(topLeft, bottomRight) {
-        // Combo mode is the full-face beard.png overlay only
         drawBeardOnFace(topLeft, bottomRight);
       }
 
@@ -1140,10 +1177,16 @@
                 topLeft: face.topLeft,
                 bottomRight: face.bottomRight
               };
+
+              latestLandmarks = Array.isArray(face.landmarks)
+                ? face.landmarks.map((pt) => [pt[0], pt[1]])
+                : null;
+
               lastFaceTime = performance.now();
             }
           } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
             latestFaceBox = null;
+            latestLandmarks = null;
           }
         } catch (error) {
           console.error("Error running BlazeFace:", error);
@@ -1236,25 +1279,30 @@
         drawBaseComposite();
 
         let boxToUse = null;
+        let landmarksToUse = null;
         const now = performance.now();
 
         if (latestFaceBox) {
           smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+          smoothedLandmarks = smoothLandmarks(smoothedLandmarks, latestLandmarks, LANDMARK_SMOOTH_ALPHA);
           boxToUse = smoothedFaceBox;
+          landmarksToUse = smoothedLandmarks;
         } else if (smoothedFaceBox && now - lastFaceTime < FACE_HOLD_MS) {
           boxToUse = smoothedFaceBox;
+          landmarksToUse = smoothedLandmarks;
         } else {
           smoothedFaceBox = null;
+          smoothedLandmarks = null;
         }
 
         if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
           const { topLeft, bottomRight } = boxToUse;
 
           if (activeFilter === "glasses") {
-            drawGlassesOnFace(topLeft, bottomRight);
+            drawGlassesOnFace(topLeft, bottomRight, landmarksToUse);
             setStatus("AI is running: glasses filter with Griffin Hall background.", "active");
           } else if (activeFilter === "helmet") {
-            drawHelmetOnFace(topLeft, bottomRight);
+            drawHelmetOnFace(topLeft, bottomRight, landmarksToUse);
             setStatus("AI is running: helmet filter with Griffin Hall background.", "active");
           } else if (activeFilter === "combo") {
             drawComboOnFace(topLeft, bottomRight);
@@ -1377,7 +1425,7 @@
             );
           } else if (activeFilter === "helmet") {
             setStatus(
-              "Helmet filter selected. Helmet placement is tuned lower on the head.",
+              "Helmet filter selected. Helmet placement is anchored to the eyes/forehead so it sits higher on the head.",
               aiRunning ? "active" : "idle"
             );
           } else if (activeFilter === "combo") {

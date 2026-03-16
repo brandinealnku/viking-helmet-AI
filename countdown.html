@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Finger Countdown Camera</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="Browser-based AI finger countdown photo booth. Hold up 1, 2, 3 fingers to trigger a CHEESE overlay and automatic snapshot."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <!-- TensorFlow.js + official hand pose detection stack -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --soft-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .content-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      line-height: 1.05;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      font-size: 0.98rem;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 18px 0 10px;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #374151;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      color: var(--nku-gold);
+      font-weight: 800;
+      min-width: 18px;
+    }
+
+    .info-text {
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .demo-panel {
+      background: var(--soft-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      height: clamp(420px, 65vh, 760px);
+      min-height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .video-skeleton {
+        animation: none;
+      }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 26%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.44), rgba(17,17,17,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 30%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.54), rgba(17,17,17,0));
+    }
+
+    .screen-pill,
+    .screen-status {
+      position: absolute;
+      top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(17,17,17,0.45);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .screen-pill {
+      left: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-status {
+      right: 12px;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .screen-sub {
+      font-size: 0.76rem;
+      opacity: 0.92;
+      margin-top: 4px;
+    }
+
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .countdown-chip {
+      min-width: 180px;
+      min-height: 180px;
+      border-radius: 999px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(17, 17, 17, 0.48);
+      border: 2px solid rgba(255,255,255,0.28);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(3rem, 8vw, 6rem);
+      line-height: 1;
+      letter-spacing: -0.05em;
+      transform: scale(0.9);
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+    }
+
+    .countdown-chip.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .countdown-chip.cheese {
+      min-width: min(88%, 700px);
+      min-height: 160px;
+      border-radius: 30px;
+      padding: 24px 32px;
+      font-size: clamp(2.2rem, 7vw, 5.5rem);
+      background: rgba(247, 183, 24, 0.95);
+      color: #111111;
+      border-color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d1d5db;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(22,163,74,0.14);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248,113,113,0.15);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .progress-row {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 14px;
+      flex-wrap: wrap;
+    }
+
+    .progress-pill {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #6b7280;
+      transition: 0.18s ease;
+    }
+
+    .progress-pill.active {
+      color: #111827;
+      border-color: var(--nku-gold);
+      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
+      background: #fff8df;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .btn-start {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+    }
+
+    .btn-capture {
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border: none;
+    }
+
+    .btn-stop {
+      background: #fff;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .app-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .preview-section {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    .small-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 8px 0 0;
+    }
+
+    .footer-note {
+      padding: 0 20px 20px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 991.98px) {
+      .content-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .page-shell {
+        padding: 12px;
+      }
+
+      .topbar {
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      .brand-sub {
+        font-size: 0.8rem;
+      }
+
+      .content-wrap {
+        padding: 14px;
+        gap: 14px;
+      }
+
+      .demo-panel {
+        padding: 10px;
+      }
+
+      #videoContainer {
+        height: min(72svh, 620px);
+        min-height: 360px;
+      }
+
+      .screen-pill,
+      .screen-status {
+        font-size: 0.62rem;
+        padding: 6px 9px;
+      }
+
+      .screen-footer {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+      }
+
+      .screen-sub {
+        font-size: 0.7rem;
+      }
+
+      .countdown-chip {
+        min-width: 140px;
+        min-height: 140px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-shell">
+    <header class="topbar" aria-label="NKU finger countdown photo demo header">
+      <div class="brand">
+        <div class="brand-pill">NKU · COI</div>
+        <span class="brand-sub">Finger Countdown Photo Booth</span>
+      </div>
+      <div class="brand-sub">Hold up 1 → 2 → 3 fingers to snap a photo</div>
+    </header>
+
+    <main class="main-card" aria-labelledby="page-title">
+      <div class="content-wrap">
+        <section aria-label="Demo description">
+          <div class="tag-row">
+            <span class="tag">Browser AI</span>
+            <span class="tag">Hand Tracking</span>
+            <span class="tag">Auto Snapshot</span>
+          </div>
+
+          <p class="eyebrow">Interactive camera experience</p>
+          <h1 id="page-title">Finger Countdown Camera</h1>
+
+          <p class="lead">
+            This version uses your camera and hand tracking to turn a finger countdown into a hands-free photo booth experience.
+            Hold up <strong>1 finger</strong>, then <strong>2 fingers</strong>, then <strong>3 fingers</strong>. The app will show
+            <strong>CHEESE!</strong> and automatically take your picture.
+          </p>
+
+          <h2 class="section-title">How to use it</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-num">1.</span>
+              <span>Tap <strong>Start Camera &amp; AI</strong>.</span>
+            </li>
+            <li>
+              <span class="step-num">2.</span>
+              <span>Move one hand clearly into view with good lighting.</span>
+            </li>
+            <li>
+              <span class="step-num">3.</span>
+              <span>Hold up <strong>1 finger</strong>, then <strong>2</strong>, then <strong>3</strong>.</span>
+            </li>
+            <li>
+              <span class="step-num">4.</span>
+              <span>When the screen says <strong>CHEESE!</strong>, the photo is captured automatically.</span>
+            </li>
+          </ol>
+
+          <h2 class="section-title">What it demonstrates</h2>
+          <p class="info-text">
+            • Camera access with <code>getUserMedia</code><br />
+            • Real-time hand landmark detection in the browser<br />
+            • Finger counting based on hand landmarks<br />
+            • Canvas overlays and auto snapshot logic
+          </p>
+        </section>
+
+        <section aria-label="Live AI demo">
+          <div class="demo-panel">
+            <div id="videoContainer" aria-label="Live finger countdown photo area">
+              <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+              <video
+                id="video"
+                autoplay
+                playsinline
+                muted
+                aria-hidden="true"
+              ></video>
+
+              <canvas
+                id="overlay"
+                role="img"
+                aria-label="Live camera with finger countdown overlay"
+              ></canvas>
+
+              <div class="screen-ui" aria-hidden="true">
+                <div class="screen-gradient-top"></div>
+                <div class="screen-gradient-bottom"></div>
+
+                <div class="screen-pill">Finger Countdown AI</div>
+
+                <div class="screen-status">
+                  <span id="screenStatusDot" class="screen-status-dot"></span>
+                  <span id="screenStatusText">Offline</span>
+                </div>
+
+                <div class="screen-footer">
+                  <div class="screen-kicker">Live demo</div>
+                  <h2 class="screen-title">Auto Photo Booth</h2>
+                  <div class="screen-sub">Hand Tracking · Countdown · Snapshot</div>
+                </div>
+              </div>
+
+              <div class="countdown-overlay" aria-hidden="true">
+                <div id="countdownChip" class="countdown-chip">1</div>
+              </div>
+            </div>
+
+            <div class="status-row" aria-live="polite">
+              <div class="status-main">
+                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to begin.</span>
+              </div>
+              <div class="status-hint">
+                Best results: one hand, plain background, good front lighting, and hold each number steady for a moment.
+              </div>
+            </div>
+
+            <div class="progress-row" aria-label="Countdown progress">
+              <div id="step1" class="progress-pill">1 Finger</div>
+              <div id="step2" class="progress-pill">2 Fingers</div>
+              <div id="step3" class="progress-pill">3 Fingers</div>
+            </div>
+
+            <div class="action-row">
+              <button id="startBtn" type="button" class="app-btn btn-start">
+                🚀 Start Camera &amp; AI
+              </button>
+              <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>
+                📸 Capture Snapshot Now
+              </button>
+              <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>
+                ⏹️ Turn Camera Off
+              </button>
+            </div>
+
+            <section id="previewSection" class="preview-section" aria-live="polite">
+              <h2 class="section-title" style="margin-top: 16px;">Saved snapshot</h2>
+              <div class="preview-image-wrapper">
+                <img
+                  id="snapshotPreview"
+                  alt="Saved camera snapshot preview"
+                  loading="lazy"
+                />
+              </div>
+              <p class="small-note">Saved locally as a PNG image.</p>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">
+        Privacy-first design: processing happens in the browser and nothing is uploaded.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const TARGET_FOLDER_LABEL = "NKU_Finger_Countdown_Photo";
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+
+      const previewSection = document.getElementById("previewSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+
+      const countdownChip = document.getElementById("countdownChip");
+      const step1 = document.getElementById("step1");
+      const step2 = document.getElementById("step2");
+      const step3 = document.getElementById("step3");
+
+      let detector = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let mediaStream = null;
+      let renderRaf = null;
+      let detectionBusy = false;
+      let latestHand = null;
+      let latestFingerCount = 0;
+      let mirrored = true;
+
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+
+      let stableCandidate = null;
+      let stableSince = 0;
+
+      let sequenceStep = 0; // 0=waiting for 1, 1=waiting for 2, 2=waiting for 3, 3=done
+      let captureLocked = false;
+      let cheeseTimeout = null;
+      let resetTimeout = null;
+
+      const STABLE_MS = 500;
+      const EMPTY_RESET_MS = 2200;
+      let lastSeenHandAt = 0;
+
+      const tips = {
+        thumb: 4,
+        index: 8,
+        middle: 12,
+        ring: 16,
+        pinky: 20
+      };
+
+      const pips = {
+        thumb: 2,
+        index: 6,
+        middle: 10,
+        ring: 14,
+        pinky: 18
+      };
+
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setScreenStatus(text, locked) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!locked);
+      }
+
+      function updateProgressUI() {
+        step1.classList.toggle("active", sequenceStep >= 1);
+        step2.classList.toggle("active", sequenceStep >= 2);
+        step3.classList.toggle("active", sequenceStep >= 3);
+      }
+
+      function showOverlay(text, isCheese = false) {
+        countdownChip.textContent = text;
+        countdownChip.classList.toggle("cheese", !!isCheese);
+        countdownChip.classList.add("show");
+      }
+
+      function hideOverlay() {
+        countdownChip.classList.remove("show");
+        countdownChip.classList.remove("cheese");
+      }
+
+      function resetSequence(message = "Sequence reset. Hold up 1 finger to begin again.") {
+        sequenceStep = 0;
+        stableCandidate = null;
+        stableSince = 0;
+        captureLocked = false;
+        updateProgressUI();
+        hideOverlay();
+        if (message) {
+          setStatus(message, aiRunning ? "active" : "idle");
+        }
+      }
+
+      function clearTimers() {
+        if (cheeseTimeout) {
+          clearTimeout(cheeseTimeout);
+          cheeseTimeout = null;
+        }
+        if (resetTimeout) {
+          clearTimeout(resetTimeout);
+          resetTimeout = null;
+        }
+      }
+
+      async function getBestBackend() {
+        const backendsToTry = ["webgl", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend not available:", backendName, error);
+          }
+        }
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("This browser does not support camera access.", "error");
+          throw new Error("getUserMedia not supported");
+        }
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 960, max: 1280 },
+            height: { ideal: 720, max: 960 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        window.addEventListener("resize", handleWindowResize, { passive: true });
+        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+      }
+
+      function handleWindowResize() {
+        if (!videoReady) return;
+        setTimeout(() => updateCanvasBufferSize(), 120);
+      }
+
+      function stopLoops() {
+        if (renderRaf) {
+          cancelAnimationFrame(renderRaf);
+          renderRaf = null;
+        }
+      }
+
+      function stopCamera() {
+        stopLoops();
+        clearTimers();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        videoReady = false;
+        aiRunning = false;
+        latestHand = null;
+        latestFingerCount = 0;
+        detectionBusy = false;
+
+        resetSequence("");
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoSkeleton.style.display = "block";
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setScreenStatus("Offline", false);
+        setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+      }
+
+      function pointFromKeypoint(keypoint) {
+        if (!keypoint) return null;
+        const x = typeof keypoint.x === "number" ? keypoint.x : Array.isArray(keypoint) ? keypoint[0] : null;
+        const y = typeof keypoint.y === "number" ? keypoint.y : Array.isArray(keypoint) ? keypoint[1] : null;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        return { x, y };
+      }
+
+      function getKeypointsArray(hand) {
+        if (!hand) return [];
+        if (Array.isArray(hand.keypoints) && hand.keypoints.length) return hand.keypoints;
+        if (Array.isArray(hand.landmarks) && hand.landmarks.length) {
+          return hand.landmarks.map((pt) => ({ x: pt[0], y: pt[1] }));
+        }
+        return [];
+      }
+
+      function drawMirroredVideoFrame() {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return;
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+
+        if (mirrored) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(video, 0, 0, w, h);
+        ctx.restore();
+      }
+
+      function drawHandSkeleton(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (!keypoints.length) return;
+
+        const connections = [
+          [0,1],[1,2],[2,3],[3,4],
+          [0,5],[5,6],[6,7],[7,8],
+          [5,9],[9,10],[10,11],[11,12],
+          [9,13],[13,14],[14,15],[15,16],
+          [13,17],[17,18],[18,19],[19,20],
+          [0,17]
+        ];
+
+        ctx.save();
+
+        if (mirrored) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+
+        for (const [a, b] of connections) {
+          const p1 = pointFromKeypoint(keypoints[a]);
+          const p2 = pointFromKeypoint(keypoints[b]);
+          if (!p1 || !p2) continue;
+
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < keypoints.length; i++) {
+          const p = pointFromKeypoint(keypoints[i]);
+          if (!p) continue;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      function drawFingerCountBadge(count) {
+        const label = count > 0 ? `${count} finger${count === 1 ? "" : "s"}` : "Show 1 finger";
+        const badgeW = 180;
+        const badgeH = 48;
+        const x = 16;
+        const y = 60;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(17,17,17,0.56)";
+        ctx.strokeStyle = "rgba(255,255,255,0.16)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, x, y, badgeW, badgeH, 24);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 20px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x + badgeW / 2, y + badgeH / 2);
+        ctx.restore();
+      }
+
+      function roundRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function countRaisedFingers(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (keypoints.length < 21) return 0;
+
+        const kp = keypoints.map(pointFromKeypoint);
+        if (kp.some((p) => !p)) return 0;
+
+        const wrist = kp[0];
+        const indexMcp = kp[5];
+        const pinkyMcp = kp[17];
+
+        const palmFacingRight = indexMcp.x < pinkyMcp.x;
+
+        let count = 0;
+
+        // Index, middle, ring, pinky: tip above pip in image coordinates
+        const fingerNames = ["index", "middle", "ring", "pinky"];
+        for (const finger of fingerNames) {
+          const tip = kp[tips[finger]];
+          const pip = kp[pips[finger]];
+          if (tip.y < pip.y - 10) {
+            count++;
+          }
+        }
+
+        // Thumb: use x-direction relative to palm orientation
+        const thumbTip = kp[tips.thumb];
+        const thumbIp = kp[3];
+        const thumbMcp = kp[2];
+
+        const thumbExtended =
+          palmFacingRight
+            ? thumbTip.x < thumbIp.x - 8 && thumbIp.x < thumbMcp.x - 4
+            : thumbTip.x > thumbIp.x + 8 && thumbIp.x > thumbMcp.x + 4;
+
+        if (thumbExtended) count++;
+
+        // Ignore impossible noisy values
+        if (count < 0 || count > 5) return 0;
+
+        // Slight sanity check: if all fingertips are close to wrist, probably noise
+        const avgTipDistance =
+          ["thumb", "index", "middle", "ring", "pinky"]
+            .map((finger) => {
+              const pt = kp[tips[finger]];
+              return Math.hypot(pt.x - wrist.x, pt.y - wrist.y);
+            })
+            .reduce((a, b) => a + b, 0) / 5;
+
+        if (avgTipDistance < 60) return 0;
+
+        return count;
+      }
+
+      async function detectHandsStep() {
+        if (!aiRunning || !videoReady || !detector || detectionBusy) return;
+
+        detectionBusy = true;
+        try {
+          const hands = await detector.estimateHands(video, {
+            flipHorizontal: false,
+            staticImageMode: false
+          });
+
+          if (Array.isArray(hands) && hands.length > 0) {
+            latestHand = hands[0];
+            latestFingerCount = countRaisedFingers(hands[0]);
+            lastSeenHandAt = performance.now();
+          } else {
+            latestHand = null;
+            latestFingerCount = 0;
+          }
+        } catch (error) {
+          console.error("Hand detection error:", error);
+        } finally {
+          detectionBusy = false;
+        }
+      }
+
+      function handleSequence() {
+        const now = performance.now();
+
+        if (!latestHand) {
+          hideOverlay();
+
+          if (sequenceStep === 0) {
+            setStatus("AI is running. Show one hand to begin the countdown.", "active");
+            setScreenStatus("Searching…", false);
+          } else if (!captureLocked) {
+            setStatus("Hand lost. Show your hand again to continue.", "active");
+            setScreenStatus("Searching…", false);
+          }
+
+          if (!captureLocked && now - lastSeenHandAt > EMPTY_RESET_MS && sequenceStep > 0) {
+            resetSequence("No hand detected for a moment. Countdown reset.");
+          }
+
+          stableCandidate = null;
+          stableSince = 0;
+          return;
+        }
+
+        setScreenStatus("Hand Locked", true);
+
+        const count = latestFingerCount;
+
+        if (count >= 1 && count <= 3 && !captureLocked) {
+          showOverlay(String(count), false);
+        } else if (!captureLocked) {
+          hideOverlay();
+        }
+
+        const expected = sequenceStep + 1;
+
+        if (count === expected) {
+          if (stableCandidate !== count) {
+            stableCandidate = count;
+            stableSince = now;
+          }
+
+          const heldLongEnough = now - stableSince >= STABLE_MS;
+
+          if (heldLongEnough) {
+            sequenceStep = count;
+            updateProgressUI();
+
+            if (count === 1) {
+              setStatus("1 finger detected. Great — now hold up 2 fingers.", "active");
+            } else if (count === 2) {
+              setStatus("2 fingers detected. Nice — now hold up 3 fingers.", "active");
+            } else if (count === 3) {
+              triggerCheeseCapture();
+            }
+
+            stableCandidate = null;
+            stableSince = 0;
+          } else {
+            setStatus(`Hold ${count} finger${count === 1 ? "" : "s"} steady…`, "active");
+          }
+        } else {
+          stableCandidate = null;
+          stableSince = 0;
+
+          if (!captureLocked) {
+            if (sequenceStep === 0) {
+              setStatus("Show 1 finger to begin the countdown.", "active");
+            } else if (sequenceStep === 1) {
+              setStatus("Good start. Now show 2 fingers.", "active");
+            } else if (sequenceStep === 2) {
+              setStatus("Almost there. Now show 3 fingers.", "active");
+            }
+          }
+        }
+      }
+
+      function triggerCheeseCapture() {
+        if (captureLocked) return;
+
+        captureLocked = true;
+        sequenceStep = 3;
+        updateProgressUI();
+
+        showOverlay("CHEESE!", true);
+        setStatus("CHEESE! Capturing photo…", "active");
+        setScreenStatus("Capturing", true);
+
+        cheeseTimeout = setTimeout(() => {
+          captureSnapshot(false);
+
+          resetTimeout = setTimeout(() => {
+            resetSequence("Photo saved. Hold up 1 finger to take another.");
+            setScreenStatus("Hand Locked", true);
+          }, 900);
+        }, 650);
+      }
+
+      function drawFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawMirroredVideoFrame();
+
+        if (latestHand) {
+          drawHandSkeleton(latestHand);
+        }
+
+        drawFingerCountBadge(latestFingerCount);
+        handleSequence();
+
+        renderRaf = requestAnimationFrame(drawFrame);
+      }
+
+      function captureSnapshot(manual = true) {
+        if (!videoReady) return;
+
+        const outputW = canvas.width;
+        const outputH = canvas.height;
+        if (!outputW || !outputH) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = outputW;
+        snapCanvas.height = outputH;
+
+        const sctx = snapCanvas.getContext("2d");
+
+        sctx.drawImage(canvas, 0, 0, outputW, outputH);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        previewSection.style.display = "block";
+
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = dataURL;
+        a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        if (manual) {
+          setStatus("Snapshot saved to your device.", "active");
+        } else {
+          setStatus("Auto snapshot saved to your device.", "active");
+        }
+      }
+
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
+
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
+
+          await setupCamera();
+
+          setStatus("Loading AI model…", "idle");
+          await getBestBackend();
+
+          const model = handPoseDetection.SupportedModels.MediaPipeHands;
+          const detectorConfig = {
+            runtime: "tfjs",
+            modelType: "lite",
+            maxHands: 1
+          };
+
+          detector = await handPoseDetection.createDetector(model, detectorConfig);
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          resetSequence("");
+          setStatus("Camera and hand tracking are ready. Show 1 finger to begin.", "active");
+          setScreenStatus("Ready", true);
+
+          const detectLoop = async () => {
+            if (!aiRunning) return;
+            await detectHandsStep();
+            setTimeout(detectLoop, 80);
+          };
+
+          detectLoop();
+          renderRaf = requestAnimationFrame(drawFrame);
+        } catch (error) {
+          console.error("Init error:", error);
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+          setScreenStatus("Offline", false);
+          setStatus(
+            "This device or browser may not fully support the demo. Try Chrome or Edge over HTTPS.",
+            "error"
+          );
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", () => captureSnapshot(true));
+      stopBtn.addEventListener("click", stopCamera);
+
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+
+      setScreenStatus("Offline", false);
+      updateProgressUI();
+      hideOverlay();
+    })();
+  </script>
+</body>
+</html>

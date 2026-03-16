@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU Norse AI Filter – Griffin Hall Everywhere Edition</title>
+  <title>NKU College of Informatics Interactive AI Mirror</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="NKU Norse AI Filter – stable browser-based AI demo with Griffin Hall as the background in all modes."
+    content="Interactive College of Informatics demo featuring real-time browser AI, face tracking, background replacement, and Norse-inspired overlays."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -126,7 +126,7 @@
     .nk-step-list li {
       display: flex;
       gap: 0.6rem;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.5rem;
       font-size: 0.92rem;
       color: #374151;
     }
@@ -544,63 +544,67 @@
   <div class="container py-4 py-lg-5 nk-shell">
     <header
       class="nk-brand-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"
-      aria-label="NKU Norse AI Filter header"
+      aria-label="NKU College of Informatics interactive AI demo header"
     >
       <div class="d-flex align-items-center gap-2">
         <div class="nk-brand-pill" aria-label="Northern Kentucky University Norse">
           <span>NKU</span>
-          <span>Norse</span>
+          <span>COI</span>
         </div>
-        <span class="nk-brand-sub">AI in the Browser · JavaScript × TensorFlow.js</span>
+        <span class="nk-brand-sub">Interactive AI Experience · JavaScript × TensorFlow.js × Real-Time UX</span>
       </div>
       <p class="nk-brand-sub text-end mb-0">
-        Griffin Hall on every screen
+        Built for buzz, interaction, and informatics storytelling
       </p>
     </header>
 
     <main class="card nk-card border-0" aria-labelledby="page-title">
       <div class="card-body p-3 p-lg-4">
         <div class="row g-4 align-items-start">
-          <section class="col-lg-5" aria-label="Demo description and learning outcomes">
+          <section class="col-lg-5" aria-label="Demo description and audience callout">
             <div class="nk-badge-row">
-              <p class="nk-pill-badge mb-0">Client-side AI</p>
-              <p class="nk-pill-badge mb-0">Private background</p>
-              <p class="nk-pill-badge mb-0">Stable overlays</p>
+              <p class="nk-pill-badge mb-0">Browser AI</p>
+              <p class="nk-pill-badge mb-0">Interactive Demo</p>
+              <p class="nk-pill-badge mb-0">Informatics in Action</p>
             </div>
 
-            <p class="nk-eyebrow mb-1">Real-time AI face filter</p>
+            <p class="nk-eyebrow mb-1">College of Informatics showcase</p>
             <h1 id="page-title" class="nk-title mb-2">
-              NKU Norse AI Filter
+              NKU Interactive AI Mirror
             </h1>
 
             <p class="nk-lead mb-3">
-              This version uses Griffin Hall as the background in every mode so personal spaces stay hidden while the overlays track more naturally across desktop, tablet, and mobile.
+              Step into a live informatics experience where your camera feed becomes a real-time AI playground. This demo transforms a standard webpage into an interactive showcase of computer vision, client-side intelligence, digital identity, and immersive user experience design.
             </p>
 
             <section class="mb-3" aria-labelledby="try-it-out-heading">
-              <h2 id="try-it-out-heading" class="nk-subsection-title mb-2">Try it out</h2>
+              <h2 id="try-it-out-heading" class="nk-subsection-title mb-2">Experience the demo</h2>
               <ol class="nk-step-list list-unstyled mb-2">
                 <li>
                   <span class="nk-step-num">1.</span>
-                  <span>Click <strong>Start Camera &amp; AI</strong>.</span>
+                  <span>Click <strong>Launch Interactive AI</strong> to activate the camera and initialize the browser-based models.</span>
                 </li>
                 <li>
                   <span class="nk-step-num">2.</span>
-                  <span>Choose <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>Griffin Hall</strong>.</span>
+                  <span>Switch between <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, and <strong>Griffin Hall Mode</strong> to explore different real-time experiences.</span>
                 </li>
                 <li>
                   <span class="nk-step-num">3.</span>
-                  <span>The helmet is now anchored higher using face landmarks so it sits on the head instead of across the middle of the face.</span>
+                  <span>Watch the interface respond as face landmarks, background replacement, and live overlays create an engaging AI-powered interaction on screen.</span>
                 </li>
               </ol>
             </section>
 
             <section class="mt-3" aria-labelledby="learning-heading">
-              <h2 id="learning-heading" class="nk-subsection-title mb-2">What you’ll learn</h2>
+              <h2 id="learning-heading" class="nk-subsection-title mb-2">Why this creates buzz</h2>
+              <p class="nk-subsection-body mb-2">
+                This is more than a filter. It is a live demonstration of how informatics connects code, data, design, and human interaction into an experience people can feel the moment they step in front of the screen.
+              </p>
               <p class="nk-subsection-body mb-1">
-                • Camera access with <code>getUserMedia</code>.<br />
-                • Real-time AR overlays with <code>&lt;canvas&gt;</code>.<br />
-                • Background compositing with BodyPix and stable face tracking with BlazeFace.
+                • Real-time camera access with <code>getUserMedia</code>.<br />
+                • Live computer vision overlays rendered with <code>&lt;canvas&gt;</code>.<br />
+                • Background compositing with BodyPix and face tracking with BlazeFace.<br />
+                • A shareable, audience-friendly interaction that makes technical work instantly visible.
               </p>
             </section>
           </section>
@@ -608,7 +612,7 @@
           <section class="col-lg-7" aria-label="Live AI demo">
             <section class="bg-light border rounded-4 p-3 p-lg-3" style="border-color: #e5e7eb;">
               <div class="mb-3">
-                <div id="videoContainer" aria-label="Live camera preview area">
+                <div id="videoContainer" aria-label="Live interactive AI mirror area">
                   <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
 
                   <video
@@ -622,24 +626,24 @@
                   <canvas
                     id="overlay"
                     role="img"
-                    aria-label="Live AI-filtered camera view"
+                    aria-label="Live AI-enhanced camera view"
                   ></canvas>
 
                   <div class="screen-ui" aria-hidden="true">
                     <div class="screen-gradient-top"></div>
                     <div class="screen-gradient-bottom"></div>
 
-                    <div class="screen-pill">⚡ Making Digital Vikings</div>
+                    <div class="screen-pill">⚡ Informatics You Can Step Into</div>
 
                     <div class="screen-status">
                       <span id="screenStatusDot" class="screen-status-dot"></span>
-                      <span id="screenStatusText">Searching…</span>
+                      <span id="screenStatusText">Initializing…</span>
                     </div>
 
                     <div class="screen-footer">
-                      <div class="screen-kicker">Live browser demo</div>
-                      <h2 class="screen-title">Norse Overlay Experience</h2>
-                      <div class="screen-sub">Client-side AI · camera + canvas + TensorFlow.js</div>
+                      <div class="screen-kicker">Live College of Informatics demo</div>
+                      <h2 class="screen-title">Interactive AI Mirror Experience</h2>
+                      <div class="screen-sub">Computer vision · UX design · browser AI · creative interaction</div>
                     </div>
                   </div>
                 </div>
@@ -652,11 +656,11 @@
                 <div class="d-flex align-items-center gap-2">
                   <span id="statusDot" class="status-dot" aria-hidden="true"></span>
                   <span id="statusText" class="status-text">
-                    Tap “Start Camera &amp; AI” to launch the demo.
+                    Press “Launch Interactive AI” to start the live experience.
                   </span>
                 </div>
                 <p class="status-hint text-md-end mb-0">
-                  Best results: Chrome or Edge, HTTPS, and bright lighting.
+                  Best on Chrome or Edge over HTTPS with clear lighting and your face centered in frame.
                 </p>
               </div>
 
@@ -664,7 +668,7 @@
                 <div
                   class="filter-group"
                   role="radiogroup"
-                  aria-label="Choose AI filter"
+                  aria-label="Choose interactive AI mode"
                 >
                   <button
                     class="filter-btn active"
@@ -676,7 +680,7 @@
                   >
                     <img
                       src="glasses.png"
-                      alt="Preview of glasses filter"
+                      alt="Preview of glasses mode"
                       class="filter-thumb"
                       loading="lazy"
                     />
@@ -693,7 +697,7 @@
                   >
                     <img
                       src="helmet.png"
-                      alt="Preview of helmet filter"
+                      alt="Preview of Norse helmet mode"
                       class="filter-thumb"
                       loading="lazy"
                     />
@@ -710,7 +714,7 @@
                   >
                     <img
                       src="beard.png"
-                      alt="Preview of viking combo filter"
+                      alt="Preview of Viking combo mode"
                       class="filter-thumb"
                       loading="lazy"
                     />
@@ -727,38 +731,38 @@
                   >
                     <img
                       src="griffin-hall.jpg"
-                      alt="Preview with Griffin Hall background"
+                      alt="Preview of Griffin Hall mode"
                       class="filter-thumb"
                       loading="lazy"
                     />
-                    <span>Griffin Hall</span>
+                    <span>Griffin Hall Mode</span>
                   </button>
                 </div>
               </div>
 
               <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mb-2">
                 <button id="startBtn" type="button" class="btn btn-outline-secondary px-4">
-                  🚀 Start Camera &amp; AI
+                  🚀 Launch Interactive AI
                 </button>
                 <button id="captureBtn" type="button" class="btn px-4" disabled>
-                  📸 Capture Norse Selfie
+                  📸 Save Demo Snapshot
                 </button>
                 <button id="stopBtn" type="button" class="btn btn-outline-danger px-4" disabled>
-                  ⏹️ Turn Camera Off
+                  ⏹️ End Experience
                 </button>
               </div>
 
               <section id="previewSection" class="mt-3" style="display: none;" aria-live="polite">
-                <h2 class="h6 mb-2">Your AI-powered Norse snapshot</h2>
+                <h2 class="h6 mb-2">Your College of Informatics demo snapshot</h2>
                 <div class="preview-image-wrapper mb-2">
                   <img
                     id="snapshotPreview"
-                    alt="NKU Norse AI snapshot preview"
+                    alt="Interactive AI demo snapshot preview"
                     loading="lazy"
                   />
                 </div>
                 <p class="small text-muted mb-0">
-                  Your image was just saved locally as a PNG.
+                  Saved locally as a PNG so visitors can leave with a memorable piece of the experience.
                 </p>
               </section>
             </section>
@@ -767,7 +771,7 @@
 
         <footer class="mt-4 pt-3 border-top" style="border-color: #e5e7eb;">
           <p class="nk-subsection-body mb-0">
-            Your data stays entirely on your device — nothing is uploaded or stored.
+            Privacy-first by design: all processing stays on the device, making this an engaging and responsible example of client-side AI.
           </p>
         </footer>
       </div>
@@ -778,7 +782,7 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_AI_Selfies";
+      const TARGET_FOLDER_LABEL = "NKU_COI_AI_Demo";
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -1012,7 +1016,7 @@
         stopBtn.disabled = true;
 
         setScreenStatus("Offline", false);
-        setStatus("Camera turned off. Click Start Camera & AI to launch again.", "idle");
+        setStatus("Experience ended. Click Launch Interactive AI to begin again.", "idle");
       }
 
       function isValidPoint(pt) {
@@ -1129,7 +1133,7 @@
         }
 
         const drawX = centerX - overlayWidth / 2;
-        const drawY = eyeLineY - overlayHeight * 0.52;
+        const drawY = eyeLineY - overlayHeight * 0.50;
 
         ctx.drawImage(
           helmetImg,
@@ -1300,20 +1304,20 @@
 
           if (activeFilter === "glasses") {
             drawGlassesOnFace(topLeft, bottomRight, landmarksToUse);
-            setStatus("AI is running: glasses filter with Griffin Hall background.", "active");
+            setStatus("Live mode active: glasses experience running with Griffin Hall in the background.", "active");
           } else if (activeFilter === "helmet") {
             drawHelmetOnFace(topLeft, bottomRight, landmarksToUse);
-            setStatus("AI is running: helmet filter with Griffin Hall background.", "active");
+            setStatus("Live mode active: Norse helmet aligned to the forehead for a stronger AR effect.", "active");
           } else if (activeFilter === "combo") {
             drawComboOnFace(topLeft, bottomRight);
-            setStatus("AI is running: Viking combo full-face overlay with Griffin Hall background.", "active");
+            setStatus("Live mode active: Viking Combo experience running.", "active");
           } else {
-            setStatus("AI is running: Griffin Hall background mode.", "active");
+            setStatus("Live mode active: Griffin Hall background experience running.", "active");
           }
 
           setScreenStatus("Face Locked", true);
         } else {
-          setStatus("Griffin Hall background is active — step into frame.", "active");
+          setStatus("AI is ready. Step into frame to activate the full experience.", "active");
           setScreenStatus("Searching…", false);
         }
 
@@ -1341,12 +1345,12 @@
         const a = document.createElement("a");
         const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
         a.href = dataURL;
-        a.download = `${TARGET_FOLDER_LABEL}-selfie-${timestampText}.png`;
+        a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
 
-        setStatus("Snapshot saved locally as a PNG.", "active");
+        setStatus("Snapshot saved locally. A shareable moment from the live AI experience is ready.", "active");
       }
 
       async function startExperience() {
@@ -1362,7 +1366,7 @@
 
           await setupCamera();
 
-          setStatus("Loading AI models…", "idle");
+          setStatus("Loading browser AI models…", "idle");
           await getBestBackend();
 
           faceModel = await blazeface.load();
@@ -1389,7 +1393,7 @@
           await detectFaceStep();
           await segmentStep();
 
-          setStatus("AI is ready. Griffin Hall is active in every mode.", "active");
+          setStatus("Interactive AI is live. Invite people to step in and try it.", "active");
           renderRaf = requestAnimationFrame(renderFrame);
         } catch (error) {
           console.error("Init error:", error);
@@ -1398,7 +1402,7 @@
           stopBtn.disabled = true;
           setScreenStatus("Offline", false);
           setStatus(
-            "This device or browser may not fully support this demo. Try a recent version of Chrome, Edge, Firefox, or Safari over HTTPS.",
+            "This device or browser may not fully support the experience. Try a recent version of Chrome, Edge, Firefox, or Safari over HTTPS.",
             "error"
           );
         }
@@ -1420,22 +1424,22 @@
 
           if (activeFilter === "glasses") {
             setStatus(
-              "Glasses filter selected. Griffin Hall will remain behind you.",
+              "Glasses mode selected. A quick, approachable entry point into the live AI experience.",
               aiRunning ? "active" : "idle"
             );
           } else if (activeFilter === "helmet") {
             setStatus(
-              "Helmet filter selected. Helmet placement is anchored to the eyes/forehead so it sits higher on the head.",
+              "Helmet mode selected. The overlay is anchored higher for a more believable head-tracked effect.",
               aiRunning ? "active" : "idle"
             );
           } else if (activeFilter === "combo") {
             setStatus(
-              "Viking combo selected. Full-face combo overlay is centered on the face.",
+              "Viking Combo selected. This mode is built for the biggest audience reaction.",
               aiRunning ? "active" : "idle"
             );
           } else {
             setStatus(
-              "Griffin Hall only mode selected.",
+              "Griffin Hall Mode selected. A clean, campus-branded background experience is ready.",
               aiRunning ? "active" : "idle"
             );
           }

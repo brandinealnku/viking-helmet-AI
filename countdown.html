@@ -773,6 +773,8 @@
     let detectionBusy = false;
     let latestHand = null;
     let latestFingerCount = 0;
+    let latestFingerStates = null;
+    let latestHandedness = "Unknown";
     let mirrored = true;
 
     let lastStatusMsg = "";
@@ -781,7 +783,7 @@
     let stableCandidate = null;
     let stableSince = 0;
 
-    let sequenceStep = 0; // 0 waiting for 1, 1 waiting for 2, 2 waiting for 3, 3 captured
+    let sequenceStep = 0;
     let captureLocked = false;
     let cheeseTimeout = null;
     let resetTimeout = null;
@@ -789,6 +791,81 @@
     const STABLE_MS = 700;
     const EMPTY_RESET_MS = 2500;
     let lastSeenHandAt = 0;
+
+    let debugPanel = null;
+    let debugBody = null;
+
+    function buildDebugPanel() {
+      debugPanel = document.createElement("div");
+      debugPanel.id = "debugPanel";
+      debugPanel.style.position = "absolute";
+      debugPanel.style.left = "12px";
+      debugPanel.style.top = "60px";
+      debugPanel.style.zIndex = "6";
+      debugPanel.style.width = "min(300px, calc(100% - 24px))";
+      debugPanel.style.padding = "12px 14px";
+      debugPanel.style.borderRadius = "16px";
+      debugPanel.style.background = "rgba(17, 17, 17, 0.72)";
+      debugPanel.style.backdropFilter = "blur(10px)";
+      debugPanel.style.color = "#fff";
+      debugPanel.style.border = "1px solid rgba(255,255,255,0.12)";
+      debugPanel.style.boxShadow = "0 10px 28px rgba(0,0,0,0.22)";
+      debugPanel.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      debugPanel.style.pointerEvents = "none";
+
+      const title = document.createElement("div");
+      title.textContent = "Debug Panel";
+      title.style.fontSize = "0.72rem";
+      title.style.fontWeight = "800";
+      title.style.letterSpacing = "0.12em";
+      title.style.textTransform = "uppercase";
+      title.style.opacity = "0.92";
+      title.style.marginBottom = "8px";
+
+      debugBody = document.createElement("div");
+      debugBody.style.fontSize = "0.82rem";
+      debugBody.style.lineHeight = "1.5";
+      debugBody.style.whiteSpace = "pre-line";
+
+      debugPanel.appendChild(title);
+      debugPanel.appendChild(debugBody);
+
+      const videoContainer = document.getElementById("videoContainer");
+      videoContainer.appendChild(debugPanel);
+    }
+
+    function updateDebugPanel() {
+      if (!debugBody) return;
+
+      const fingerStates = latestFingerStates || {
+        thumb: false,
+        index: false,
+        middle: false,
+        ring: false,
+        pinky: false
+      };
+
+      const expected = sequenceStep + 1;
+      const sequenceLabel =
+        sequenceStep === 0 ? "waiting for 1" :
+        sequenceStep === 1 ? "waiting for 2" :
+        sequenceStep === 2 ? "waiting for 3" :
+        "captured";
+
+      debugBody.textContent =
+        `Hand detected: ${latestHand ? "yes" : "no"}\n` +
+        `Handedness: ${latestHandedness}\n` +
+        `Raw finger count: ${latestFingerCount}\n` +
+        `Expected count: ${expected <= 3 ? expected : "-"}\n` +
+        `Sequence: ${sequenceLabel}\n` +
+        `Capture locked: ${captureLocked ? "yes" : "no"}\n` +
+        `\n` +
+        `Thumb:  ${fingerStates.thumb ? "UP" : "down"}\n` +
+        `Index:  ${fingerStates.index ? "UP" : "down"}\n` +
+        `Middle: ${fingerStates.middle ? "UP" : "down"}\n` +
+        `Ring:   ${fingerStates.ring ? "UP" : "down"}\n` +
+        `Pinky:  ${fingerStates.pinky ? "UP" : "down"}`;
+    }
 
     function setStatus(message, mode = "idle") {
       if (message === lastStatusMsg && mode === lastStatusMode) return;
@@ -834,6 +911,7 @@
       captureLocked = false;
       updateProgressUI();
       hideOverlay();
+
       if (message) {
         setStatus(message, aiRunning ? "active" : "idle");
       }
@@ -933,6 +1011,8 @@
       aiRunning = false;
       latestHand = null;
       latestFingerCount = 0;
+      latestFingerStates = null;
+      latestHandedness = "Unknown";
       detectionBusy = false;
 
       resetSequence("");
@@ -946,6 +1026,7 @@
 
       setScreenStatus("Offline", false);
       setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+      updateDebugPanel();
     }
 
     function pointFromKeypoint(keypoint) {
@@ -966,10 +1047,10 @@
     }
 
     function getHandedness(hand) {
-      if (!hand) return "Right";
+      if (!hand) return "Unknown";
       if (typeof hand.handedness === "string") return hand.handedness;
       if (Array.isArray(hand.handedness) && hand.handedness[0]?.label) return hand.handedness[0].label;
-      return "Right";
+      return "Unknown";
     }
 
     function drawMirroredVideoFrame() {
@@ -1040,7 +1121,7 @@
       const badgeW = 190;
       const badgeH = 48;
       const x = 16;
-      const y = 60;
+      const y = 16;
 
       ctx.save();
       ctx.fillStyle = "rgba(17,17,17,0.56)";
@@ -1078,15 +1159,33 @@
 
     function countRaisedFingers(hand) {
       const keypoints = getKeypointsArray(hand);
-      if (keypoints.length < 21) return 0;
+      if (keypoints.length < 21) {
+        latestFingerStates = {
+          thumb: false,
+          index: false,
+          middle: false,
+          ring: false,
+          pinky: false
+        };
+        return 0;
+      }
 
       const kp = keypoints.map(pointFromKeypoint);
-      if (kp.some((p) => !p)) return 0;
+      if (kp.some((p) => !p)) {
+        latestFingerStates = {
+          thumb: false,
+          index: false,
+          middle: false,
+          ring: false,
+          pinky: false
+        };
+        return 0;
+      }
 
       const handedness = getHandedness(hand);
+      latestHandedness = handedness;
 
       const wrist = kp[0];
-      const thumbCMC = kp[1];
       const thumbMCP = kp[2];
       const thumbIP = kp[3];
       const thumbTip = kp[4];
@@ -1107,13 +1206,10 @@
       const pinkyPIP = kp[18];
       const pinkyTip = kp[20];
 
-      let count = 0;
-
-      // For the 4 fingers, use tip above pip and some extra margin.
       const fingerUp = (tip, pip, mcp) => {
         const verticalOpen = pip.y - tip.y;
         const fullLength = mcp.y - tip.y;
-        return verticalOpen > 12 && fullLength > 18;
+        return verticalOpen > 10 && fullLength > 16;
       };
 
       const indexUp = fingerUp(indexTip, indexPIP, indexMCP);
@@ -1121,41 +1217,48 @@
       const ringUp = fingerUp(ringTip, ringPIP, ringMCP);
       const pinkyUp = fingerUp(pinkyTip, pinkyPIP, pinkyMCP);
 
-      if (indexUp) count++;
-      if (middleUp) count++;
-      if (ringUp) count++;
-      if (pinkyUp) count++;
-
-      // Thumb: use handedness plus "thumb tip farther from palm than IP/MCP"
-      // and horizontal extension away from the hand.
       const palmCenter = {
         x: (indexMCP.x + middleMCP.x + ringMCP.x + pinkyMCP.x) / 4,
         y: (indexMCP.y + middleMCP.y + ringMCP.y + pinkyMCP.y) / 4
       };
 
       const thumbFar =
-        distance(thumbTip, palmCenter) > distance(thumbIP, palmCenter) + 10 &&
-        distance(thumbTip, palmCenter) > distance(thumbMCP, palmCenter) + 16;
+        distance(thumbTip, palmCenter) > distance(thumbIP, palmCenter) + 8 &&
+        distance(thumbTip, palmCenter) > distance(thumbMCP, palmCenter) + 14;
 
       let thumbOut = false;
       if (handedness === "Right") {
-        thumbOut = thumbTip.x < thumbIP.x - 6;
+        thumbOut = thumbTip.x < thumbIP.x - 4;
+      } else if (handedness === "Left") {
+        thumbOut = thumbTip.x > thumbIP.x + 4;
       } else {
-        thumbOut = thumbTip.x > thumbIP.x + 6;
+        thumbOut = Math.abs(thumbTip.x - thumbIP.x) > 10;
       }
 
       const thumbUp = thumbFar && thumbOut;
-      if (thumbUp) count++;
 
-      // Ignore closed fist noise.
+      latestFingerStates = {
+        thumb: thumbUp,
+        index: indexUp,
+        middle: middleUp,
+        ring: ringUp,
+        pinky: pinkyUp
+      };
+
+      let count = 0;
+      if (thumbUp) count++;
+      if (indexUp) count++;
+      if (middleUp) count++;
+      if (ringUp) count++;
+      if (pinkyUp) count++;
+
       const avgTipDistance =
         [thumbTip, indexTip, middleTip, ringTip, pinkyTip]
           .map((pt) => distance(pt, wrist))
           .reduce((a, b) => a + b, 0) / 5;
 
-      if (avgTipDistance < 55) return 0;
+      if (avgTipDistance < 50) return 0;
 
-      // We only care about 1, 2, 3 for this interaction.
       return Math.min(count, 5);
     }
 
@@ -1176,7 +1279,17 @@
         } else {
           latestHand = null;
           latestFingerCount = 0;
+          latestFingerStates = {
+            thumb: false,
+            index: false,
+            middle: false,
+            ring: false,
+            pinky: false
+          };
+          latestHandedness = "Unknown";
         }
+
+        updateDebugPanel();
       } catch (error) {
         console.error("Hand detection error:", error);
       } finally {
@@ -1269,6 +1382,7 @@
       showOverlay("CHEESE!", true);
       setStatus("CHEESE! Capturing photo…", "active");
       setScreenStatus("Capturing", true);
+      updateDebugPanel();
 
       cheeseTimeout = setTimeout(() => {
         captureSnapshot(false);
@@ -1276,6 +1390,7 @@
         resetTimeout = setTimeout(() => {
           resetSequence("Photo saved. Hold up 1 finger to take another.");
           setScreenStatus("Ready", true);
+          updateDebugPanel();
         }, 900);
       }, 700);
     }
@@ -1380,6 +1495,9 @@
         );
       }
     }
+
+    buildDebugPanel();
+    updateDebugPanel();
 
     startBtn.addEventListener("click", startExperience);
     captureBtn.addEventListener("click", () => captureSnapshot(true));

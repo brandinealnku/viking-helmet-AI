@@ -16,11 +16,11 @@
     crossorigin="anonymous"
   />
 
-  <!-- TensorFlow.js + official hand pose detection stack -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
 
   <style>
     :root {
@@ -596,7 +596,7 @@
         <div class="brand-pill">NKU · COI</div>
         <span class="brand-sub">Finger Countdown Photo Booth</span>
       </div>
-      <div class="brand-sub">Hold up 1 → 2 → 3 fingers to snap a photo</div>
+      <div class="brand-sub">Show 1 → 2 → 3 using index / index+middle / index+middle+ring</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -612,9 +612,12 @@
           <h1 id="page-title">Finger Countdown Camera</h1>
 
           <p class="lead">
-            This version uses your camera and hand tracking to turn a finger countdown into a hands-free photo booth experience.
-            Hold up <strong>1 finger</strong>, then <strong>2 fingers</strong>, then <strong>3 fingers</strong>. The app will show
-            <strong>CHEESE!</strong> and automatically take your picture.
+            This version is optimized to be more reliable on front-facing webcams.
+            Instead of trying to count every possible finger pose, it looks for three cleaner hand signs:
+            <strong>1 = index only</strong>,
+            <strong>2 = index + middle</strong>,
+            <strong>3 = index + middle + ring</strong>.
+            Then it flashes <strong>CHEESE!</strong> and captures a photo automatically.
           </p>
 
           <h2 class="section-title">How to use it</h2>
@@ -625,11 +628,11 @@
             </li>
             <li>
               <span class="step-num">2.</span>
-              <span>Move one hand clearly into view with good lighting.</span>
+              <span>Move one hand clearly into view with your palm facing the camera.</span>
             </li>
             <li>
               <span class="step-num">3.</span>
-              <span>Hold up <strong>1 finger</strong>, then <strong>2</strong>, then <strong>3</strong>.</span>
+              <span>Show <strong>index only</strong>, then <strong>index + middle</strong>, then <strong>index + middle + ring</strong>.</span>
             </li>
             <li>
               <span class="step-num">4.</span>
@@ -641,7 +644,7 @@
           <p class="info-text">
             • Camera access with <code>getUserMedia</code><br />
             • Real-time hand landmark detection in the browser<br />
-            • Finger counting based on hand landmarks<br />
+            • Simplified finger pattern recognition for stability<br />
             • Canvas overlays and auto snapshot logic
           </p>
         </section>
@@ -694,7 +697,7 @@
                 <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to begin.</span>
               </div>
               <div class="status-hint">
-                Best results: one hand, plain background, good front lighting, and hold each number steady for a moment.
+                Best results: one hand, good front lighting, palm facing camera, and keep your pinky folded for the 3 pose.
               </div>
             </div>
 
@@ -738,779 +741,628 @@
   </div>
 
   <script>
-  (function () {
-    "use strict";
+    (function () {
+      "use strict";
 
-    const TARGET_FOLDER_LABEL = "NKU_Finger_Countdown_Photo";
+      const TARGET_FOLDER_LABEL = "NKU_Finger_Countdown_Photo";
 
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("overlay");
-    const ctx = canvas.getContext("2d");
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
 
-    const statusText = document.getElementById("statusText");
-    const statusDot = document.getElementById("statusDot");
-    const startBtn = document.getElementById("startBtn");
-    const captureBtn = document.getElementById("captureBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const videoSkeleton = document.getElementById("videoSkeleton");
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
 
-    const screenStatusDot = document.getElementById("screenStatusDot");
-    const screenStatusText = document.getElementById("screenStatusText");
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
 
-    const previewSection = document.getElementById("previewSection");
-    const snapshotPreview = document.getElementById("snapshotPreview");
+      const previewSection = document.getElementById("previewSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
 
-    const countdownChip = document.getElementById("countdownChip");
-    const step1 = document.getElementById("step1");
-    const step2 = document.getElementById("step2");
-    const step3 = document.getElementById("step3");
+      const countdownChip = document.getElementById("countdownChip");
+      const step1 = document.getElementById("step1");
+      const step2 = document.getElementById("step2");
+      const step3 = document.getElementById("step3");
 
-    let detector = null;
-    let videoReady = false;
-    let aiRunning = false;
-    let mediaStream = null;
-    let renderRaf = null;
-    let detectionBusy = false;
-    let latestHand = null;
-    let latestFingerCount = 0;
-    let latestFingerStates = null;
-    let latestHandedness = "Unknown";
-    let mirrored = true;
+      let detector = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let mediaStream = null;
+      let renderRaf = null;
+      let detectionBusy = false;
+      let latestHand = null;
+      let latestFingerCount = 0;
+      let mirrored = true;
 
-    let lastStatusMsg = "";
-    let lastStatusMode = "";
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
 
-    let stableCandidate = null;
-    let stableSince = 0;
+      let stableCandidate = null;
+      let stableSince = 0;
 
-    let sequenceStep = 0;
-    let captureLocked = false;
-    let cheeseTimeout = null;
-    let resetTimeout = null;
+      let sequenceStep = 0;
+      let captureLocked = false;
+      let cheeseTimeout = null;
+      let resetTimeout = null;
 
-    const STABLE_MS = 700;
-    const EMPTY_RESET_MS = 2500;
-    let lastSeenHandAt = 0;
+      const STABLE_MS = 700;
+      const EMPTY_RESET_MS = 2500;
+      let lastSeenHandAt = 0;
 
-    let debugPanel = null;
-    let debugBody = null;
-
-    function buildDebugPanel() {
-      debugPanel = document.createElement("div");
-      debugPanel.id = "debugPanel";
-      debugPanel.style.position = "absolute";
-      debugPanel.style.left = "12px";
-      debugPanel.style.top = "60px";
-      debugPanel.style.zIndex = "6";
-      debugPanel.style.width = "min(300px, calc(100% - 24px))";
-      debugPanel.style.padding = "12px 14px";
-      debugPanel.style.borderRadius = "16px";
-      debugPanel.style.background = "rgba(17, 17, 17, 0.72)";
-      debugPanel.style.backdropFilter = "blur(10px)";
-      debugPanel.style.color = "#fff";
-      debugPanel.style.border = "1px solid rgba(255,255,255,0.12)";
-      debugPanel.style.boxShadow = "0 10px 28px rgba(0,0,0,0.22)";
-      debugPanel.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-      debugPanel.style.pointerEvents = "none";
-
-      const title = document.createElement("div");
-      title.textContent = "Debug Panel";
-      title.style.fontSize = "0.72rem";
-      title.style.fontWeight = "800";
-      title.style.letterSpacing = "0.12em";
-      title.style.textTransform = "uppercase";
-      title.style.opacity = "0.92";
-      title.style.marginBottom = "8px";
-
-      debugBody = document.createElement("div");
-      debugBody.style.fontSize = "0.82rem";
-      debugBody.style.lineHeight = "1.5";
-      debugBody.style.whiteSpace = "pre-line";
-
-      debugPanel.appendChild(title);
-      debugPanel.appendChild(debugBody);
-
-      const videoContainer = document.getElementById("videoContainer");
-      videoContainer.appendChild(debugPanel);
-    }
-
-    function updateDebugPanel() {
-      if (!debugBody) return;
-
-      const fingerStates = latestFingerStates || {
-        thumb: false,
-        index: false,
-        middle: false,
-        ring: false,
-        pinky: false
-      };
-
-      const expected = sequenceStep + 1;
-      const sequenceLabel =
-        sequenceStep === 0 ? "waiting for 1" :
-        sequenceStep === 1 ? "waiting for 2" :
-        sequenceStep === 2 ? "waiting for 3" :
-        "captured";
-
-      debugBody.textContent =
-        `Hand detected: ${latestHand ? "yes" : "no"}\n` +
-        `Handedness: ${latestHandedness}\n` +
-        `Raw finger count: ${latestFingerCount}\n` +
-        `Expected count: ${expected <= 3 ? expected : "-"}\n` +
-        `Sequence: ${sequenceLabel}\n` +
-        `Capture locked: ${captureLocked ? "yes" : "no"}\n` +
-        `\n` +
-        `Thumb:  ${fingerStates.thumb ? "UP" : "down"}\n` +
-        `Index:  ${fingerStates.index ? "UP" : "down"}\n` +
-        `Middle: ${fingerStates.middle ? "UP" : "down"}\n` +
-        `Ring:   ${fingerStates.ring ? "UP" : "down"}\n` +
-        `Pinky:  ${fingerStates.pinky ? "UP" : "down"}`;
-    }
-
-    function setStatus(message, mode = "idle") {
-      if (message === lastStatusMsg && mode === lastStatusMode) return;
-      lastStatusMsg = message;
-      lastStatusMode = mode;
-
-      statusText.textContent = message;
-      statusDot.classList.remove("active", "error");
-
-      if (mode === "active") {
-        statusDot.classList.add("active");
-      } else if (mode === "error") {
-        statusDot.classList.add("error");
-      }
-    }
-
-    function setScreenStatus(text, locked) {
-      screenStatusText.textContent = text;
-      screenStatusDot.classList.toggle("active", !!locked);
-    }
-
-    function updateProgressUI() {
-      step1.classList.toggle("active", sequenceStep >= 1);
-      step2.classList.toggle("active", sequenceStep >= 2);
-      step3.classList.toggle("active", sequenceStep >= 3);
-    }
-
-    function showOverlay(text, isCheese = false) {
-      countdownChip.textContent = text;
-      countdownChip.classList.toggle("cheese", !!isCheese);
-      countdownChip.classList.add("show");
-    }
-
-    function hideOverlay() {
-      countdownChip.classList.remove("show");
-      countdownChip.classList.remove("cheese");
-    }
-
-    function resetSequence(message = "Sequence reset. Hold up 1 finger to begin again.") {
-      sequenceStep = 0;
-      stableCandidate = null;
-      stableSince = 0;
-      captureLocked = false;
-      updateProgressUI();
-      hideOverlay();
-
-      if (message) {
-        setStatus(message, aiRunning ? "active" : "idle");
-      }
-    }
-
-    function clearTimers() {
-      if (cheeseTimeout) {
-        clearTimeout(cheeseTimeout);
-        cheeseTimeout = null;
-      }
-      if (resetTimeout) {
-        clearTimeout(resetTimeout);
-        resetTimeout = null;
-      }
-    }
-
-    async function getBestBackend() {
-      const backendsToTry = ["webgl", "cpu"];
-      for (const backendName of backendsToTry) {
-        try {
-          const ok = await tf.setBackend(backendName);
-          if (ok) {
-            await tf.ready();
-            return;
+      async function getBestBackend() {
+        const backendsToTry = ["webgl", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend not available:", backendName, error);
           }
-        } catch (error) {
-          console.warn("Backend not available:", backendName, error);
         }
       }
-    }
 
-    function updateCanvasBufferSize() {
-      if (!video.videoWidth || !video.videoHeight) return;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-    }
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+        lastStatusMsg = message;
+        lastStatusMode = mode;
 
-    async function setupCamera() {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setStatus("This browser does not support camera access.", "error");
-        throw new Error("getUserMedia not supported");
-      }
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
 
-      const constraints = {
-        audio: false,
-        video: {
-          facingMode: { ideal: "user" },
-          width: { ideal: 960, max: 1280 },
-          height: { ideal: 720, max: 960 }
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
         }
-      };
-
-      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = mediaStream;
-
-      await new Promise((resolve) => {
-        video.onloadedmetadata = async () => {
-          await video.play();
-          updateCanvasBufferSize();
-          videoReady = true;
-          videoSkeleton.style.display = "none";
-          resolve();
-        };
-      });
-
-      window.addEventListener("resize", handleWindowResize, { passive: true });
-      window.addEventListener("orientationchange", handleWindowResize, { passive: true });
-    }
-
-    function handleWindowResize() {
-      if (!videoReady) return;
-      setTimeout(() => updateCanvasBufferSize(), 120);
-    }
-
-    function stopLoops() {
-      if (renderRaf) {
-        cancelAnimationFrame(renderRaf);
-        renderRaf = null;
-      }
-    }
-
-    function stopCamera() {
-      stopLoops();
-      clearTimers();
-
-      if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-        mediaStream = null;
       }
 
-      if (video.srcObject) {
-        video.srcObject = null;
+      function setScreenStatus(text, locked) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!locked);
       }
 
-      videoReady = false;
-      aiRunning = false;
-      latestHand = null;
-      latestFingerCount = 0;
-      latestFingerStates = null;
-      latestHandedness = "Unknown";
-      detectionBusy = false;
-
-      resetSequence("");
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      videoSkeleton.style.display = "block";
-      startBtn.disabled = false;
-      captureBtn.disabled = true;
-      stopBtn.disabled = true;
-
-      setScreenStatus("Offline", false);
-      setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
-      updateDebugPanel();
-    }
-
-    function pointFromKeypoint(keypoint) {
-      if (!keypoint) return null;
-      const x = typeof keypoint.x === "number" ? keypoint.x : Array.isArray(keypoint) ? keypoint[0] : null;
-      const y = typeof keypoint.y === "number" ? keypoint.y : Array.isArray(keypoint) ? keypoint[1] : null;
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-      return { x, y };
-    }
-
-    function getKeypointsArray(hand) {
-      if (!hand) return [];
-      if (Array.isArray(hand.keypoints) && hand.keypoints.length) return hand.keypoints;
-      if (Array.isArray(hand.landmarks) && hand.landmarks.length) {
-        return hand.landmarks.map((pt) => ({ x: pt[0], y: pt[1] }));
-      }
-      return [];
-    }
-
-    function getHandedness(hand) {
-      if (!hand) return "Unknown";
-      if (typeof hand.handedness === "string") return hand.handedness;
-      if (Array.isArray(hand.handedness) && hand.handedness[0]?.label) return hand.handedness[0].label;
-      return "Unknown";
-    }
-
-    function drawMirroredVideoFrame() {
-      const w = canvas.width;
-      const h = canvas.height;
-      if (!w || !h) return;
-
-      ctx.save();
-      ctx.clearRect(0, 0, w, h);
-
-      if (mirrored) {
-        ctx.translate(w, 0);
-        ctx.scale(-1, 1);
+      function updateProgressUI() {
+        step1.classList.toggle("active", sequenceStep >= 1);
+        step2.classList.toggle("active", sequenceStep >= 2);
+        step3.classList.toggle("active", sequenceStep >= 3);
       }
 
-      ctx.drawImage(video, 0, 0, w, h);
-      ctx.restore();
-    }
-
-    function drawHandSkeleton(hand) {
-      const keypoints = getKeypointsArray(hand);
-      if (!keypoints.length) return;
-
-      const connections = [
-        [0,1],[1,2],[2,3],[3,4],
-        [0,5],[5,6],[6,7],[7,8],
-        [5,9],[9,10],[10,11],[11,12],
-        [9,13],[13,14],[14,15],[15,16],
-        [13,17],[17,18],[18,19],[19,20],
-        [0,17]
-      ];
-
-      ctx.save();
-
-      if (mirrored) {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+      function showOverlay(text, isCheese = false) {
+        countdownChip.textContent = text;
+        countdownChip.classList.toggle("cheese", !!isCheese);
+        countdownChip.classList.add("show");
       }
 
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-
-      for (const [a, b] of connections) {
-        const p1 = pointFromKeypoint(keypoints[a]);
-        const p2 = pointFromKeypoint(keypoints[b]);
-        if (!p1 || !p2) continue;
-
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
+      function hideOverlay() {
+        countdownChip.classList.remove("show");
+        countdownChip.classList.remove("cheese");
       }
 
-      for (let i = 0; i < keypoints.length; i++) {
-        const p = pointFromKeypoint(keypoints[i]);
-        if (!p) continue;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-    }
-
-    function drawFingerCountBadge(count) {
-      const label = count > 0 ? `${count} finger${count === 1 ? "" : "s"}` : "Show 1 / 2 / 3";
-      const badgeW = 190;
-      const badgeH = 48;
-      const x = 16;
-      const y = 16;
-
-      ctx.save();
-      ctx.fillStyle = "rgba(17,17,17,0.56)";
-      ctx.strokeStyle = "rgba(255,255,255,0.16)";
-      ctx.lineWidth = 1;
-      roundRect(ctx, x, y, badgeW, badgeH, 24);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "700 20px system-ui, -apple-system, Segoe UI, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(label, x + badgeW / 2, y + badgeH / 2);
-      ctx.restore();
-    }
-
-    function roundRect(context, x, y, width, height, radius) {
-      context.beginPath();
-      context.moveTo(x + radius, y);
-      context.lineTo(x + width - radius, y);
-      context.quadraticCurveTo(x + width, y, x + width, y + radius);
-      context.lineTo(x + width, y + height - radius);
-      context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      context.lineTo(x + radius, y + height);
-      context.quadraticCurveTo(x, y + height, x, y + height - radius);
-      context.lineTo(x, y + radius);
-      context.quadraticCurveTo(x, y, x + radius, y);
-      context.closePath();
-    }
-
-    function distance(a, b) {
-      return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    function countRaisedFingers(hand) {
-      const keypoints = getKeypointsArray(hand);
-      if (keypoints.length < 21) {
-        latestFingerStates = {
-          thumb: false,
-          index: false,
-          middle: false,
-          ring: false,
-          pinky: false
-        };
-        return 0;
-      }
-
-      const kp = keypoints.map(pointFromKeypoint);
-      if (kp.some((p) => !p)) {
-        latestFingerStates = {
-          thumb: false,
-          index: false,
-          middle: false,
-          ring: false,
-          pinky: false
-        };
-        return 0;
-      }
-
-      const handedness = getHandedness(hand);
-      latestHandedness = handedness;
-
-      const wrist = kp[0];
-      const thumbMCP = kp[2];
-      const thumbIP = kp[3];
-      const thumbTip = kp[4];
-
-      const indexMCP = kp[5];
-      const indexPIP = kp[6];
-      const indexTip = kp[8];
-
-      const middleMCP = kp[9];
-      const middlePIP = kp[10];
-      const middleTip = kp[12];
-
-      const ringMCP = kp[13];
-      const ringPIP = kp[14];
-      const ringTip = kp[16];
-
-      const pinkyMCP = kp[17];
-      const pinkyPIP = kp[18];
-      const pinkyTip = kp[20];
-
-      const fingerUp = (tip, pip, mcp) => {
-        const verticalOpen = pip.y - tip.y;
-        const fullLength = mcp.y - tip.y;
-        return verticalOpen > 10 && fullLength > 16;
-      };
-
-      const indexUp = fingerUp(indexTip, indexPIP, indexMCP);
-      const middleUp = fingerUp(middleTip, middlePIP, middleMCP);
-      const ringUp = fingerUp(ringTip, ringPIP, ringMCP);
-      const pinkyUp = fingerUp(pinkyTip, pinkyPIP, pinkyMCP);
-
-      const palmCenter = {
-        x: (indexMCP.x + middleMCP.x + ringMCP.x + pinkyMCP.x) / 4,
-        y: (indexMCP.y + middleMCP.y + ringMCP.y + pinkyMCP.y) / 4
-      };
-
-      const thumbFar =
-        distance(thumbTip, palmCenter) > distance(thumbIP, palmCenter) + 8 &&
-        distance(thumbTip, palmCenter) > distance(thumbMCP, palmCenter) + 14;
-
-      let thumbOut = false;
-      if (handedness === "Right") {
-        thumbOut = thumbTip.x < thumbIP.x - 4;
-      } else if (handedness === "Left") {
-        thumbOut = thumbTip.x > thumbIP.x + 4;
-      } else {
-        thumbOut = Math.abs(thumbTip.x - thumbIP.x) > 10;
-      }
-
-      const thumbUp = thumbFar && thumbOut;
-
-      latestFingerStates = {
-        thumb: thumbUp,
-        index: indexUp,
-        middle: middleUp,
-        ring: ringUp,
-        pinky: pinkyUp
-      };
-
-      let count = 0;
-      if (thumbUp) count++;
-      if (indexUp) count++;
-      if (middleUp) count++;
-      if (ringUp) count++;
-      if (pinkyUp) count++;
-
-      const avgTipDistance =
-        [thumbTip, indexTip, middleTip, ringTip, pinkyTip]
-          .map((pt) => distance(pt, wrist))
-          .reduce((a, b) => a + b, 0) / 5;
-
-      if (avgTipDistance < 50) return 0;
-
-      return Math.min(count, 5);
-    }
-
-    async function detectHandsStep() {
-      if (!aiRunning || !videoReady || !detector || detectionBusy) return;
-
-      detectionBusy = true;
-      try {
-        const hands = await detector.estimateHands(video, {
-          flipHorizontal: false
-        });
-
-        if (Array.isArray(hands) && hands.length > 0) {
-          const bestHand = hands[0];
-          latestHand = bestHand;
-          latestFingerCount = countRaisedFingers(bestHand);
-          lastSeenHandAt = performance.now();
-        } else {
-          latestHand = null;
-          latestFingerCount = 0;
-          latestFingerStates = {
-            thumb: false,
-            index: false,
-            middle: false,
-            ring: false,
-            pinky: false
-          };
-          latestHandedness = "Unknown";
-        }
-
-        updateDebugPanel();
-      } catch (error) {
-        console.error("Hand detection error:", error);
-      } finally {
-        detectionBusy = false;
-      }
-    }
-
-    function handleSequence() {
-      const now = performance.now();
-
-      if (!latestHand) {
-        hideOverlay();
-
-        if (sequenceStep === 0) {
-          setStatus("AI is running. Show one hand to begin the countdown.", "active");
-          setScreenStatus("Searching…", false);
-        } else if (!captureLocked) {
-          setStatus("Hand lost. Show your hand again to continue.", "active");
-          setScreenStatus("Searching…", false);
-        }
-
-        if (!captureLocked && now - lastSeenHandAt > EMPTY_RESET_MS && sequenceStep > 0) {
-          resetSequence("No hand detected for a moment. Countdown reset.");
-        }
-
+      function resetSequence(message = "Sequence reset. Hold up 1 finger to begin again.") {
+        sequenceStep = 0;
         stableCandidate = null;
         stableSince = 0;
-        return;
-      }
-
-      setScreenStatus("Hand Locked", true);
-
-      const count = latestFingerCount;
-      const expected = sequenceStep + 1;
-
-      if (!captureLocked && count >= 1 && count <= 3) {
-        showOverlay(String(count), false);
-      } else if (!captureLocked) {
+        captureLocked = false;
+        updateProgressUI();
         hideOverlay();
+
+        if (message) {
+          setStatus(message, aiRunning ? "active" : "idle");
+        }
       }
 
-      if (count === expected) {
-        if (stableCandidate !== count) {
-          stableCandidate = count;
-          stableSince = now;
+      function clearTimers() {
+        if (cheeseTimeout) {
+          clearTimeout(cheeseTimeout);
+          cheeseTimeout = null;
+        }
+        if (resetTimeout) {
+          clearTimeout(resetTimeout);
+          resetTimeout = null;
+        }
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("This browser does not support camera access.", "error");
+          throw new Error("getUserMedia not supported");
         }
 
-        const heldLongEnough = now - stableSince >= STABLE_MS;
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 960, max: 1280 },
+            height: { ideal: 720, max: 960 }
+          }
+        };
 
-        if (heldLongEnough) {
-          sequenceStep = count;
-          updateProgressUI();
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
 
-          if (count === 1) {
-            setStatus("1 finger detected. Now show 2 fingers.", "active");
-          } else if (count === 2) {
-            setStatus("2 fingers detected. Now show 3 fingers.", "active");
-          } else if (count === 3) {
-            triggerCheeseCapture();
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        window.addEventListener("resize", handleWindowResize, { passive: true });
+        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+      }
+
+      function handleWindowResize() {
+        if (!videoReady) return;
+        setTimeout(() => updateCanvasBufferSize(), 120);
+      }
+
+      function stopLoops() {
+        if (renderRaf) {
+          cancelAnimationFrame(renderRaf);
+          renderRaf = null;
+        }
+      }
+
+      function stopCamera() {
+        stopLoops();
+        clearTimers();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        videoReady = false;
+        aiRunning = false;
+        latestHand = null;
+        latestFingerCount = 0;
+        detectionBusy = false;
+
+        resetSequence("");
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoSkeleton.style.display = "block";
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setScreenStatus("Offline", false);
+        setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+      }
+
+      function pointFromKeypoint(keypoint) {
+        if (!keypoint) return null;
+        const x = typeof keypoint.x === "number" ? keypoint.x : Array.isArray(keypoint) ? keypoint[0] : null;
+        const y = typeof keypoint.y === "number" ? keypoint.y : Array.isArray(keypoint) ? keypoint[1] : null;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        return { x, y };
+      }
+
+      function getKeypointsArray(hand) {
+        if (!hand) return [];
+        if (Array.isArray(hand.keypoints) && hand.keypoints.length) return hand.keypoints;
+        if (Array.isArray(hand.landmarks) && hand.landmarks.length) {
+          return hand.landmarks.map((pt) => ({ x: pt[0], y: pt[1] }));
+        }
+        return [];
+      }
+
+      function distance(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function drawMirroredVideoFrame() {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return;
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+
+        if (mirrored) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(video, 0, 0, w, h);
+        ctx.restore();
+      }
+
+      function drawHandSkeleton(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (!keypoints.length) return;
+
+        const connections = [
+          [0,1],[1,2],[2,3],[3,4],
+          [0,5],[5,6],[6,7],[7,8],
+          [5,9],[9,10],[10,11],[11,12],
+          [9,13],[13,14],[14,15],[15,16],
+          [13,17],[17,18],[18,19],[19,20],
+          [0,17]
+        ];
+
+        ctx.save();
+
+        if (mirrored) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+
+        for (const [a, b] of connections) {
+          const p1 = pointFromKeypoint(keypoints[a]);
+          const p2 = pointFromKeypoint(keypoints[b]);
+          if (!p1 || !p2) continue;
+
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < keypoints.length; i++) {
+          const p = pointFromKeypoint(keypoints[i]);
+          if (!p) continue;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      function drawFingerCountBadge(count) {
+        const label = count > 0 ? `${count} finger${count === 1 ? "" : "s"}` : "Show 1 / 2 / 3";
+        const badgeW = 190;
+        const badgeH = 48;
+        const x = 16;
+        const y = 16;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(17,17,17,0.56)";
+        ctx.strokeStyle = "rgba(255,255,255,0.16)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, x, y, badgeW, badgeH, 24);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 20px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x + badgeW / 2, y + badgeH / 2);
+        ctx.restore();
+      }
+
+      function roundRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function countRaisedFingers(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (keypoints.length < 21) return 0;
+
+        const kp = keypoints.map(pointFromKeypoint);
+        if (kp.some((p) => !p)) return 0;
+
+        const wrist = kp[0];
+
+        const indexMCP = kp[5];
+        const indexPIP = kp[6];
+        const indexTIP = kp[8];
+
+        const middleMCP = kp[9];
+        const middlePIP = kp[10];
+        const middleTIP = kp[12];
+
+        const ringMCP = kp[13];
+        const ringPIP = kp[14];
+        const ringTIP = kp[16];
+
+        const pinkyMCP = kp[17];
+        const pinkyPIP = kp[18];
+        const pinkyTIP = kp[20];
+
+        function fingerUp(tip, pip, mcp) {
+          const tipAbovePip = tip.y < pip.y - 8;
+          const pipAboveMcp = pip.y < mcp.y - 3;
+          const totalOpen = mcp.y - tip.y > 24;
+          return tipAbovePip && pipAboveMcp && totalOpen;
+        }
+
+        const indexUp = fingerUp(indexTIP, indexPIP, indexMCP);
+        const middleUp = fingerUp(middleTIP, middlePIP, middleMCP);
+        const ringUp = fingerUp(ringTIP, ringPIP, ringMCP);
+
+        const pinkyUp =
+          pinkyTIP.y < pinkyPIP.y - 12 &&
+          pinkyPIP.y < pinkyMCP.y - 4 &&
+          pinkyMCP.y - pinkyTIP.y > 28;
+
+        const avgTipDistance =
+          [indexTIP, middleTIP, ringTIP, pinkyTIP]
+            .map((pt) => distance(pt, wrist))
+            .reduce((a, b) => a + b, 0) / 4;
+
+        if (avgTipDistance < 55) return 0;
+
+        if (indexUp && !middleUp && !ringUp && !pinkyUp) return 1;
+        if (indexUp && middleUp && !ringUp && !pinkyUp) return 2;
+        if (indexUp && middleUp && ringUp && !pinkyUp) return 3;
+
+        return 0;
+      }
+
+      async function detectHandsStep() {
+        if (!aiRunning || !videoReady || !detector || detectionBusy) return;
+
+        detectionBusy = true;
+        try {
+          const hands = await detector.estimateHands(video, {
+            flipHorizontal: false
+          });
+
+          if (Array.isArray(hands) && hands.length > 0) {
+            const bestHand = hands[0];
+            latestHand = bestHand;
+            latestFingerCount = countRaisedFingers(bestHand);
+            lastSeenHandAt = performance.now();
+          } else {
+            latestHand = null;
+            latestFingerCount = 0;
+          }
+        } catch (error) {
+          console.error("Hand detection error:", error);
+        } finally {
+          detectionBusy = false;
+        }
+      }
+
+      function handleSequence() {
+        const now = performance.now();
+
+        if (!latestHand) {
+          hideOverlay();
+
+          if (sequenceStep === 0) {
+            setStatus("AI is running. Show one hand with just your index finger up.", "active");
+            setScreenStatus("Searching…", false);
+          } else if (!captureLocked) {
+            setStatus("Hand lost. Show your hand again to continue.", "active");
+            setScreenStatus("Searching…", false);
+          }
+
+          if (!captureLocked && now - lastSeenHandAt > EMPTY_RESET_MS && sequenceStep > 0) {
+            resetSequence("No hand detected for a moment. Countdown reset.");
           }
 
           stableCandidate = null;
           stableSince = 0;
-        } else {
-          setStatus(`Hold ${count} finger${count === 1 ? "" : "s"} steady…`, "active");
+          return;
         }
-      } else {
-        stableCandidate = null;
-        stableSince = 0;
 
-        if (!captureLocked) {
-          if (sequenceStep === 0) {
-            setStatus("Show 1 finger to begin.", "active");
-          } else if (sequenceStep === 1) {
-            setStatus("Great. Now show 2 fingers.", "active");
-          } else if (sequenceStep === 2) {
-            setStatus("Almost there. Now show 3 fingers.", "active");
+        setScreenStatus("Hand Locked", true);
+
+        const count = latestFingerCount;
+        const expected = sequenceStep + 1;
+
+        if (!captureLocked && count >= 1 && count <= 3) {
+          showOverlay(String(count), false);
+        } else if (!captureLocked) {
+          hideOverlay();
+        }
+
+        if (count === expected) {
+          if (stableCandidate !== count) {
+            stableCandidate = count;
+            stableSince = now;
+          }
+
+          const heldLongEnough = now - stableSince >= STABLE_MS;
+
+          if (heldLongEnough) {
+            sequenceStep = count;
+            updateProgressUI();
+
+            if (count === 1) {
+              setStatus("1 recognized. Now show index + middle.", "active");
+            } else if (count === 2) {
+              setStatus("2 recognized. Now show index + middle + ring.", "active");
+            } else if (count === 3) {
+              triggerCheeseCapture();
+            }
+
+            stableCandidate = null;
+            stableSince = 0;
+          } else {
+            setStatus(`Hold ${count} steady…`, "active");
+          }
+        } else {
+          stableCandidate = null;
+          stableSince = 0;
+
+          if (!captureLocked) {
+            if (sequenceStep === 0) {
+              setStatus("Show only your index finger.", "active");
+            } else if (sequenceStep === 1) {
+              setStatus("Now show index + middle fingers.", "active");
+            } else if (sequenceStep === 2) {
+              setStatus("Now show index + middle + ring fingers.", "active");
+            }
           }
         }
       }
-    }
 
-    function triggerCheeseCapture() {
-      if (captureLocked) return;
+      function triggerCheeseCapture() {
+        if (captureLocked) return;
 
-      captureLocked = true;
-      sequenceStep = 3;
-      updateProgressUI();
+        captureLocked = true;
+        sequenceStep = 3;
+        updateProgressUI();
 
-      showOverlay("CHEESE!", true);
-      setStatus("CHEESE! Capturing photo…", "active");
-      setScreenStatus("Capturing", true);
-      updateDebugPanel();
+        showOverlay("CHEESE!", true);
+        setStatus("CHEESE! Capturing photo…", "active");
+        setScreenStatus("Capturing", true);
 
-      cheeseTimeout = setTimeout(() => {
-        captureSnapshot(false);
+        cheeseTimeout = setTimeout(() => {
+          captureSnapshot(false);
 
-        resetTimeout = setTimeout(() => {
-          resetSequence("Photo saved. Hold up 1 finger to take another.");
-          setScreenStatus("Ready", true);
-          updateDebugPanel();
-        }, 900);
-      }, 700);
-    }
-
-    function drawFrame() {
-      if (!aiRunning || !videoReady) return;
-
-      drawMirroredVideoFrame();
-
-      if (latestHand) {
-        drawHandSkeleton(latestHand);
+          resetTimeout = setTimeout(() => {
+            resetSequence("Photo saved. Hold up 1 finger to take another.");
+            setScreenStatus("Ready", true);
+          }, 900);
+        }, 700);
       }
 
-      drawFingerCountBadge(latestFingerCount);
-      handleSequence();
+      function drawFrame() {
+        if (!aiRunning || !videoReady) return;
 
-      renderRaf = requestAnimationFrame(drawFrame);
-    }
+        drawMirroredVideoFrame();
 
-    function captureSnapshot(manual = true) {
-      if (!videoReady) return;
+        if (latestHand) {
+          drawHandSkeleton(latestHand);
+        }
 
-      const outputW = canvas.width;
-      const outputH = canvas.height;
-      if (!outputW || !outputH) return;
+        drawFingerCountBadge(latestFingerCount);
+        handleSequence();
 
-      const snapCanvas = document.createElement("canvas");
-      snapCanvas.width = outputW;
-      snapCanvas.height = outputH;
-
-      const sctx = snapCanvas.getContext("2d");
-      sctx.drawImage(canvas, 0, 0, outputW, outputH);
-
-      const dataURL = snapCanvas.toDataURL("image/png");
-      snapshotPreview.src = dataURL;
-      previewSection.style.display = "block";
-
-      const a = document.createElement("a");
-      const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
-      a.href = dataURL;
-      a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      setStatus(
-        manual ? "Snapshot saved to your device." : "Auto snapshot saved to your device.",
-        "active"
-      );
-    }
-
-    async function startExperience() {
-      try {
-        if (aiRunning) return;
-
-        startBtn.disabled = true;
-        captureBtn.disabled = true;
-        stopBtn.disabled = true;
-
-        setStatus("Requesting camera access…", "idle");
-        setScreenStatus("Loading…", false);
-
-        await setupCamera();
-
-        setStatus("Loading AI model…", "idle");
-        await getBestBackend();
-
-        const model = handPoseDetection.SupportedModels.MediaPipeHands;
-        const detectorConfig = {
-          runtime: "tfjs",
-          modelType: "full",
-          maxHands: 1
-        };
-
-        detector = await handPoseDetection.createDetector(model, detectorConfig);
-
-        aiRunning = true;
-        captureBtn.disabled = false;
-        stopBtn.disabled = false;
-
-        resetSequence("");
-        setStatus("Camera and hand tracking are ready. Show 1 finger to begin.", "active");
-        setScreenStatus("Ready", true);
-
-        const detectLoop = async () => {
-          if (!aiRunning) return;
-          await detectHandsStep();
-          setTimeout(detectLoop, 100);
-        };
-
-        detectLoop();
         renderRaf = requestAnimationFrame(drawFrame);
-      } catch (error) {
-        console.error("Init error:", error);
-        startBtn.disabled = false;
-        captureBtn.disabled = true;
-        stopBtn.disabled = true;
-        setScreenStatus("Offline", false);
+      }
+
+      function captureSnapshot(manual = true) {
+        if (!videoReady) return;
+
+        const outputW = canvas.width;
+        const outputH = canvas.height;
+        if (!outputW || !outputH) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = outputW;
+        snapCanvas.height = outputH;
+
+        const sctx = snapCanvas.getContext("2d");
+        sctx.drawImage(canvas, 0, 0, outputW, outputH);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        previewSection.style.display = "block";
+
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = dataURL;
+        a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
         setStatus(
-          "This device or browser may not fully support the demo. Try Chrome or Edge over HTTPS.",
-          "error"
+          manual ? "Snapshot saved to your device." : "Auto snapshot saved to your device.",
+          "active"
         );
       }
-    }
 
-    buildDebugPanel();
-    updateDebugPanel();
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
 
-    startBtn.addEventListener("click", startExperience);
-    captureBtn.addEventListener("click", () => captureSnapshot(true));
-    stopBtn.addEventListener("click", stopCamera);
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
 
-    window.addEventListener("beforeunload", () => {
-      stopCamera();
-    });
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
 
-    setScreenStatus("Offline", false);
-    updateProgressUI();
-    hideOverlay();
-  })();
-</script>
+          await setupCamera();
+
+          setStatus("Loading AI model…", "idle");
+          await getBestBackend();
+
+          const model = handPoseDetection.SupportedModels.MediaPipeHands;
+          const detectorConfig = {
+            runtime: "mediapipe",
+            solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
+            modelType: "full",
+            maxHands: 1
+          };
+
+          detector = await handPoseDetection.createDetector(model, detectorConfig);
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          resetSequence("");
+          setStatus("Camera and hand tracking are ready. Show only your index finger to begin.", "active");
+          setScreenStatus("Ready", true);
+
+          const detectLoop = async () => {
+            if (!aiRunning) return;
+            await detectHandsStep();
+            setTimeout(detectLoop, 120);
+          };
+
+          detectLoop();
+          renderRaf = requestAnimationFrame(drawFrame);
+        } catch (error) {
+          console.error("Init error:", error);
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+          setScreenStatus("Offline", false);
+          setStatus(
+            "This device or browser may not fully support the demo. Try Chrome or Edge over HTTPS.",
+            "error"
+          );
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", () => captureSnapshot(true));
+      stopBtn.addEventListener("click", stopCamera);
+
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+
+      setScreenStatus("Offline", false);
+      updateProgressUI();
+      hideOverlay();
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU Gesture Navigation Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="Browser-based AI gesture navigation demo. Swipe left or right with your hand to move through the navigation bar and hold an open palm to select."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --soft-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --nav-bg: #0f172a;
+      --nav-pill: rgba(255,255,255,0.08);
+      --nav-active: #f7b718;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page-shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .content-wrap {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      line-height: 1.05;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      font-size: 0.98rem;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 18px 0 10px;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #374151;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      color: var(--nku-gold);
+      font-weight: 800;
+      min-width: 18px;
+    }
+
+    .info-text {
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .demo-panel {
+      background: var(--soft-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      height: 430px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 26%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.44), rgba(17,17,17,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 32%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.62), rgba(17,17,17,0));
+    }
+
+    .screen-pill,
+    .screen-status {
+      position: absolute;
+      top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(17,17,17,0.45);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .screen-pill {
+      left: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-status {
+      right: 12px;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .screen-sub {
+      font-size: 0.76rem;
+      opacity: 0.92;
+      margin-top: 4px;
+    }
+
+    .gesture-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .gesture-chip {
+      min-width: 200px;
+      min-height: 90px;
+      padding: 20px 28px;
+      border-radius: 24px;
+      background: rgba(17,17,17,0.55);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.96);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gesture-chip.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .gesture-chip.select {
+      background: rgba(247, 183, 24, 0.96);
+      color: #111111;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d1d5db;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(22,163,74,0.14);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248,113,113,0.15);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .btn-start {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+    }
+
+    .btn-stop {
+      background: #fff;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .app-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .experience-shell {
+      min-height: 760px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .demo-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(8px);
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .demo-nav-inner {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .nav-item-pill {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: var(--nav-pill);
+      color: rgba(255,255,255,0.82);
+      font-weight: 700;
+      font-size: 0.92rem;
+      transition: 0.18s ease;
+      cursor: pointer;
+    }
+
+    .nav-item-pill.active {
+      background: var(--nav-active);
+      color: #111111;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(247, 183, 24, 0.24);
+    }
+
+    .nav-item-pill.visited:not(.active) {
+      background: rgba(255,255,255,0.14);
+      color: #ffffff;
+    }
+
+    .page-stage {
+      padding: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(247,183,24,0.11), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .content-panel {
+      display: none;
+      animation: fadeSlide 0.25s ease;
+    }
+
+    .content-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-card {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #fff8df;
+      color: #8a5b00;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero-card h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-card p {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    .stats-grid,
+    .feature-grid,
+    .gallery-grid,
+    .pricing-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 18px;
+    }
+
+    .feature-grid,
+    .gallery-grid,
+    .pricing-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .info-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      min-height: 140px;
+    }
+
+    .info-card h3 {
+      font-size: 1rem;
+      margin: 0 0 8px;
+    }
+
+    .info-card p {
+      color: #6b7280;
+      line-height: 1.6;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+      color: #111827;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      font-weight: 800;
+    }
+
+    .mini-note {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .footer-note {
+      padding: 0 20px 20px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .content-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .page-shell {
+        padding: 12px;
+      }
+
+      .topbar {
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      .content-wrap {
+        padding: 14px;
+        gap: 14px;
+      }
+
+      .demo-panel {
+        padding: 10px;
+      }
+
+      #videoContainer {
+        height: 360px;
+      }
+
+      .screen-pill,
+      .screen-status {
+        font-size: 0.62rem;
+        padding: 6px 9px;
+      }
+
+      .stats-grid,
+      .feature-grid,
+      .gallery-grid,
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-shell">
+    <header class="topbar" aria-label="Gesture navigation demo header">
+      <div class="brand">
+        <div class="brand-pill">NKU · COI</div>
+        <span class="brand-sub">Gesture-Controlled Navigation Demo</span>
+      </div>
+      <div class="brand-sub">Swipe right = next · Swipe left = previous · Hold open palm = select</div>
+    </header>
+
+    <main class="main-card" aria-labelledby="page-title">
+      <div class="content-wrap">
+        <section aria-label="Demo description">
+          <div class="tag-row">
+            <span class="tag">Browser AI</span>
+            <span class="tag">Hand Tracking</span>
+            <span class="tag">Gesture UI</span>
+          </div>
+
+          <p class="eyebrow">Interactive navigation experience</p>
+          <h1 id="page-title">Hand Gesture Website Navigation</h1>
+
+          <p class="lead">
+            This demo turns a webcam into a gesture controller for a webpage navigation bar.
+            Instead of clicking tabs, a user can move through the menu with a hand swipe and
+            select the current section by holding an open palm steady.
+          </p>
+
+          <h2 class="section-title">How to use it</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-num">1.</span>
+              <span>Tap <strong>Start Camera &amp; AI</strong>.</span>
+            </li>
+            <li>
+              <span class="step-num">2.</span>
+              <span>Move one hand clearly into view with your palm facing the camera.</span>
+            </li>
+            <li>
+              <span class="step-num">3.</span>
+              <span><strong>Swipe your hand right</strong> to move to the next navigation item.</span>
+            </li>
+            <li>
+              <span class="step-num">4.</span>
+              <span><strong>Swipe your hand left</strong> to move to the previous navigation item.</span>
+            </li>
+            <li>
+              <span class="step-num">5.</span>
+              <span><strong>Hold an open palm steady</strong> to open the highlighted section.</span>
+            </li>
+          </ol>
+
+          <h2 class="section-title">What it demonstrates</h2>
+          <p class="info-text">
+            • Camera access with <code>getUserMedia</code><br />
+            • Real-time hand landmark detection in the browser<br />
+            • Motion-based swipe detection using palm position<br />
+            • Gesture-driven navigation and section switching
+          </p>
+        </section>
+
+        <section aria-label="Live AI gesture demo">
+          <div class="demo-panel">
+            <div id="videoContainer" aria-label="Live gesture navigation area">
+              <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+              <video
+                id="video"
+                autoplay
+                playsinline
+                muted
+                aria-hidden="true"
+              ></video>
+
+              <canvas
+                id="overlay"
+                role="img"
+                aria-label="Live camera with hand gesture overlay"
+              ></canvas>
+
+              <div class="screen-ui" aria-hidden="true">
+                <div class="screen-gradient-top"></div>
+                <div class="screen-gradient-bottom"></div>
+
+                <div class="screen-pill">Gesture Navigation AI</div>
+
+                <div class="screen-status">
+                  <span id="screenStatusDot" class="screen-status-dot"></span>
+                  <span id="screenStatusText">Offline</span>
+                </div>
+
+                <div class="screen-footer">
+                  <div class="screen-kicker">Live demo</div>
+                  <h2 class="screen-title">Touchless Menu Control</h2>
+                  <div class="screen-sub">Swipe · Highlight · Select</div>
+                </div>
+              </div>
+
+              <div class="gesture-overlay" aria-hidden="true">
+                <div id="gestureChip" class="gesture-chip">Ready</div>
+              </div>
+            </div>
+
+            <div class="status-row" aria-live="polite">
+              <div class="status-main">
+                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to begin.</span>
+              </div>
+              <div class="status-hint">
+                Best results: one hand, good lighting, palm facing camera, and a clear left/right motion across the frame.
+              </div>
+            </div>
+
+            <div class="action-row">
+              <button id="startBtn" type="button" class="app-btn btn-start">
+                🚀 Start Camera &amp; AI
+              </button>
+              <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>
+                ⏹️ Turn Camera Off
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div style="padding: 0 20px 20px;">
+        <div class="experience-shell">
+          <nav class="demo-nav" aria-label="Gesture-controlled navigation bar">
+            <div class="demo-nav-inner" id="demoNav"></div>
+          </nav>
+
+          <div class="page-stage">
+            <section id="panel-home" class="content-panel active" data-index="0">
+              <div class="hero-card">
+                <div class="hero-label">Home</div>
+                <h2>Welcome to the Gesture Navigation Experience</h2>
+                <p>
+                  This section demonstrates how a user could move across major site areas without touching
+                  the screen. Think digital signage, kiosks, live events, accessibility-inspired interfaces,
+                  and futuristic brand activations.
+                </p>
+              </div>
+
+              <div class="stats-grid">
+                <div class="info-card">
+                  <div class="stat-value">100%</div>
+                  <div class="stat-label">Browser-Based</div>
+                </div>
+                <div class="info-card">
+                  <div class="stat-value">0</div>
+                  <div class="stat-label">Physical Clicks Needed</div>
+                </div>
+                <div class="info-card">
+                  <div class="stat-value">Live</div>
+                  <div class="stat-label">Hand Tracking</div>
+                </div>
+              </div>
+
+              <div class="feature-grid">
+                <div class="info-card">
+                  <h3>Touchless Interaction</h3>
+                  <p>Great for conference booths, labs, classrooms, and interactive campus showcases.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Modern UX Concept</h3>
+                  <p>Lets users explore interface ideas that feel cinematic, playful, and memorable.</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="panel-about" class="content-panel" data-index="1">
+              <div class="hero-card">
+                <div class="hero-label">About</div>
+                <h2>How the Demo Works</h2>
+                <p>
+                  The app detects hand landmarks from the webcam, estimates the palm center,
+                  and watches how that center moves over time. A strong horizontal motion is treated
+                  as a swipe gesture. A steady open palm becomes a select gesture.
+                </p>
+              </div>
+
+              <div class="feature-grid">
+                <div class="info-card">
+                  <h3>Swipe Detection</h3>
+                  <p>Tracks palm center changes across recent frames and looks for a strong left or right motion.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Open Palm Select</h3>
+                  <p>Recognizes an open hand and waits briefly before confirming selection.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Nav Highlighting</h3>
+                  <p>Each swipe changes the active navigation pill so the user always sees where they are.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Content Switching</h3>
+                  <p>When selected, the corresponding page section is revealed instantly.</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="panel-programs" class="content-panel" data-index="2">
+              <div class="hero-card">
+                <div class="hero-label">Programs</div>
+                <h2>Potential Campus and Business Applications</h2>
+                <p>
+                  This same interaction model can be used in recruiting experiences, museum-style exhibits,
+                  smart kiosks, digital product showrooms, healthcare check-in concepts, and high-impact event displays.
+                </p>
+              </div>
+
+              <div class="feature-grid">
+                <div class="info-card">
+                  <h3>Campus Recruiting</h3>
+                  <p>Prospective students swipe through majors, labs, scholarships, and student stories.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Retail Product Walls</h3>
+                  <p>Customers navigate products hands-free on large display screens.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Exhibits & Museums</h3>
+                  <p>Visitors browse stories and media without touching shared surfaces.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Conference Booths</h3>
+                  <p>Gesture control creates a memorable “wow” moment that attracts crowds.</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="panel-gallery" class="content-panel" data-index="3">
+              <div class="hero-card">
+                <div class="hero-label">Gallery</div>
+                <h2>Interactive Showcase Panels</h2>
+                <p>
+                  This section simulates a gallery-like experience. In a real deployment,
+                  each card could contain video, data, product previews, student demos, or partner success stories.
+                </p>
+              </div>
+
+              <div class="gallery-grid">
+                <div class="info-card">
+                  <h3>Demo Panel A</h3>
+                  <p>Gesture-driven portfolio preview for student innovation and applied AI projects.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Demo Panel B</h3>
+                  <p>Immersive product storytelling with live animations or campus highlights.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Demo Panel C</h3>
+                  <p>Interactive employer showcase featuring internships, partnerships, and skills pathways.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Demo Panel D</h3>
+                  <p>Event mode where users explore different sections from across the room.</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="panel-contact" class="content-panel" data-index="4">
+              <div class="hero-card">
+                <div class="hero-label">Contact</div>
+                <h2>Imagine This as a Real Website Entry Point</h2>
+                <p>
+                  A production version could connect to real forms, booking systems, program pages,
+                  event registrations, or admissions funnels. The interaction layer becomes the hook,
+                  but the business value comes from what happens after the selection.
+                </p>
+              </div>
+
+              <div class="pricing-grid">
+                <div class="info-card">
+                  <h3>Lead Capture</h3>
+                  <p>Gesture-selected calls to action could open QR codes, forms, or email signup flows.</p>
+                </div>
+                <div class="info-card">
+                  <h3>Experience Analytics</h3>
+                  <p>Track which sections are explored most to understand audience engagement.</p>
+                </div>
+              </div>
+            </section>
+
+            <p class="mini-note">
+              Tip: you can still click the nav pills manually while testing, but the main goal is to drive them with gestures.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Privacy-first design: processing happens in the browser and nothing is uploaded.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+      const gestureChip = document.getElementById("gestureChip");
+
+      const demoNav = document.getElementById("demoNav");
+      const panels = Array.from(document.querySelectorAll(".content-panel"));
+
+      const navItems = [
+        { label: "Home", panelId: "panel-home" },
+        { label: "About", panelId: "panel-about" },
+        { label: "Programs", panelId: "panel-programs" },
+        { label: "Gallery", panelId: "panel-gallery" },
+        { label: "Contact", panelId: "panel-contact" }
+      ];
+
+      let detector = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let mediaStream = null;
+      let renderRaf = null;
+      let detectTimer = null;
+      let detectionBusy = false;
+      let latestHand = null;
+      let mirrored = true;
+
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+
+      let navIndex = 0;
+      let visitedIndices = new Set([0]);
+
+      let wristTrail = [];
+      let lastGestureAt = 0;
+      let gestureCooldownMs = 900;
+
+      let palmHoldStart = 0;
+      let selectedLocked = false;
+
+      const SWIPE_DISTANCE_THRESHOLD = 95;
+      const SWIPE_VERTICAL_TOLERANCE = 65;
+      const HOLD_SELECT_MS = 900;
+      const OPEN_PALM_MIN_FINGERS = 4;
+
+      function buildNav() {
+        demoNav.innerHTML = "";
+        navItems.forEach((item, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "nav-item-pill";
+          button.textContent = item.label;
+          button.setAttribute("data-index", String(index));
+          button.addEventListener("click", () => {
+            setActiveNav(index, true);
+            openPanel(index);
+            flashGestureChip("SELECT", true);
+            setStatus(`Opened ${navItems[index].label}.`, "active");
+          });
+          demoNav.appendChild(button);
+        });
+        updateNavUI();
+      }
+
+      function updateNavUI() {
+        const buttons = Array.from(demoNav.querySelectorAll(".nav-item-pill"));
+        buttons.forEach((btn, index) => {
+          btn.classList.toggle("active", index === navIndex);
+          btn.classList.toggle("visited", visitedIndices.has(index));
+        });
+      }
+
+      function openPanel(index) {
+        panels.forEach((panel, i) => {
+          panel.classList.toggle("active", i === index);
+        });
+        const activePanel = panels[index];
+        if (activePanel) {
+          activePanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+
+      function setActiveNav(index, markVisited = true) {
+        navIndex = Math.max(0, Math.min(navItems.length - 1, index));
+        if (markVisited) {
+          visitedIndices.add(navIndex);
+        }
+        updateNavUI();
+      }
+
+      function moveNext() {
+        const nextIndex = (navIndex + 1) % navItems.length;
+        setActiveNav(nextIndex);
+        setStatus(`Moved to ${navItems[nextIndex].label}. Hold open palm to open it.`, "active");
+        flashGestureChip("NEXT");
+      }
+
+      function movePrev() {
+        const prevIndex = (navIndex - 1 + navItems.length) % navItems.length;
+        setActiveNav(prevIndex);
+        setStatus(`Moved to ${navItems[prevIndex].label}. Hold open palm to open it.`, "active");
+        flashGestureChip("PREV");
+      }
+
+      function selectActiveNav() {
+        if (selectedLocked) return;
+        selectedLocked = true;
+
+        openPanel(navIndex);
+        flashGestureChip("SELECT", true);
+        setStatus(`Opened ${navItems[navIndex].label}.`, "active");
+        setScreenStatus("Selected", true);
+
+        setTimeout(() => {
+          selectedLocked = false;
+        }, 700);
+      }
+
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setScreenStatus(text, active) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!active);
+      }
+
+      function flashGestureChip(text, isSelect = false) {
+        gestureChip.textContent = text;
+        gestureChip.classList.toggle("select", !!isSelect);
+        gestureChip.classList.add("show");
+
+        clearTimeout(flashGestureChip._timer);
+        flashGestureChip._timer = setTimeout(() => {
+          gestureChip.classList.remove("show");
+          gestureChip.classList.remove("select");
+        }, isSelect ? 700 : 500);
+      }
+
+      async function getBestBackend() {
+        const backendsToTry = ["webgl", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend not available:", backendName, error);
+          }
+        }
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("This browser does not support camera access.", "error");
+          throw new Error("getUserMedia not supported");
+        }
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 960, max: 1280 },
+            height: { ideal: 720, max: 960 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        window.addEventListener("resize", handleWindowResize, { passive: true });
+        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+      }
+
+      function handleWindowResize() {
+        if (!videoReady) return;
+        setTimeout(() => updateCanvasBufferSize(), 120);
+      }
+
+      function stopLoops() {
+        if (renderRaf) {
+          cancelAnimationFrame(renderRaf);
+          renderRaf = null;
+        }
+        if (detectTimer) {
+          clearTimeout(detectTimer);
+          detectTimer = null;
+        }
+      }
+
+      function stopCamera() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        videoReady = false;
+        aiRunning = false;
+        latestHand = null;
+        detectionBusy = false;
+        wristTrail = [];
+        palmHoldStart = 0;
+        selectedLocked = false;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoSkeleton.style.display = "block";
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        setScreenStatus("Offline", false);
+        setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+      }
+
+      function pointFromKeypoint(keypoint) {
+        if (!keypoint) return null;
+        const x = typeof keypoint.x === "number" ? keypoint.x : Array.isArray(keypoint) ? keypoint[0] : null;
+        const y = typeof keypoint.y === "number" ? keypoint.y : Array.isArray(keypoint) ? keypoint[1] : null;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        return { x, y };
+      }
+
+      function getKeypointsArray(hand) {
+        if (!hand) return [];
+        if (Array.isArray(hand.keypoints) && hand.keypoints.length) return hand.keypoints;
+        if (Array.isArray(hand.landmarks) && hand.landmarks.length) {
+          return hand.landmarks.map((pt) => ({ x: pt[0], y: pt[1] }));
+        }
+        return [];
+      }
+
+      function drawMirroredVideoFrame() {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return;
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+
+        if (mirrored) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(video, 0, 0, w, h);
+        ctx.restore();
+      }
+
+      function drawHandSkeleton(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (!keypoints.length) return;
+
+        const connections = [
+          [0,1],[1,2],[2,3],[3,4],
+          [0,5],[5,6],[6,7],[7,8],
+          [5,9],[9,10],[10,11],[11,12],
+          [9,13],[13,14],[14,15],[15,16],
+          [13,17],[17,18],[18,19],[19,20],
+          [0,17]
+        ];
+
+        ctx.save();
+
+        if (mirrored) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+
+        for (const [a, b] of connections) {
+          const p1 = pointFromKeypoint(keypoints[a]);
+          const p2 = pointFromKeypoint(keypoints[b]);
+          if (!p1 || !p2) continue;
+
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < keypoints.length; i++) {
+          const p = pointFromKeypoint(keypoints[i]);
+          if (!p) continue;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, i === 0 ? 7 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      function roundRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function drawGestureBadge(text) {
+        const badgeW = 240;
+        const badgeH = 48;
+        const x = 16;
+        const y = 16;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(17,17,17,0.56)";
+        ctx.strokeStyle = "rgba(255,255,255,0.16)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, x, y, badgeW, badgeH, 24);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 18px system-ui, -apple-system, Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x + badgeW / 2, y + badgeH / 2);
+        ctx.restore();
+      }
+
+      function distance(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function countExtendedFingers(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (keypoints.length < 21) return 0;
+
+        const kp = keypoints.map(pointFromKeypoint);
+        if (kp.some((p) => !p)) return 0;
+
+        const wrist = kp[0];
+        const fingerTriples = [
+          [5, 6, 8],
+          [9, 10, 12],
+          [13, 14, 16],
+          [17, 18, 20]
+        ];
+
+        let count = 0;
+
+        for (const [mcpIndex, pipIndex, tipIndex] of fingerTriples) {
+          const mcp = kp[mcpIndex];
+          const pip = kp[pipIndex];
+          const tip = kp[tipIndex];
+
+          const tipAbovePip = tip.y < pip.y - 6;
+          const pipAboveMcp = pip.y < mcp.y - 2;
+          const extendedDistance = distance(tip, wrist) > distance(pip, wrist) + 12;
+
+          if (tipAbovePip && pipAboveMcp && extendedDistance) {
+            count++;
+          }
+        }
+
+        const thumbTip = kp[4];
+        const thumbIp = kp[3];
+        const thumbMcp = kp[2];
+        const thumbExtended =
+          Math.abs(thumbTip.x - thumbMcp.x) > Math.abs(thumbIp.x - thumbMcp.x) + 10 &&
+          distance(thumbTip, wrist) > distance(thumbIp, wrist) + 8;
+
+        if (thumbExtended) count++;
+
+        return count;
+      }
+
+      function getPalmCenter(hand) {
+        const keypoints = getKeypointsArray(hand);
+        if (keypoints.length < 21) return null;
+
+        const indices = [0, 5, 9, 13, 17];
+        const points = indices.map((i) => pointFromKeypoint(keypoints[i])).filter(Boolean);
+
+        if (!points.length) return null;
+
+        const avgX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+        const avgY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+
+        return { x: avgX, y: avgY };
+      }
+
+      function updateWristTrail(center) {
+        const now = performance.now();
+        wristTrail.push({ x: center.x, y: center.y, t: now });
+
+        const keepMs = 380;
+        wristTrail = wristTrail.filter((p) => now - p.t <= keepMs);
+      }
+
+      function detectSwipeGesture() {
+        const now = performance.now();
+        if (now - lastGestureAt < gestureCooldownMs) return null;
+        if (wristTrail.length < 4) return null;
+
+        const first = wristTrail[0];
+        const last = wristTrail[wristTrail.length - 1];
+
+        const dx = last.x - first.x;
+        const dy = last.y - first.y;
+
+        if (Math.abs(dx) < SWIPE_DISTANCE_THRESHOLD) return null;
+        if (Math.abs(dy) > SWIPE_VERTICAL_TOLERANCE) return null;
+
+        lastGestureAt = now;
+        wristTrail = [];
+
+        if (dx > 0) {
+          return mirrored ? "LEFT_SWIPE" : "RIGHT_SWIPE";
+        }
+        return mirrored ? "RIGHT_SWIPE" : "LEFT_SWIPE";
+      }
+
+      function processOpenPalmSelect(hand) {
+        const fingerCount = countExtendedFingers(hand);
+        const now = performance.now();
+
+        if (fingerCount >= OPEN_PALM_MIN_FINGERS) {
+          if (!palmHoldStart) {
+            palmHoldStart = now;
+          }
+
+          const elapsed = now - palmHoldStart;
+          if (elapsed >= HOLD_SELECT_MS && !selectedLocked) {
+            palmHoldStart = 0;
+            return true;
+          }
+        } else {
+          palmHoldStart = 0;
+        }
+
+        return false;
+      }
+
+      async function detectHandsStep() {
+        if (!aiRunning || !videoReady || !detector || detectionBusy) return;
+
+        detectionBusy = true;
+        try {
+          const hands = await detector.estimateHands(video, {
+            flipHorizontal: false
+          });
+
+          if (Array.isArray(hands) && hands.length > 0) {
+            latestHand = hands[0];
+          } else {
+            latestHand = null;
+            wristTrail = [];
+            palmHoldStart = 0;
+          }
+        } catch (error) {
+          console.error("Hand detection error:", error);
+        } finally {
+          detectionBusy = false;
+        }
+      }
+
+      function handleGestures() {
+        if (!latestHand) {
+          setStatus("AI is running. Show one hand to start controlling the navigation.", "active");
+          setScreenStatus("Searching…", false);
+          return "Show hand";
+        }
+
+        const palmCenter = getPalmCenter(latestHand);
+        if (palmCenter) {
+          updateWristTrail(palmCenter);
+        }
+
+        setScreenStatus("Hand Locked", true);
+
+        const swipe = detectSwipeGesture();
+        if (swipe === "RIGHT_SWIPE") {
+          moveNext();
+          return "Swipe →";
+        }
+        if (swipe === "LEFT_SWIPE") {
+          movePrev();
+          return "← Swipe";
+        }
+
+        const didSelect = processOpenPalmSelect(latestHand);
+        if (didSelect) {
+          selectActiveNav();
+          return "Select";
+        }
+
+        const extended = countExtendedFingers(latestHand);
+        if (extended >= OPEN_PALM_MIN_FINGERS) {
+          const now = performance.now();
+          const heldMs = palmHoldStart ? Math.max(0, now - palmHoldStart) : 0;
+          const pct = Math.min(100, Math.round((heldMs / HOLD_SELECT_MS) * 100));
+          setStatus(`Open palm detected. Hold steady to select (${pct}%).`, "active");
+          return `Hold Palm ${pct}%`;
+        }
+
+        setStatus(`Active tab: ${navItems[navIndex].label}. Swipe to move or hold open palm to select.`, "active");
+        return `Tab: ${navItems[navIndex].label}`;
+      }
+
+      function drawFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawMirroredVideoFrame();
+
+        if (latestHand) {
+          drawHandSkeleton(latestHand);
+        }
+
+        const badgeText = handleGestures();
+        drawGestureBadge(badgeText);
+
+        renderRaf = requestAnimationFrame(drawFrame);
+      }
+
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
+
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
+
+          await setupCamera();
+
+          setStatus("Loading AI model…", "idle");
+          await getBestBackend();
+
+          const model = handPoseDetection.SupportedModels.MediaPipeHands;
+          const detectorConfig = {
+            runtime: "mediapipe",
+            solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
+            modelType: "full",
+            maxHands: 1
+          };
+
+          detector = await handPoseDetection.createDetector(model, detectorConfig);
+
+          aiRunning = true;
+          stopBtn.disabled = false;
+
+          setStatus("Camera and gesture tracking are ready. Swipe your hand left or right to move through the nav.", "active");
+          setScreenStatus("Ready", true);
+
+          const detectLoop = async () => {
+            if (!aiRunning) return;
+            await detectHandsStep();
+            detectTimer = setTimeout(detectLoop, 100);
+          };
+
+          detectLoop();
+          renderRaf = requestAnimationFrame(drawFrame);
+        } catch (error) {
+          console.error("Init error:", error);
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          setScreenStatus("Offline", false);
+          setStatus(
+            "This device or browser may not fully support the demo. Try Chrome or Edge over HTTPS.",
+            "error"
+          );
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", stopCamera);
+
+      window.addEventListener("beforeunload", () => {
+        stopCamera();
+      });
+
+      buildNav();
+      openPanel(0);
+      setScreenStatus("Offline", false);
+      flashGestureChip("Ready");
+    })();
+  </script>
+</body>
+</html>

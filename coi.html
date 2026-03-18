@@ -1085,6 +1085,8 @@
     let mediaStream = null;
 
     let activeFilter = "glasses";
+    let lastSnapshotDataURL = null;
+    let lastSnapshotFile = null;
 
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
@@ -1610,7 +1612,7 @@
       renderRaf = requestAnimationFrame(renderFrame);
     }
 
-    function captureSnapshot() {
+    async function captureSnapshot() {
       if (!videoReady) return;
 
       const outputW = canvas.width;
@@ -1629,29 +1631,63 @@
       snapshotPreview.src = dataURL;
       previewSection.style.display = "block";
 
-      const a = document.createElement("a");
+      lastSnapshotDataURL = dataURL;
+
       const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+
+      try {
+        const blob = await new Promise((resolve) => {
+          snapCanvas.toBlob(resolve, "image/png");
+        });
+
+        if (blob) {
+          lastSnapshotFile = new File([blob], filename, { type: "image/png" });
+        } else {
+          lastSnapshotFile = null;
+        }
+      } catch (error) {
+        console.warn("Could not prepare snapshot file for sharing:", error);
+        lastSnapshotFile = null;
+      }
+
+      const a = document.createElement("a");
       a.href = dataURL;
-      a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
-      setStatus("Snapshot saved to your device with creator credit watermark.", "active");
+      setStatus("Snapshot saved to your device and ready to share.", "active");
     }
 
     async function shareDemo() {
       const shareURL = window.location.href;
-      const shareData = {
-        title: "NKU COI WebAI Demo | Brandi Neal",
-        text: "Try this interactive NKU College of Informatics WebAI + AR demo created by Dr. Brandi Neal.",
-        url: shareURL
-      };
+      const shareText = "Try this interactive NKU College of Informatics WebAI + AR demo created by Dr. Brandi Neal.";
+      const shareTitle = "NKU COI WebAI Demo | Brandi Neal";
 
       try {
+        if (lastSnapshotFile && navigator.share && navigator.canShare) {
+          const imageShareData = {
+            title: shareTitle,
+            text: "Check out my snapshot from this NKU COI WebAI demo by Dr. Brandi Neal.",
+            files: [lastSnapshotFile]
+          };
+
+          if (navigator.canShare(imageShareData)) {
+            await navigator.share(imageShareData);
+            setStatus("Snapshot share sheet opened.", "active");
+            return;
+          }
+        }
+
         if (navigator.share) {
-          await navigator.share(shareData);
-          setStatus("Share sheet opened.", "active");
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareURL
+          });
+          setStatus("Demo share sheet opened.", "active");
           return;
         }
 
@@ -1673,7 +1709,7 @@
         try {
           if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(shareURL);
-            setStatus("Share sheet was unavailable, so the demo URL was copied instead.", "active");
+            setStatus("Share was unavailable, so the demo URL was copied instead.", "active");
             return;
           }
         } catch (clipboardError) {
@@ -1764,6 +1800,12 @@
         }
       });
     });
+
+    if (navigator.share) {
+      shareBtn.innerHTML = "📲 Share Demo";
+    } else {
+      shareBtn.innerHTML = "🔗 Copy Demo URL";
+    }
 
     startBtn.addEventListener("click", startExperience);
     captureBtn.addEventListener("click", captureSnapshot);

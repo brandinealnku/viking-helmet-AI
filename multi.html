@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NKU College of Informatics Interactive AI Demo — Multi-Person Crowd Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="Mobile-friendly interactive AI demo for the NKU College of Informatics featuring real-time multi-person face tracking, labels, counter, and crowd-aware overlays."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --soft-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page-shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .content-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      line-height: 1.05;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      font-size: 0.98rem;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 18px 0 10px;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #374151;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      color: var(--nku-gold);
+      font-weight: 800;
+      min-width: 18px;
+    }
+
+    .info-text {
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .demo-panel {
+      background: var(--soft-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      height: clamp(400px, 62vh, 740px);
+      min-height: 400px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .video-skeleton {
+        animation: none;
+      }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 26%;
+      background: linear-gradient(180deg, rgba(17,17,17,0.44), rgba(17,17,17,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 30%;
+      background: linear-gradient(0deg, rgba(17,17,17,0.54), rgba(17,17,17,0));
+    }
+
+    .screen-pill,
+    .screen-status,
+    .screen-counter {
+      position: absolute;
+      top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(17,17,17,0.45);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .screen-pill {
+      left: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-status {
+      right: 12px;
+    }
+
+    .screen-counter {
+      top: 50px;
+      right: 12px;
+      background: rgba(247, 183, 24, 0.9);
+      color: #111;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .screen-sub {
+      font-size: 0.76rem;
+      opacity: 0.92;
+      margin-top: 4px;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d1d5db;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22,163,74,0.14);
+      transform: scale(1.05);
+    }
+
+    .status-dot.error {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248,113,113,0.15);
+      transform: scale(1.05);
+    }
+
+    .status-text {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .filter-group {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #374151;
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      text-align: left;
+    }
+
+    .filter-btn:focus-visible {
+      outline: 2px solid var(--nku-gold);
+      outline-offset: 2px;
+    }
+
+    .filter-btn.active {
+      border-color: var(--nku-gold);
+      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
+      font-weight: 700;
+    }
+
+    .filter-thumb {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      flex: 0 0 auto;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .btn-start {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+    }
+
+    .btn-capture {
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border: none;
+    }
+
+    .btn-stop {
+      background: #fff;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .app-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .preview-section {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    .small-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 8px 0 0;
+    }
+
+    .footer-note {
+      padding: 0 20px 20px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 991.98px) {
+      .content-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .page-shell {
+        padding: 12px;
+      }
+
+      .topbar {
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      .brand-sub {
+        font-size: 0.8rem;
+      }
+
+      .content-wrap {
+        padding: 14px;
+        gap: 14px;
+      }
+
+      .demo-panel {
+        padding: 10px;
+      }
+
+      #videoContainer {
+        height: min(72svh, 580px);
+        min-height: 360px;
+      }
+
+      .screen-pill,
+      .screen-status,
+      .screen-counter {
+        font-size: 0.62rem;
+        padding: 6px 9px;
+      }
+
+      .screen-counter {
+        top: 46px;
+      }
+
+      .screen-footer {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+      }
+
+      .screen-sub {
+        font-size: 0.7rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .filter-group {
+        grid-template-columns: 1fr;
+      }
+
+      #videoContainer {
+        height: min(72svh, 540px);
+        min-height: 340px;
+      }
+
+      .screen-pill {
+        max-width: calc(100% - 120px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-shell">
+    <header class="topbar" aria-label="NKU College of Informatics interactive AI demo header">
+      <div class="brand">
+        <div class="brand-pill">NKU · COI</div>
+        <span class="brand-sub">Interactive AI Demo</span>
+      </div>
+      <div class="brand-sub">Multi-person crowd mode</div>
+    </header>
+
+    <main class="main-card" aria-labelledby="page-title">
+      <div class="content-wrap">
+        <section aria-label="Demo description">
+          <div class="tag-row">
+            <span class="tag">Browser AI</span>
+            <span class="tag">Multi-Person</span>
+            <span class="tag">Crowd Labels</span>
+            <span class="tag">Live Counter</span>
+          </div>
+
+          <p class="eyebrow">College of Informatics</p>
+          <h1 id="page-title">Interactive AI Crowd Mirror</h1>
+
+          <p class="lead">
+            This upgraded version recognizes multiple people, labels each person on screen, shows a live crowd count, and can automatically assign different visual styles across a group.
+          </p>
+
+          <h2 class="section-title">How to use it</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-num">1.</span>
+              <span>Select <strong>Start Camera &amp; AI</strong>.</span>
+            </li>
+            <li>
+              <span class="step-num">2.</span>
+              <span>Have one or more people step into view.</span>
+            </li>
+            <li>
+              <span class="step-num">3.</span>
+              <span>Choose a specific mode or use <strong>Auto Crowd</strong> for mixed overlays.</span>
+            </li>
+            <li>
+              <span class="step-num">4.</span>
+              <span>Capture a snapshot once everyone is styled.</span>
+            </li>
+          </ol>
+
+          <h2 class="section-title">What it demonstrates</h2>
+          <p class="info-text">
+            • Multi-face detection with BlazeFace<br />
+            • Multi-person segmentation with BodyPix<br />
+            • Canvas overlays for groups<br />
+            • Live crowd counting and labeled participants<br />
+            • Auto-assigned visual effects for event demos
+          </p>
+        </section>
+
+        <section aria-label="Live AI demo">
+          <div class="demo-panel">
+            <div id="videoContainer" aria-label="Live interactive AI mirror area">
+              <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+              <video id="video" autoplay playsinline muted aria-hidden="true"></video>
+              <canvas id="overlay" role="img" aria-label="Live AI-enhanced camera view"></canvas>
+
+              <div class="screen-ui" aria-hidden="true">
+                <div class="screen-gradient-top"></div>
+                <div class="screen-gradient-bottom"></div>
+
+                <div class="screen-pill">Interactive AI</div>
+
+                <div class="screen-status">
+                  <span id="screenStatusDot" class="screen-status-dot"></span>
+                  <span id="screenStatusText">Offline</span>
+                </div>
+
+                <div class="screen-counter">
+                  <span>👥</span>
+                  <span id="screenCounterText">0 detected</span>
+                </div>
+
+                <div class="screen-footer">
+                  <div class="screen-kicker">Live demo</div>
+                  <h2 class="screen-title">NKU AI Crowd Mirror</h2>
+                  <div class="screen-sub">Camera · Canvas · TensorFlow.js</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-row" aria-live="polite">
+              <div class="status-main">
+                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to begin.</span>
+              </div>
+              <div class="status-hint">
+                Best results: use Chrome or Edge over HTTPS with good lighting and some space between people.
+              </div>
+            </div>
+
+            <div class="filter-group" role="radiogroup" aria-label="Choose AI mode">
+              <button class="filter-btn active" data-filter="auto" type="button" role="radio" aria-pressed="true" aria-checked="true">
+                <img src="beard.png" alt="Preview of auto crowd mode" class="filter-thumb" loading="lazy" />
+                <span>Auto Crowd</span>
+              </button>
+
+              <button class="filter-btn" data-filter="glasses" type="button" role="radio" aria-pressed="false" aria-checked="false">
+                <img src="glasses.png" alt="Preview of glasses mode" class="filter-thumb" loading="lazy" />
+                <span>Glasses</span>
+              </button>
+
+              <button class="filter-btn" data-filter="helmet" type="button" role="radio" aria-pressed="false" aria-checked="false">
+                <img src="helmet.png" alt="Preview of helmet mode" class="filter-thumb" loading="lazy" />
+                <span>Helmet</span>
+              </button>
+
+              <button class="filter-btn" data-filter="combo" type="button" role="radio" aria-pressed="false" aria-checked="false">
+                <img src="beard.png" alt="Preview of Viking combo mode" class="filter-thumb" loading="lazy" />
+                <span>Viking Combo</span>
+              </button>
+
+              <button class="filter-btn" data-filter="griffin" type="button" role="radio" aria-pressed="false" aria-checked="false">
+                <img src="griffin-hall.jpg" alt="Preview of Griffin Hall mode" class="filter-thumb" loading="lazy" />
+                <span>Griffin Hall</span>
+              </button>
+            </div>
+
+            <div class="action-row">
+              <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Camera &amp; AI</button>
+              <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
+              <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>⏹️ Turn Camera Off</button>
+            </div>
+
+            <section id="previewSection" class="preview-section" aria-live="polite">
+              <h2 class="section-title" style="margin-top: 16px;">Saved snapshot</h2>
+              <div class="preview-image-wrapper">
+                <img id="snapshotPreview" alt="Saved AI demo snapshot preview" loading="lazy" />
+              </div>
+              <p class="small-note">Saved locally as a PNG image.</p>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">
+        Privacy-first design: processing stays on the device and nothing is uploaded or stored.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const TARGET_FOLDER_LABEL = "NKU_COI_AI_Crowd_Demo";
+      const MAX_FACES = 6;
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+      const filterButtons = document.querySelectorAll(".filter-btn");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+      const screenCounterText = document.getElementById("screenCounterText");
+
+      const previewSection = document.getElementById("previewSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+
+      let faceModel = null;
+      let bodyPixModel = null;
+      let videoReady = false;
+      let glassesImgReady = false;
+      let helmetImgReady = false;
+      let beardImgReady = false;
+      let bgReady = false;
+      let aiRunning = false;
+      let mediaStream = null;
+
+      let activeFilter = "auto";
+
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+
+      const bgCanvas = document.createElement("canvas");
+      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+
+      let latestFaces = [];
+      let smoothedFaces = [];
+      let lastFacesTime = 0;
+      let lastSegmentation = null;
+
+      let renderRaf = null;
+      let faceDetectTimer = null;
+      let segmentTimer = null;
+      let lastStatusMsg = "";
+      let lastStatusMode = "";
+
+      const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
+      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+      const FACE_HOLD_MS = 420;
+      const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+      const LANDMARK_SMOOTH_ALPHA = isMobileUA ? 0.28 : 0.22;
+      const FACE_DETECT_MS = isMobileUA ? 140 : 100;
+      const SEGMENT_MS = isMobileUA ? 260 : 200;
+
+      const bgImage = new Image();
+      bgImage.src = "griffin-hall.jpg";
+      bgImage.onload = () => { bgReady = true; };
+      bgImage.onerror = () => {
+        bgReady = false;
+        console.warn("⚠️ Could not load griffin-hall.jpg.");
+      };
+
+      const glassesImg = new Image();
+      glassesImg.src = "glasses.png";
+      glassesImg.onload = () => { glassesImgReady = true; };
+      glassesImg.onerror = () => console.warn("⚠️ Could not load glasses.png");
+
+      const helmetImg = new Image();
+      helmetImg.src = "helmet.png";
+      helmetImg.onload = () => { helmetImgReady = true; };
+      helmetImg.onerror = () => console.warn("⚠️ Could not load helmet.png");
+
+      const beardImg = new Image();
+      beardImg.src = "beard.png";
+      beardImg.onload = () => { beardImgReady = true; };
+      beardImg.onerror = () => console.warn("⚠️ Could not load beard.png");
+
+      function setStatus(message, mode = "idle") {
+        if (message === lastStatusMsg && mode === lastStatusMode) return;
+        lastStatusMsg = message;
+        lastStatusMode = mode;
+
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setScreenStatus(text, locked) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!locked);
+      }
+
+      function setCounter(count) {
+        screenCounterText.textContent = `${count} detected`;
+      }
+
+      async function getBestBackend() {
+        if (!window.tf) return;
+
+        const backendsToTry = ["webgl", "wasm", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend not available:", backendName, error);
+          }
+        }
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        const renderWidth = video.videoWidth;
+        const renderHeight = video.videoHeight;
+
+        canvas.width = renderWidth;
+        canvas.height = renderHeight;
+        tempCanvas.width = renderWidth;
+        tempCanvas.height = renderHeight;
+        bgCanvas.width = renderWidth;
+        bgCanvas.height = renderHeight;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("This browser does not support camera access. Try Chrome, Edge, Firefox, or Safari.", "error");
+          throw new Error("getUserMedia not supported");
+        }
+
+        const mobileLike = isSmallScreen() || isMobileUA;
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: mobileLike ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
+            height: mobileLike ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        window.addEventListener("resize", handleWindowResize, { passive: true });
+        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+      }
+
+      function handleWindowResize() {
+        if (!videoReady) return;
+        setTimeout(updateCanvasBufferSize, 120);
+      }
+
+      function stopLoops() {
+        if (renderRaf) cancelAnimationFrame(renderRaf);
+        renderRaf = null;
+
+        if (faceDetectTimer) clearInterval(faceDetectTimer);
+        faceDetectTimer = null;
+
+        if (segmentTimer) clearInterval(segmentTimer);
+        segmentTimer = null;
+      }
+
+      function stopCamera() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        videoReady = false;
+        aiRunning = false;
+        latestFaces = [];
+        smoothedFaces = [];
+        lastFacesTime = 0;
+        lastSegmentation = null;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoSkeleton.style.display = "block";
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setCounter(0);
+        setScreenStatus("Offline", false);
+        setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+      }
+
+      function isValidPoint(pt) {
+        return (
+          Array.isArray(pt) &&
+          pt.length >= 2 &&
+          typeof pt[0] === "number" &&
+          typeof pt[1] === "number" &&
+          Number.isFinite(pt[0]) &&
+          Number.isFinite(pt[1])
+        );
+      }
+
+      function isValidBox(topLeft, bottomRight) {
+        if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        return x2 - x1 > 0 && y2 - y1 > 0;
+      }
+
+      function getFaceMetrics(topLeft, bottomRight) {
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+        const centerX = x1 + faceWidth / 2;
+        const centerY = y1 + faceHeight / 2;
+        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+      }
+
+      function getFaceCenterX(face) {
+        const { centerX } = getFaceMetrics(face.topLeft, face.bottomRight);
+        return centerX;
+      }
+
+      function normalizePredictions(predictions) {
+        if (!Array.isArray(predictions)) return [];
+
+        return predictions
+          .filter((face) => isValidBox(face.topLeft, face.bottomRight))
+          .map((face) => ({
+            topLeft: [face.topLeft[0], face.topLeft[1]],
+            bottomRight: [face.bottomRight[0], face.bottomRight[1]],
+            landmarks: Array.isArray(face.landmarks)
+              ? face.landmarks.map((pt) => [pt[0], pt[1]])
+              : null
+          }))
+          .sort((a, b) => getFaceCenterX(a) - getFaceCenterX(b))
+          .slice(0, MAX_FACES);
+      }
+
+      function smoothBox(oldBox, newBox, alpha) {
+        if (!oldBox) return newBox;
+
+        const [ox1, oy1] = oldBox.topLeft;
+        const [ox2, oy2] = oldBox.bottomRight;
+        const [nx1, ny1] = newBox.topLeft;
+        const [nx2, ny2] = newBox.bottomRight;
+
+        return {
+          topLeft: [
+            ox1 + alpha * (nx1 - ox1),
+            oy1 + alpha * (ny1 - oy1)
+          ],
+          bottomRight: [
+            ox2 + alpha * (nx2 - ox2),
+            oy2 + alpha * (ny2 - oy2)
+          ]
+        };
+      }
+
+      function smoothLandmarks(oldLandmarks, newLandmarks, alpha) {
+        if (!Array.isArray(newLandmarks) || newLandmarks.length === 0) return null;
+        if (!Array.isArray(oldLandmarks) || oldLandmarks.length !== newLandmarks.length) {
+          return newLandmarks.map((pt) => [pt[0], pt[1]]);
+        }
+
+        return newLandmarks.map((pt, index) => {
+          const oldPt = oldLandmarks[index];
+          if (!isValidPoint(oldPt) || !isValidPoint(pt)) return [pt[0], pt[1]];
+          return [
+            oldPt[0] + alpha * (pt[0] - oldPt[0]),
+            oldPt[1] + alpha * (pt[1] - oldPt[1])
+          ];
+        });
+      }
+
+      function smoothFaceList(oldFaces, newFaces) {
+        return newFaces.map((face, index) => {
+          const oldFace = oldFaces[index];
+
+          const smoothedBox = smoothBox(
+            oldFace
+              ? { topLeft: oldFace.topLeft, bottomRight: oldFace.bottomRight }
+              : null,
+            { topLeft: face.topLeft, bottomRight: face.bottomRight },
+            SMOOTH_ALPHA
+          );
+
+          return {
+            topLeft: smoothedBox.topLeft,
+            bottomRight: smoothedBox.bottomRight,
+            landmarks: smoothLandmarks(oldFace?.landmarks || null, face.landmarks, LANDMARK_SMOOTH_ALPHA)
+          };
+        });
+      }
+
+      function drawGlassesOnFace(topLeft, bottomRight, landmarks = null) {
+        if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+        const overlayWidth = faceWidth * 1.12;
+        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        let eyeLineY = y1 + faceHeight * 0.43;
+
+        if (Array.isArray(landmarks) && landmarks.length >= 2) {
+          const leftEye = landmarks[0];
+          const rightEye = landmarks[1];
+          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+          }
+        }
+
+        ctx.drawImage(
+          glassesImg,
+          centerX - overlayWidth / 2,
+          eyeLineY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawHelmetOnFace(topLeft, bottomRight, landmarks = null) {
+        if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+        const overlayWidth = faceWidth * 1.55;
+        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+
+        let eyeLineY = y1 + faceHeight * 0.38;
+
+        if (Array.isArray(landmarks) && landmarks.length >= 2) {
+          const leftEye = landmarks[0];
+          const rightEye = landmarks[1];
+          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+          }
+        }
+
+        const drawX = centerX - overlayWidth / 2;
+        const drawY = eyeLineY - overlayHeight * 0.50;
+
+        ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
+      }
+
+      function drawBeardOnFace(topLeft, bottomRight) {
+        if (!beardImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(topLeft, bottomRight);
+
+        const overlayWidth = faceWidth * 1.42;
+        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
+        const overlayHeight = overlayWidth * aspect;
+        const overlayCenterY = centerY - faceHeight * 0.02;
+
+        ctx.drawImage(
+          beardImg,
+          centerX - overlayWidth / 2,
+          overlayCenterY - overlayHeight / 2,
+          overlayWidth,
+          overlayHeight
+        );
+      }
+
+      function drawComboOnFace(topLeft, bottomRight, landmarks = null) {
+        drawHelmetOnFace(topLeft, bottomRight, landmarks);
+        drawGlassesOnFace(topLeft, bottomRight, landmarks);
+        drawBeardOnFace(topLeft, bottomRight);
+      }
+
+      function drawFaceLabel(topLeft, bottomRight, labelText) {
+        if (!isValidBox(topLeft, bottomRight)) return;
+
+        const { centerX, y1, faceWidth } = getFaceMetrics(topLeft, bottomRight);
+
+        const paddingX = 12;
+        const pillHeight = 28;
+        const y = Math.max(10, y1 - 38);
+
+        ctx.save();
+        ctx.font = "700 14px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        const textWidth = ctx.measureText(labelText).width;
+        const pillWidth = Math.max(faceWidth * 0.42, textWidth + paddingX * 2);
+        const x = centerX - pillWidth / 2;
+        const radius = 14;
+
+        ctx.fillStyle = "rgba(17,17,17,0.78)";
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + pillWidth - radius, y);
+        ctx.quadraticCurveTo(x + pillWidth, y, x + pillWidth, y + radius);
+        ctx.lineTo(x + pillWidth, y + pillHeight - radius);
+        ctx.quadraticCurveTo(x + pillWidth, y + pillHeight, x + pillWidth - radius, y + pillHeight);
+        ctx.lineTo(x + radius, y + pillHeight);
+        ctx.quadraticCurveTo(x, y + pillHeight, x, y + pillHeight - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(247,183,24,0.95)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(labelText, centerX, y + pillHeight / 2 + 0.5);
+        ctx.restore();
+      }
+
+      function getAutoStyleForIndex(index) {
+        const styles = ["glasses", "helmet", "combo"];
+        return styles[index % styles.length];
+      }
+
+      function drawAssignedOverlay(face, styleName) {
+        const { topLeft, bottomRight, landmarks } = face;
+
+        if (styleName === "glasses") {
+          drawGlassesOnFace(topLeft, bottomRight, landmarks);
+        } else if (styleName === "helmet") {
+          drawHelmetOnFace(topLeft, bottomRight, landmarks);
+        } else if (styleName === "combo") {
+          drawComboOnFace(topLeft, bottomRight, landmarks);
+        }
+      }
+
+      async function detectFaceStep() {
+        if (!aiRunning || !videoReady || !faceModel) return;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+          const faces = normalizePredictions(predictions);
+
+          if (faces.length > 0) {
+            latestFaces = faces;
+            lastFacesTime = performance.now();
+          } else if (performance.now() - lastFacesTime > FACE_HOLD_MS) {
+            latestFaces = [];
+          }
+        } catch (error) {
+          console.error("Error running BlazeFace:", error);
+        }
+      }
+
+      function combineSegmentationMasks(segmentations, width, height) {
+        const combined = new Uint8Array(width * height);
+
+        if (!Array.isArray(segmentations)) return combined;
+
+        for (const seg of segmentations) {
+          if (!seg || !seg.data) continue;
+          const len = Math.min(combined.length, seg.data.length);
+          for (let i = 0; i < len; i++) {
+            if (seg.data[i] === 1) combined[i] = 1;
+          }
+        }
+        return combined;
+      }
+
+      async function segmentStep() {
+        if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+        try {
+          const people = await bodyPixModel.segmentMultiPerson(video, {
+            internalResolution: isMobileUA ? "low" : "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: Math.min(MAX_FACES, 6),
+            scoreThreshold: 0.3,
+            nmsRadius: 20
+          });
+
+          lastSegmentation = Array.isArray(people) ? people : null;
+        } catch (error) {
+          console.error("BodyPix error:", error);
+          lastSegmentation = null;
+        }
+      }
+
+      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const targetRatio = targetW / targetH;
+
+        let drawW, drawH, drawX, drawY;
+
+        if (imgRatio > targetRatio) {
+          drawH = targetH;
+          drawW = drawH * imgRatio;
+          drawX = (targetW - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = targetW;
+          drawH = drawW / imgRatio;
+          drawX = 0;
+          drawY = (targetH - drawH) / 2;
+        }
+
+        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
+      }
+
+      function drawBaseComposite() {
+        const logicalW = canvas.width;
+        const logicalH = canvas.height;
+        if (!logicalW || !logicalH) return;
+
+        ctx.clearRect(0, 0, logicalW, logicalH);
+
+        if (
+          bgReady &&
+          bodyPixModel &&
+          Array.isArray(lastSegmentation) &&
+          lastSegmentation.length > 0 &&
+          (activeFilter === "griffin" || activeFilter === "auto")
+        ) {
+          tempCtx.clearRect(0, 0, logicalW, logicalH);
+          tempCtx.drawImage(video, 0, 0, logicalW, logicalH);
+
+          const frameImageData = tempCtx.getImageData(0, 0, logicalW, logicalH);
+          const framePixels = frameImageData.data;
+
+          bgCtx.clearRect(0, 0, logicalW, logicalH);
+          drawBackgroundCover(bgImage, bgCtx, logicalW, logicalH);
+
+          const bgImageData = bgCtx.getImageData(0, 0, logicalW, logicalH);
+          const bgPixels = bgImageData.data;
+
+          const mask = combineSegmentationMasks(lastSegmentation, logicalW, logicalH);
+          const len = Math.min(mask.length, framePixels.length / 4);
+
+          for (let i = 0; i < len; i++) {
+            const offset = i * 4;
+            if (mask[i] === 0) {
+              framePixels[offset] = bgPixels[offset];
+              framePixels[offset + 1] = bgPixels[offset + 1];
+              framePixels[offset + 2] = bgPixels[offset + 2];
+              framePixels[offset + 3] = bgPixels[offset + 3];
+            }
+          }
+
+          ctx.putImageData(frameImageData, 0, 0);
+        } else {
+          ctx.drawImage(video, 0, 0, logicalW, logicalH);
+        }
+      }
+
+      function renderFrame() {
+        if (!aiRunning || !videoReady) return;
+
+        drawBaseComposite();
+
+        const now = performance.now();
+        let facesToUse = [];
+
+        if (latestFaces.length > 0) {
+          smoothedFaces = smoothFaceList(smoothedFaces, latestFaces);
+          facesToUse = smoothedFaces;
+        } else if (smoothedFaces.length > 0 && now - lastFacesTime < FACE_HOLD_MS) {
+          facesToUse = smoothedFaces;
+        } else {
+          smoothedFaces = [];
+        }
+
+        const visibleFaces = facesToUse.filter((face) =>
+          isValidBox(face.topLeft, face.bottomRight)
+        );
+
+        setCounter(visibleFaces.length);
+
+        if (visibleFaces.length > 0) {
+          visibleFaces.forEach((face, index) => {
+            const label = `Person ${index + 1}`;
+
+            if (activeFilter === "auto") {
+              const assigned = getAutoStyleForIndex(index);
+              drawAssignedOverlay(face, assigned);
+              drawFaceLabel(face.topLeft, face.bottomRight, `${label} · ${assigned}`);
+            } else if (activeFilter === "glasses") {
+              drawGlassesOnFace(face.topLeft, face.bottomRight, face.landmarks);
+              drawFaceLabel(face.topLeft, face.bottomRight, `${label} · glasses`);
+            } else if (activeFilter === "helmet") {
+              drawHelmetOnFace(face.topLeft, face.bottomRight, face.landmarks);
+              drawFaceLabel(face.topLeft, face.bottomRight, `${label} · helmet`);
+            } else if (activeFilter === "combo") {
+              drawComboOnFace(face.topLeft, face.bottomRight, face.landmarks);
+              drawFaceLabel(face.topLeft, face.bottomRight, `${label} · combo`);
+            } else if (activeFilter === "griffin") {
+              drawFaceLabel(face.topLeft, face.bottomRight, label);
+            }
+          });
+
+          if (activeFilter === "auto") {
+            setStatus(`${visibleFaces.length} face(s) detected. Auto Crowd mode is assigning mixed overlays.`, "active");
+          } else if (activeFilter === "glasses") {
+            setStatus(`${visibleFaces.length} face(s) detected. Glasses mode is active.`, "active");
+          } else if (activeFilter === "helmet") {
+            setStatus(`${visibleFaces.length} face(s) detected. Helmet mode is active.`, "active");
+          } else if (activeFilter === "combo") {
+            setStatus(`${visibleFaces.length} face(s) detected. Viking Combo mode is active.`, "active");
+          } else {
+            setStatus(`${visibleFaces.length} person/people detected. Griffin Hall background is active.`, "active");
+          }
+
+          setScreenStatus(`${visibleFaces.length} Locked`, true);
+        } else {
+          setStatus("AI is running. Move one or more people into view to activate overlays.", "active");
+          setScreenStatus("Searching…", false);
+        }
+
+        renderRaf = requestAnimationFrame(renderFrame);
+      }
+
+      function captureSnapshot() {
+        if (!videoReady) return;
+
+        const outputW = canvas.width;
+        const outputH = canvas.height;
+        if (!outputW || !outputH) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = outputW;
+        snapCanvas.height = outputH;
+
+        const sctx = snapCanvas.getContext("2d");
+        sctx.drawImage(canvas, 0, 0, outputW, outputH);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        previewSection.style.display = "block";
+
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = dataURL;
+        a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setStatus("Snapshot saved to your device.", "active");
+      }
+
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
+
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting camera access…", "idle");
+          setScreenStatus("Loading…", false);
+          setCounter(0);
+
+          await setupCamera();
+
+          setStatus("Loading AI models…", "idle");
+          await getBestBackend();
+
+          faceModel = await blazeface.load();
+
+          try {
+            bodyPixModel = await bodyPix.load({
+              architecture: "MobileNetV1",
+              outputStride: 16,
+              multiplier: isMobileUA ? 0.5 : 0.75,
+              quantBytes: 2
+            });
+          } catch (error) {
+            console.warn("⚠️ BodyPix failed to load.", error);
+            bodyPixModel = null;
+          }
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          stopBtn.disabled = false;
+
+          faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
+          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
+
+          await detectFaceStep();
+          await segmentStep();
+
+          setStatus("Camera and AI are ready.", "active");
+          renderRaf = requestAnimationFrame(renderFrame);
+        } catch (error) {
+          console.error("Init error:", error);
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          stopBtn.disabled = true;
+          setCounter(0);
+          setScreenStatus("Offline", false);
+          setStatus(
+            "This device or browser may not fully support the demo. Try Chrome, Edge, Firefox, or Safari over HTTPS.",
+            "error"
+          );
+        }
+      }
+
+      filterButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeFilter = btn.getAttribute("data-filter") || "auto";
+
+          filterButtons.forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+            b.setAttribute("aria-checked", "false");
+          });
+
+          btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
+          btn.setAttribute("aria-checked", "true");
+
+          if (activeFilter === "auto") {
+            setStatus("Auto Crowd mode selected.", aiRunning ? "active" : "idle");
+          } else if (activeFilter === "glasses") {
+            setStatus("Glasses mode selected.", aiRunning ? "active" : "idle");
+          } else if (activeFilter === "helmet") {
+            setStatus("Helmet mode selected.", aiRunning ? "active" : "idle");
+          } else if (activeFilter === "combo") {
+            setStatus("Viking Combo mode selected.", aiRunning ? "active" : "idle");
+          } else {
+            setStatus("Griffin Hall mode selected.", aiRunning ? "active" : "idle");
+          }
+        });
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", captureSnapshot);
+      stopBtn.addEventListener("click", stopCamera);
+
+      window.addEventListener("beforeunload", stopCamera);
+
+      setCounter(0);
+      setScreenStatus("Offline", false);
+    })();
+  </script>
+</body>
+</html>

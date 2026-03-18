@@ -1169,6 +1169,19 @@
       screenStatusDot.classList.toggle("active", !!locked);
     }
 
+    function updateShareButtonLabel() {
+      if (lastSnapshotFile) {
+        shareBtn.innerHTML = "🖼️ Share Snapshot";
+        return;
+      }
+
+      if (navigator.share) {
+        shareBtn.innerHTML = "📲 Share Demo";
+      } else {
+        shareBtn.innerHTML = "🔗 Copy Demo URL";
+      }
+    }
+
     async function getBestBackend() {
       if (!window.tf) return;
 
@@ -1280,6 +1293,8 @@
       smoothedLandmarks = null;
       lastFaceTime = 0;
       lastSegmentation = null;
+      lastSnapshotDataURL = null;
+      lastSnapshotFile = null;
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1289,6 +1304,7 @@
       captureBtn.disabled = true;
       stopBtn.disabled = true;
 
+      updateShareButtonLabel();
       setScreenStatus("Offline", false);
       setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
     }
@@ -1431,8 +1447,7 @@
       );
     }
 
-    function drawComboOnFace(topLeft, bottomRight, landmarks = null) {
-      drawHelmetOnFace(topLeft, bottomRight, landmarks);
+    function drawVikingOnFace(topLeft, bottomRight) {
       drawBeardOnFace(topLeft, bottomRight);
     }
 
@@ -1597,8 +1612,8 @@
           drawHelmetOnFace(topLeft, bottomRight, landmarksToUse);
           setStatus("Helmet mode is active.", "active");
         } else if (activeFilter === "combo") {
-          drawComboOnFace(topLeft, bottomRight, landmarksToUse);
-          setStatus("Viking Combo mode is active.", "active");
+          drawVikingOnFace(topLeft, bottomRight);
+          setStatus("Viking mode is active.", "active");
         } else {
           setStatus("Griffin Hall background mode is active.", "active");
         }
@@ -1658,19 +1673,21 @@
       a.click();
       document.body.removeChild(a);
 
+      updateShareButtonLabel();
       setStatus("Snapshot saved to your device and ready to share.", "active");
     }
 
     async function shareDemo() {
       const shareURL = window.location.href;
-      const shareText = "Try this interactive NKU College of Informatics WebAI + AR demo created by Dr. Brandi Neal.";
       const shareTitle = "NKU COI WebAI Demo | Brandi Neal";
+      const demoShareText = "Try this interactive NKU College of Informatics WebAI + AR demo created by Dr. Brandi Neal.";
+      const snapshotShareText = "Check out my snapshot from this NKU COI WebAI demo by Dr. Brandi Neal.";
 
       try {
         if (lastSnapshotFile && navigator.share && navigator.canShare) {
           const imageShareData = {
             title: shareTitle,
-            text: "Check out my snapshot from this NKU COI WebAI demo by Dr. Brandi Neal.",
+            text: snapshotShareText,
             files: [lastSnapshotFile]
           };
 
@@ -1684,7 +1701,7 @@
         if (navigator.share) {
           await navigator.share({
             title: shareTitle,
-            text: shareText,
+            text: demoShareText,
             url: shareURL
           });
           setStatus("Demo share sheet opened.", "active");
@@ -1794,18 +1811,14 @@
         } else if (activeFilter === "helmet") {
           setStatus("Helmet mode selected.", aiRunning ? "active" : "idle");
         } else if (activeFilter === "combo") {
-          setStatus("Viking Combo mode selected.", aiRunning ? "active" : "idle");
+          setStatus("Viking mode selected.", aiRunning ? "active" : "idle");
         } else {
           setStatus("Griffin Hall mode selected.", aiRunning ? "active" : "idle");
         }
       });
     });
 
-    if (navigator.share) {
-      shareBtn.innerHTML = "📲 Share Demo";
-    } else {
-      shareBtn.innerHTML = "🔗 Copy Demo URL";
-    }
+    updateShareButtonLabel();
 
     startBtn.addEventListener("click", startExperience);
     captureBtn.addEventListener("click", captureSnapshot);

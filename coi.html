@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU COI AI Mirror Showcase | Dr. Brandi Neal</title>
+  <title>NKU COI WebAI Demo | Brandi Neal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
@@ -679,7 +679,7 @@
       color: #b91c1c;
     }
 
-    .btn-share {
+    .btn- {
       background: #111827;
       color: white;
       border: none;
@@ -811,75 +811,18 @@
     <header class="topbar" aria-label="NKU College of Informatics interactive AI demo header">
       <div class="brand">
         <div class="brand-pill">NKU · COI</div>
-        <span class="brand-sub">AI Showcase Demo</span>
+        <span class="brand-sub">WebAI Demo</span>
       </div>
       <div class="brand-sub">Scan the QR code · Open on mobile · Try it live</div>
     </header>
 
-    <section class="hero-card" aria-labelledby="hero-title">
-      <div class="hero-grid">
-        <div>
-          <div class="eyebrow">Interactive college showcase</div>
-          <h1 id="hero-title">Experience browser-based AI in real time.</h1>
-          <p class="hero-lead">
-            This live demo turns your device into an interactive AI mirror using
-            <strong>camera input</strong>, <strong>face tracking</strong>,
-            <strong>canvas rendering</strong>, and <strong>browser AI</strong>.
-            It is designed for college showcases, recruitment events, open houses, and public demos.
-          </p>
-
-          <div class="hero-badges">
-            <span class="hero-badge">Mobile Friendly</span>
-            <span class="hero-badge">Runs in the Browser</span>
-            <span class="hero-badge">Privacy-First</span>
-            <span class="hero-badge">Computer Vision</span>
-          </div>
-
-          <div class="hero-cta-row">
-            <a href="#demo-area" class="hero-cta primary">Try the demo</a>
-            <a href="#creator-credit" class="hero-cta secondary">About the creator</a>
-          </div>
-        </div>
-
-        <div class="hero-side">
-          <div class="mini-card">
-            <div class="mini-label">Best way to use it</div>
-            <p>
-              Open from a QR code on your phone, allow camera access, and test the different AI modes.
-            </p>
-          </div>
-
-          <div class="mini-card">
-            <div class="mini-label">Privacy note</div>
-            <p>
-              This demo is intended to process visual effects locally in the browser. Nothing is uploaded or stored by this page.
-            </p>
-          </div>
-
-          <div class="mini-card" id="creator-credit">
-            <div class="mini-label">Created by</div>
-            <div class="creator-name">Dr. Brandi Neal</div>
-            <p>
-              Faculty creator · AI showcase concept · College of Informatics demonstration experience
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <main class="main-card" aria-labelledby="page-title">
       <div class="content-wrap">
         <section aria-label="Demo description">
-          <div class="tag-row">
-            <span class="tag">Browser AI</span>
-            <span class="tag">Real-time Camera</span>
-            <span class="tag">Computer Vision</span>
-            <span class="tag">Event Showcase</span>
-          </div>
 
           <p class="eyebrow" style="color:#6b7280;">College of Informatics</p>
           <h2 id="page-title" style="font-size:clamp(1.6rem,2.8vw,2.3rem); margin:0 0 10px 0; letter-spacing:-0.02em;">
-            Interactive AI Mirror
+            Interactive WebAI + AR
           </h2>
 
           <p class="lead">
@@ -895,7 +838,7 @@
             </li>
             <li>
               <span class="step-num">2</span>
-              <span>Try a mode such as <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking Combo</strong>, or <strong>Griffin Hall</strong>.</span>
+              <span>Try a mode such as <strong>Glasses</strong>, <strong>Helmet</strong>, <strong>Viking</strong>, or <strong>Griffin Hall</strong>.</span>
             </li>
             <li>
               <span class="step-num">3</span>
@@ -916,9 +859,6 @@
 
           <div class="contact-card">
             <h3>Creator Credit</h3>
-            <p>
-              If you share this at a showcase, fair, open house, or presentation, this section helps ensure the project is clearly credited to you.
-            </p>
 
             <div class="contact-list">
               <div class="contact-item">
@@ -931,7 +871,7 @@
               </div>
               <div class="contact-item">
                 <span class="contact-label">Email:</span>
-                <span>REPLACE-WITH-YOUR-EMAIL@nku.edu</span>
+                <span>nealb3@nku.edu</span>
               </div>
               <div class="contact-item">
                 <span class="contact-label">LinkedIn:</span>
@@ -1044,11 +984,11 @@
               >
                 <img
                   src="beard.png"
-                  alt="Preview of Viking combo mode"
+                  alt="Preview of Viking mode."
                   class="filter-thumb"
                   loading="lazy"
                 />
-                <span>Viking Combo</span>
+                <span>Viking Mode</span>
               </button>
 
               <button
@@ -1077,7 +1017,7 @@
                 📸 Capture Snapshot
               </button>
               <button id="shareBtn" type="button" class="app-btn btn-share">
-                🔗 Copy Share Link
+                📲 Share Demo
               </button>
               <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>
                 ⏹️ Turn Camera Off
@@ -1094,7 +1034,7 @@
                 />
               </div>
               <p class="small-note">
-                Saved locally as a PNG image. Great for student engagement, recruitment, and live event interaction.
+                Saved locally as a PNG image. 
               </p>
             </section>
           </div>
@@ -1104,717 +1044,738 @@
       <div class="footer-note">
         <strong>Privacy-first design:</strong> this demo is intended to process effects on the device in the browser, with no upload workflow built into this page.
         <br />
-        <strong>Credit:</strong> Showcase concept and implementation by <strong>Dr. Brandi Neal</strong>.
       </div>
     </main>
   </div>
 
   <script>
-    (function () {
-      "use strict";
+  (function () {
+    "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_AI_Demo";
-      const CREATOR_CREDIT_TEXT = "Created by Dr. Brandi Neal";
+    const TARGET_FOLDER_LABEL = "NKU_COI_AI_Demo";
+    const CREATOR_CREDIT_TEXT = "Created by Dr. Brandi Neal";
 
-      const video = document.getElementById("video");
-      const canvas = document.getElementById("overlay");
-      const ctx = canvas.getContext("2d");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
 
-      const statusText = document.getElementById("statusText");
-      const statusDot = document.getElementById("statusDot");
-      const startBtn = document.getElementById("startBtn");
-      const captureBtn = document.getElementById("captureBtn");
-      const stopBtn = document.getElementById("stopBtn");
-      const shareBtn = document.getElementById("shareBtn");
-      const videoSkeleton = document.getElementById("videoSkeleton");
-      const filterButtons = document.querySelectorAll(".filter-btn");
+    const statusText = document.getElementById("statusText");
+    const statusDot = document.getElementById("statusDot");
+    const startBtn = document.getElementById("startBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const shareBtn = document.getElementById("shareBtn");
+    const videoSkeleton = document.getElementById("videoSkeleton");
+    const filterButtons = document.querySelectorAll(".filter-btn");
 
-      const screenStatusDot = document.getElementById("screenStatusDot");
-      const screenStatusText = document.getElementById("screenStatusText");
+    const screenStatusDot = document.getElementById("screenStatusDot");
+    const screenStatusText = document.getElementById("screenStatusText");
 
-      const previewSection = document.getElementById("previewSection");
-      const snapshotPreview = document.getElementById("snapshotPreview");
+    const previewSection = document.getElementById("previewSection");
+    const snapshotPreview = document.getElementById("snapshotPreview");
 
-      let faceModel = null;
-      let bodyPixModel = null;
-      let videoReady = false;
-      let glassesImgReady = false;
-      let helmetImgReady = false;
-      let beardImgReady = false;
-      let bgReady = false;
-      let aiRunning = false;
-      let mediaStream = null;
+    let faceModel = null;
+    let bodyPixModel = null;
+    let videoReady = false;
+    let glassesImgReady = false;
+    let helmetImgReady = false;
+    let beardImgReady = false;
+    let bgReady = false;
+    let aiRunning = false;
+    let mediaStream = null;
 
-      let activeFilter = "glasses";
+    let activeFilter = "glasses";
 
-      const tempCanvas = document.createElement("canvas");
-      const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
 
-      const bgCanvas = document.createElement("canvas");
-      const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
+    const bgCanvas = document.createElement("canvas");
+    const bgCtx = bgCanvas.getContext("2d", { willReadFrequently: true });
 
-      let latestFaceBox = null;
-      let latestLandmarks = null;
-      let smoothedFaceBox = null;
-      let smoothedLandmarks = null;
-      let lastFaceTime = 0;
-      let lastSegmentation = null;
+    let latestFaceBox = null;
+    let latestLandmarks = null;
+    let smoothedFaceBox = null;
+    let smoothedLandmarks = null;
+    let lastFaceTime = 0;
+    let lastSegmentation = null;
 
-      let renderRaf = null;
-      let faceDetectTimer = null;
-      let segmentTimer = null;
-      let lastStatusMsg = "";
-      let lastStatusMode = "";
+    let renderRaf = null;
+    let faceDetectTimer = null;
+    let segmentTimer = null;
+    let lastStatusMsg = "";
+    let lastStatusMode = "";
 
-      const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
-      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-      const FACE_HOLD_MS = 380;
-      const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
-      const LANDMARK_SMOOTH_ALPHA = isMobileUA ? 0.28 : 0.22;
-      const FACE_DETECT_MS = isMobileUA ? 120 : 90;
-      const SEGMENT_MS = isMobileUA ? 240 : 180;
+    const FACE_HOLD_MS = 380;
+    const SMOOTH_ALPHA = isMobileUA ? 0.22 : 0.16;
+    const LANDMARK_SMOOTH_ALPHA = isMobileUA ? 0.28 : 0.22;
+    const FACE_DETECT_MS = isMobileUA ? 120 : 90;
+    const SEGMENT_MS = isMobileUA ? 240 : 180;
 
-      const bgImage = new Image();
-      bgImage.src = "griffin-hall.jpg";
-      bgImage.onload = () => {
-        bgReady = true;
-        console.log("✅ Griffin Hall background loaded:", bgImage.naturalWidth, bgImage.naturalHeight);
-      };
-      bgImage.onerror = () => {
-        bgReady = false;
-        console.warn("⚠️ Could not load griffin-hall.jpg.");
-      };
+    const bgImage = new Image();
+    bgImage.src = "griffin-hall.jpg";
+    bgImage.onload = () => {
+      bgReady = true;
+      console.log("✅ Griffin Hall background loaded:", bgImage.naturalWidth, bgImage.naturalHeight);
+    };
+    bgImage.onerror = () => {
+      bgReady = false;
+      console.warn("⚠️ Could not load griffin-hall.jpg.");
+    };
 
-      const glassesImg = new Image();
-      glassesImg.src = "glasses.png";
-      glassesImg.onload = () => {
-        glassesImgReady = true;
-      };
-      glassesImg.onerror = () => console.warn("⚠️ Could not load glasses.png");
+    const glassesImg = new Image();
+    glassesImg.src = "glasses.png";
+    glassesImg.onload = () => {
+      glassesImgReady = true;
+    };
+    glassesImg.onerror = () => console.warn("⚠️ Could not load glasses.png");
 
-      const helmetImg = new Image();
-      helmetImg.src = "helmet.png";
-      helmetImg.onload = () => {
-        helmetImgReady = true;
-      };
-      helmetImg.onerror = () => console.warn("⚠️ Could not load helmet.png");
+    const helmetImg = new Image();
+    helmetImg.src = "helmet.png";
+    helmetImg.onload = () => {
+      helmetImgReady = true;
+    };
+    helmetImg.onerror = () => console.warn("⚠️ Could not load helmet.png");
 
-      const beardImg = new Image();
-      beardImg.src = "beard.png";
-      beardImg.onload = () => {
-        beardImgReady = true;
-      };
-      beardImg.onerror = () => console.warn("⚠️ Could not load beard.png");
+    const beardImg = new Image();
+    beardImg.src = "beard.png";
+    beardImg.onload = () => {
+      beardImgReady = true;
+    };
+    beardImg.onerror = () => console.warn("⚠️ Could not load beard.png");
 
-      function setStatus(message, mode = "idle") {
-        if (message === lastStatusMsg && mode === lastStatusMode) return;
+    function setStatus(message, mode = "idle") {
+      if (message === lastStatusMsg && mode === lastStatusMode) return;
 
-        lastStatusMsg = message;
-        lastStatusMode = mode;
+      lastStatusMsg = message;
+      lastStatusMode = mode;
 
-        statusText.textContent = message;
-        statusDot.classList.remove("active", "error");
+      statusText.textContent = message;
+      statusDot.classList.remove("active", "error");
 
-        if (mode === "active") {
-          statusDot.classList.add("active");
-        } else if (mode === "error") {
-          statusDot.classList.add("error");
-        }
+      if (mode === "active") {
+        statusDot.classList.add("active");
+      } else if (mode === "error") {
+        statusDot.classList.add("error");
       }
+    }
 
-      function setScreenStatus(text, locked) {
-        screenStatusText.textContent = text;
-        screenStatusDot.classList.toggle("active", !!locked);
-      }
+    function setScreenStatus(text, locked) {
+      screenStatusText.textContent = text;
+      screenStatusDot.classList.toggle("active", !!locked);
+    }
 
-      async function getBestBackend() {
-        if (!window.tf) return;
+    async function getBestBackend() {
+      if (!window.tf) return;
 
-        const backendsToTry = ["webgl", "wasm", "cpu"];
-        for (const backendName of backendsToTry) {
-          try {
-            const ok = await tf.setBackend(backendName);
-            if (ok) {
-              await tf.ready();
-              console.log("✅ Using TFJS backend:", tf.getBackend());
-              return;
-            }
-          } catch (error) {
-            console.warn("Backend not available:", backendName, error);
+      const backendsToTry = ["webgl", "wasm", "cpu"];
+      for (const backendName of backendsToTry) {
+        try {
+          const ok = await tf.setBackend(backendName);
+          if (ok) {
+            await tf.ready();
+            console.log("✅ Using TFJS backend:", tf.getBackend());
+            return;
           }
+        } catch (error) {
+          console.warn("Backend not available:", backendName, error);
         }
       }
+    }
 
-      function updateCanvasBufferSize() {
-        if (!video.videoWidth || !video.videoHeight) return;
+    function updateCanvasBufferSize() {
+      if (!video.videoWidth || !video.videoHeight) return;
 
-        const renderWidth = video.videoWidth;
-        const renderHeight = video.videoHeight;
+      const renderWidth = video.videoWidth;
+      const renderHeight = video.videoHeight;
 
-        canvas.width = renderWidth;
-        canvas.height = renderHeight;
+      canvas.width = renderWidth;
+      canvas.height = renderHeight;
 
-        tempCanvas.width = renderWidth;
-        tempCanvas.height = renderHeight;
+      tempCanvas.width = renderWidth;
+      tempCanvas.height = renderHeight;
 
-        bgCanvas.width = renderWidth;
-        bgCanvas.height = renderHeight;
+      bgCanvas.width = renderWidth;
+      bgCanvas.height = renderHeight;
 
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    async function setupCamera() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus(
+          "This browser does not support camera access. Try Chrome, Edge, Firefox, or Safari.",
+          "error"
+        );
+        throw new Error("getUserMedia not supported");
       }
 
-      async function setupCamera() {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          setStatus(
-            "This browser does not support camera access. Try Chrome, Edge, Firefox, or Safari.",
-            "error"
-          );
-          throw new Error("getUserMedia not supported");
+      const mobileLike = isSmallScreen() || isMobileUA;
+
+      const constraints = {
+        audio: false,
+        video: {
+          facingMode: { ideal: "user" },
+          width: mobileLike ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
+          height: mobileLike ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
         }
+      };
 
-        const mobileLike = isSmallScreen() || isMobileUA;
+      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = mediaStream;
 
-        const constraints = {
-          audio: false,
-          video: {
-            facingMode: { ideal: "user" },
-            width: mobileLike ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
-            height: mobileLike ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
-          }
-        };
-
-        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = mediaStream;
-
-        await new Promise((resolve) => {
-          video.onloadedmetadata = async () => {
-            await video.play();
-            updateCanvasBufferSize();
-            videoReady = true;
-            videoSkeleton.style.display = "none";
-            resolve();
-          };
-        });
-
-        window.addEventListener("resize", handleWindowResize, { passive: true });
-        window.addEventListener("orientationchange", handleWindowResize, { passive: true });
-      }
-
-      function handleWindowResize() {
-        if (!videoReady) return;
-        setTimeout(() => {
+      await new Promise((resolve) => {
+        video.onloadedmetadata = async () => {
+          await video.play();
           updateCanvasBufferSize();
-        }, 120);
+          videoReady = true;
+          videoSkeleton.style.display = "none";
+          resolve();
+        };
+      });
+
+      window.addEventListener("resize", handleWindowResize, { passive: true });
+      window.addEventListener("orientationchange", handleWindowResize, { passive: true });
+    }
+
+    function handleWindowResize() {
+      if (!videoReady) return;
+      setTimeout(() => {
+        updateCanvasBufferSize();
+      }, 120);
+    }
+
+    function stopLoops() {
+      if (renderRaf) cancelAnimationFrame(renderRaf);
+      renderRaf = null;
+
+      if (faceDetectTimer) clearInterval(faceDetectTimer);
+      faceDetectTimer = null;
+
+      if (segmentTimer) clearInterval(segmentTimer);
+      segmentTimer = null;
+    }
+
+    function stopCamera() {
+      stopLoops();
+
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
       }
 
-      function stopLoops() {
-        if (renderRaf) cancelAnimationFrame(renderRaf);
-        renderRaf = null;
-
-        if (faceDetectTimer) clearInterval(faceDetectTimer);
-        faceDetectTimer = null;
-
-        if (segmentTimer) clearInterval(segmentTimer);
-        segmentTimer = null;
+      if (video.srcObject) {
+        video.srcObject = null;
       }
 
-      function stopCamera() {
-        stopLoops();
+      videoReady = false;
+      aiRunning = false;
+      latestFaceBox = null;
+      latestLandmarks = null;
+      smoothedFaceBox = null;
+      smoothedLandmarks = null;
+      lastFaceTime = 0;
+      lastSegmentation = null;
 
-        if (mediaStream) {
-          mediaStream.getTracks().forEach((track) => track.stop());
-          mediaStream = null;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      videoSkeleton.style.display = "block";
+      startBtn.disabled = false;
+      captureBtn.disabled = true;
+      stopBtn.disabled = true;
+
+      setScreenStatus("Offline", false);
+      setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
+    }
+
+    function isValidPoint(pt) {
+      return (
+        Array.isArray(pt) &&
+        pt.length >= 2 &&
+        typeof pt[0] === "number" &&
+        typeof pt[1] === "number" &&
+        Number.isFinite(pt[0]) &&
+        Number.isFinite(pt[1])
+      );
+    }
+
+    function isValidBox(topLeft, bottomRight) {
+      if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      return x2 - x1 > 0 && y2 - y1 > 0;
+    }
+
+    function smoothBox(oldBox, newBox, alpha) {
+      if (!oldBox) return newBox;
+
+      const [ox1, oy1] = oldBox.topLeft;
+      const [ox2, oy2] = oldBox.bottomRight;
+      const [nx1, ny1] = newBox.topLeft;
+      const [nx2, ny2] = newBox.bottomRight;
+
+      return {
+        topLeft: [
+          ox1 + alpha * (nx1 - ox1),
+          oy1 + alpha * (ny1 - oy1)
+        ],
+        bottomRight: [
+          ox2 + alpha * (nx2 - ox2),
+          oy2 + alpha * (ny2 - oy2)
+        ]
+      };
+    }
+
+    function smoothLandmarks(oldLandmarks, newLandmarks, alpha) {
+      if (!Array.isArray(newLandmarks) || newLandmarks.length === 0) return null;
+      if (!Array.isArray(oldLandmarks) || oldLandmarks.length !== newLandmarks.length) {
+        return newLandmarks.map((pt) => [pt[0], pt[1]]);
+      }
+
+      return newLandmarks.map((pt, index) => {
+        const oldPt = oldLandmarks[index];
+        if (!isValidPoint(oldPt) || !isValidPoint(pt)) return [pt[0], pt[1]];
+        return [
+          oldPt[0] + alpha * (pt[0] - oldPt[0]),
+          oldPt[1] + alpha * (pt[1] - oldPt[1])
+        ];
+      });
+    }
+
+    function getFaceMetrics(topLeft, bottomRight) {
+      const [x1, y1] = topLeft;
+      const [x2, y2] = bottomRight;
+      const faceWidth = x2 - x1;
+      const faceHeight = y2 - y1;
+      const centerX = x1 + faceWidth / 2;
+      const centerY = y1 + faceHeight / 2;
+
+      return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
+    }
+
+    function drawGlassesOnFace(topLeft, bottomRight, landmarks = null) {
+      if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+      const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+      const overlayWidth = faceWidth * 1.12;
+      const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
+      const overlayHeight = overlayWidth * aspect;
+
+      let eyeLineY = y1 + faceHeight * 0.43;
+
+      if (Array.isArray(landmarks) && landmarks.length >= 2) {
+        const leftEye = landmarks[0];
+        const rightEye = landmarks[1];
+        if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+          eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+        }
+      }
+
+      ctx.drawImage(
+        glassesImg,
+        centerX - overlayWidth / 2,
+        eyeLineY - overlayHeight / 2,
+        overlayWidth,
+        overlayHeight
+      );
+    }
+
+    function drawHelmetOnFace(topLeft, bottomRight, landmarks = null) {
+      if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+      const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
+
+      const overlayWidth = faceWidth * 1.55;
+      const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
+      const overlayHeight = overlayWidth * aspect;
+
+      let eyeLineY = y1 + faceHeight * 0.38;
+
+      if (Array.isArray(landmarks) && landmarks.length >= 2) {
+        const leftEye = landmarks[0];
+        const rightEye = landmarks[1];
+
+        if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
+          eyeLineY = (leftEye[1] + rightEye[1]) / 2;
+        }
+      }
+
+      const drawX = centerX - overlayWidth / 2;
+      const drawY = eyeLineY - overlayHeight * 0.50;
+
+      ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
+    }
+
+    function drawBeardOnFace(topLeft, bottomRight) {
+      if (!beardImgReady || !isValidBox(topLeft, bottomRight)) return;
+
+      const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(topLeft, bottomRight);
+
+      const overlayWidth = faceWidth * 1.42;
+      const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
+      const overlayHeight = overlayWidth * aspect;
+      const overlayCenterY = centerY - faceHeight * 0.02;
+
+      ctx.drawImage(
+        beardImg,
+        centerX - overlayWidth / 2,
+        overlayCenterY - overlayHeight / 2,
+        overlayWidth,
+        overlayHeight
+      );
+    }
+
+    function drawComboOnFace(topLeft, bottomRight, landmarks = null) {
+      drawHelmetOnFace(topLeft, bottomRight, landmarks);
+      drawBeardOnFace(topLeft, bottomRight);
+    }
+
+    async function detectFaceStep() {
+      if (!aiRunning || !videoReady || !faceModel) return;
+
+      try {
+        const predictions = await faceModel.estimateFaces(video, false);
+
+        if (Array.isArray(predictions) && predictions.length > 0) {
+          const face = predictions[0];
+
+          if (isValidBox(face.topLeft, face.bottomRight)) {
+            latestFaceBox = {
+              topLeft: face.topLeft,
+              bottomRight: face.bottomRight
+            };
+
+            latestLandmarks = Array.isArray(face.landmarks)
+              ? face.landmarks.map((pt) => [pt[0], pt[1]])
+              : null;
+
+            lastFaceTime = performance.now();
+          }
+        } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
+          latestFaceBox = null;
+          latestLandmarks = null;
+        }
+      } catch (error) {
+        console.error("Error running BlazeFace:", error);
+      }
+    }
+
+    async function segmentStep() {
+      if (!aiRunning || !videoReady || !bodyPixModel) return;
+
+      try {
+        lastSegmentation = await bodyPixModel.segmentPerson(video, {
+          internalResolution: isMobileUA ? "low" : "medium",
+          segmentationThreshold: 0.7,
+          maxDetections: 1
+        });
+      } catch (error) {
+        console.error("BodyPix error:", error);
+        lastSegmentation = null;
+      }
+    }
+
+    function drawBackgroundCover(img, targetCtx, targetW, targetH) {
+      if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const targetRatio = targetW / targetH;
+
+      let drawW, drawH, drawX, drawY;
+
+      if (imgRatio > targetRatio) {
+        drawH = targetH;
+        drawW = drawH * imgRatio;
+        drawX = (targetW - drawW) / 2;
+        drawY = 0;
+      } else {
+        drawW = targetW;
+        drawH = drawW / imgRatio;
+        drawX = 0;
+        drawY = (targetH - drawH) / 2;
+      }
+
+      targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
+    }
+
+    function drawBaseComposite() {
+      const logicalW = canvas.width;
+      const logicalH = canvas.height;
+
+      if (!logicalW || !logicalH) return;
+
+      ctx.clearRect(0, 0, logicalW, logicalH);
+
+      if (bgReady && bodyPixModel && lastSegmentation) {
+        tempCtx.clearRect(0, 0, logicalW, logicalH);
+        tempCtx.drawImage(video, 0, 0, logicalW, logicalH);
+
+        const mask = lastSegmentation.data;
+        const frameImageData = tempCtx.getImageData(0, 0, logicalW, logicalH);
+        const framePixels = frameImageData.data;
+
+        bgCtx.clearRect(0, 0, logicalW, logicalH);
+        drawBackgroundCover(bgImage, bgCtx, logicalW, logicalH);
+
+        const bgImageData = bgCtx.getImageData(0, 0, logicalW, logicalH);
+        const bgPixels = bgImageData.data;
+
+        const len = Math.min(mask.length, framePixels.length / 4);
+
+        for (let i = 0; i < len; i++) {
+          const offset = i * 4;
+          if (mask[i] === 0) {
+            framePixels[offset] = bgPixels[offset];
+            framePixels[offset + 1] = bgPixels[offset + 1];
+            framePixels[offset + 2] = bgPixels[offset + 2];
+            framePixels[offset + 3] = bgPixels[offset + 3];
+          }
         }
 
-        if (video.srcObject) {
-          video.srcObject = null;
-        }
+        ctx.putImageData(frameImageData, 0, 0);
+      } else if (activeFilter === "griffin" && bgReady) {
+        drawBackgroundCover(bgImage, ctx, logicalW, logicalH);
+      } else {
+        ctx.drawImage(video, 0, 0, logicalW, logicalH);
+      }
+    }
 
-        videoReady = false;
-        aiRunning = false;
-        latestFaceBox = null;
-        latestLandmarks = null;
+    function addWatermarkToSnapshot(targetCtx, outputW, outputH) {
+      const pad = Math.max(16, Math.round(outputW * 0.018));
+      const boxH = Math.max(42, Math.round(outputH * 0.072));
+
+      targetCtx.save();
+      targetCtx.fillStyle = "rgba(17,17,17,0.58)";
+      targetCtx.beginPath();
+      targetCtx.roundRect(pad, outputH - boxH - pad, Math.min(outputW * 0.72, 420), boxH, 14);
+      targetCtx.fill();
+
+      targetCtx.fillStyle = "#ffffff";
+      targetCtx.font = `700 ${Math.max(14, Math.round(outputW * 0.018))}px system-ui, sans-serif`;
+      targetCtx.fillText("NKU COI AI Showcase", pad + 14, outputH - pad - boxH / 2 + 2);
+
+      targetCtx.font = `500 ${Math.max(12, Math.round(outputW * 0.014))}px system-ui, sans-serif`;
+      targetCtx.fillText(CREATOR_CREDIT_TEXT, pad + 14, outputH - pad - 12);
+      targetCtx.restore();
+    }
+
+    function renderFrame() {
+      if (!aiRunning || !videoReady) return;
+
+      drawBaseComposite();
+
+      let boxToUse = null;
+      let landmarksToUse = null;
+      const now = performance.now();
+
+      if (latestFaceBox) {
+        smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
+        smoothedLandmarks = smoothLandmarks(smoothedLandmarks, latestLandmarks, LANDMARK_SMOOTH_ALPHA);
+        boxToUse = smoothedFaceBox;
+        landmarksToUse = smoothedLandmarks;
+      } else if (smoothedFaceBox && now - lastFaceTime < FACE_HOLD_MS) {
+        boxToUse = smoothedFaceBox;
+        landmarksToUse = smoothedLandmarks;
+      } else {
         smoothedFaceBox = null;
         smoothedLandmarks = null;
-        lastFaceTime = 0;
-        lastSegmentation = null;
+      }
 
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
+        const { topLeft, bottomRight } = boxToUse;
 
-        videoSkeleton.style.display = "block";
-        startBtn.disabled = false;
+        if (activeFilter === "glasses") {
+          drawGlassesOnFace(topLeft, bottomRight, landmarksToUse);
+          setStatus("Glasses mode is active.", "active");
+        } else if (activeFilter === "helmet") {
+          drawHelmetOnFace(topLeft, bottomRight, landmarksToUse);
+          setStatus("Helmet mode is active.", "active");
+        } else if (activeFilter === "combo") {
+          drawComboOnFace(topLeft, bottomRight, landmarksToUse);
+          setStatus("Viking Combo mode is active.", "active");
+        } else {
+          setStatus("Griffin Hall background mode is active.", "active");
+        }
+
+        setScreenStatus("Face Locked", true);
+      } else {
+        setStatus("AI is running. Move into view to activate overlays.", "active");
+        setScreenStatus("Searching…", false);
+      }
+
+      renderRaf = requestAnimationFrame(renderFrame);
+    }
+
+    function captureSnapshot() {
+      if (!videoReady) return;
+
+      const outputW = canvas.width;
+      const outputH = canvas.height;
+      if (!outputW || !outputH) return;
+
+      const snapCanvas = document.createElement("canvas");
+      snapCanvas.width = outputW;
+      snapCanvas.height = outputH;
+
+      const sctx = snapCanvas.getContext("2d");
+      sctx.drawImage(canvas, 0, 0, outputW, outputH);
+      addWatermarkToSnapshot(sctx, outputW, outputH);
+
+      const dataURL = snapCanvas.toDataURL("image/png");
+      snapshotPreview.src = dataURL;
+      previewSection.style.display = "block";
+
+      const a = document.createElement("a");
+      const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+      a.href = dataURL;
+      a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setStatus("Snapshot saved to your device with creator credit watermark.", "active");
+    }
+
+    async function shareDemo() {
+      const shareURL = window.location.href;
+      const shareData = {
+        title: "NKU COI WebAI Demo | Brandi Neal",
+        text: "Try this interactive NKU College of Informatics WebAI + AR demo created by Dr. Brandi Neal.",
+        url: shareURL
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          setStatus("Share sheet opened.", "active");
+          return;
+        }
+
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareURL);
+          setStatus("Sharing is not supported here, so the demo URL was copied to your clipboard.", "active");
+          return;
+        }
+
+        setStatus("Sharing is not supported on this device. Please copy the page URL manually.", "error");
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          setStatus("Share canceled.", "idle");
+          return;
+        }
+
+        console.warn("Share failed:", error);
+
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareURL);
+            setStatus("Share sheet was unavailable, so the demo URL was copied instead.", "active");
+            return;
+          }
+        } catch (clipboardError) {
+          console.warn("Clipboard fallback failed:", clipboardError);
+        }
+
+        setStatus("Could not share this demo on this device. Please copy the URL manually.", "error");
+      }
+    }
+
+    async function startExperience() {
+      try {
+        if (aiRunning) return;
+
+        startBtn.disabled = true;
         captureBtn.disabled = true;
         stopBtn.disabled = true;
 
-        setScreenStatus("Offline", false);
-        setStatus("Camera turned off. Tap Start Camera & AI to begin again.", "idle");
-      }
+        setStatus("Requesting camera access…", "idle");
+        setScreenStatus("Loading…", false);
 
-      function isValidPoint(pt) {
-        return (
-          Array.isArray(pt) &&
-          pt.length >= 2 &&
-          typeof pt[0] === "number" &&
-          typeof pt[1] === "number" &&
-          Number.isFinite(pt[0]) &&
-          Number.isFinite(pt[1])
-        );
-      }
+        await setupCamera();
 
-      function isValidBox(topLeft, bottomRight) {
-        if (!isValidPoint(topLeft) || !isValidPoint(bottomRight)) return false;
-        const [x1, y1] = topLeft;
-        const [x2, y2] = bottomRight;
-        return x2 - x1 > 0 && y2 - y1 > 0;
-      }
+        setStatus("Loading AI models…", "idle");
+        await getBestBackend();
 
-      function smoothBox(oldBox, newBox, alpha) {
-        if (!oldBox) return newBox;
-
-        const [ox1, oy1] = oldBox.topLeft;
-        const [ox2, oy2] = oldBox.bottomRight;
-        const [nx1, ny1] = newBox.topLeft;
-        const [nx2, ny2] = newBox.bottomRight;
-
-        return {
-          topLeft: [
-            ox1 + alpha * (nx1 - ox1),
-            oy1 + alpha * (ny1 - oy1)
-          ],
-          bottomRight: [
-            ox2 + alpha * (nx2 - ox2),
-            oy2 + alpha * (ny2 - oy2)
-          ]
-        };
-      }
-
-      function smoothLandmarks(oldLandmarks, newLandmarks, alpha) {
-        if (!Array.isArray(newLandmarks) || newLandmarks.length === 0) return null;
-        if (!Array.isArray(oldLandmarks) || oldLandmarks.length !== newLandmarks.length) {
-          return newLandmarks.map((pt) => [pt[0], pt[1]]);
-        }
-
-        return newLandmarks.map((pt, index) => {
-          const oldPt = oldLandmarks[index];
-          if (!isValidPoint(oldPt) || !isValidPoint(pt)) return [pt[0], pt[1]];
-          return [
-            oldPt[0] + alpha * (pt[0] - oldPt[0]),
-            oldPt[1] + alpha * (pt[1] - oldPt[1])
-          ];
-        });
-      }
-
-      function getFaceMetrics(topLeft, bottomRight) {
-        const [x1, y1] = topLeft;
-        const [x2, y2] = bottomRight;
-        const faceWidth = x2 - x1;
-        const faceHeight = y2 - y1;
-        const centerX = x1 + faceWidth / 2;
-        const centerY = y1 + faceHeight / 2;
-
-        return { x1, y1, x2, y2, faceWidth, faceHeight, centerX, centerY };
-      }
-
-      function drawGlassesOnFace(topLeft, bottomRight, landmarks = null) {
-        if (!glassesImgReady || !isValidBox(topLeft, bottomRight)) return;
-
-        const { x1, y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
-
-        const overlayWidth = faceWidth * 1.12;
-        const aspect = glassesImg.naturalHeight / glassesImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-
-        let eyeLineY = y1 + faceHeight * 0.43;
-
-        if (Array.isArray(landmarks) && landmarks.length >= 2) {
-          const leftEye = landmarks[0];
-          const rightEye = landmarks[1];
-          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
-            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
-          }
-        }
-
-        ctx.drawImage(
-          glassesImg,
-          centerX - overlayWidth / 2,
-          eyeLineY - overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-      }
-
-      function drawHelmetOnFace(topLeft, bottomRight, landmarks = null) {
-        if (!helmetImgReady || !isValidBox(topLeft, bottomRight)) return;
-
-        const { y1, faceWidth, faceHeight, centerX } = getFaceMetrics(topLeft, bottomRight);
-
-        const overlayWidth = faceWidth * 1.55;
-        const aspect = helmetImg.naturalHeight / helmetImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-
-        let eyeLineY = y1 + faceHeight * 0.38;
-
-        if (Array.isArray(landmarks) && landmarks.length >= 2) {
-          const leftEye = landmarks[0];
-          const rightEye = landmarks[1];
-
-          if (isValidPoint(leftEye) && isValidPoint(rightEye)) {
-            eyeLineY = (leftEye[1] + rightEye[1]) / 2;
-          }
-        }
-
-        const drawX = centerX - overlayWidth / 2;
-        const drawY = eyeLineY - overlayHeight * 0.50;
-
-        ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
-      }
-
-      function drawBeardOnFace(topLeft, bottomRight) {
-        if (!beardImgReady || !isValidBox(topLeft, bottomRight)) return;
-
-        const { faceWidth, faceHeight, centerX, centerY } = getFaceMetrics(topLeft, bottomRight);
-
-        const overlayWidth = faceWidth * 1.42;
-        const aspect = beardImg.naturalHeight / beardImg.naturalWidth;
-        const overlayHeight = overlayWidth * aspect;
-        const overlayCenterY = centerY - faceHeight * 0.02;
-
-        ctx.drawImage(
-          beardImg,
-          centerX - overlayWidth / 2,
-          overlayCenterY - overlayHeight / 2,
-          overlayWidth,
-          overlayHeight
-        );
-      }
-
-      function drawComboOnFace(topLeft, bottomRight, landmarks = null) {
-        drawHelmetOnFace(topLeft, bottomRight, landmarks);
-        drawBeardOnFace(topLeft, bottomRight);
-      }
-
-      async function detectFaceStep() {
-        if (!aiRunning || !videoReady || !faceModel) return;
+        faceModel = await blazeface.load();
 
         try {
-          const predictions = await faceModel.estimateFaces(video, false);
-
-          if (Array.isArray(predictions) && predictions.length > 0) {
-            const face = predictions[0];
-
-            if (isValidBox(face.topLeft, face.bottomRight)) {
-              latestFaceBox = {
-                topLeft: face.topLeft,
-                bottomRight: face.bottomRight
-              };
-
-              latestLandmarks = Array.isArray(face.landmarks)
-                ? face.landmarks.map((pt) => [pt[0], pt[1]])
-                : null;
-
-              lastFaceTime = performance.now();
-            }
-          } else if (performance.now() - lastFaceTime > FACE_HOLD_MS) {
-            latestFaceBox = null;
-            latestLandmarks = null;
-          }
-        } catch (error) {
-          console.error("Error running BlazeFace:", error);
-        }
-      }
-
-      async function segmentStep() {
-        if (!aiRunning || !videoReady || !bodyPixModel) return;
-
-        try {
-          lastSegmentation = await bodyPixModel.segmentPerson(video, {
-            internalResolution: isMobileUA ? "low" : "medium",
-            segmentationThreshold: 0.7,
-            maxDetections: 1
+          bodyPixModel = await bodyPix.load({
+            architecture: "MobileNetV1",
+            outputStride: 16,
+            multiplier: isMobileUA ? 0.5 : 0.75,
+            quantBytes: 2
           });
         } catch (error) {
-          console.error("BodyPix error:", error);
-          lastSegmentation = null;
-        }
-      }
-
-      function drawBackgroundCover(img, targetCtx, targetW, targetH) {
-        if (!img || !img.naturalWidth || !img.naturalHeight) return;
-
-        const imgRatio = img.naturalWidth / img.naturalHeight;
-        const targetRatio = targetW / targetH;
-
-        let drawW, drawH, drawX, drawY;
-
-        if (imgRatio > targetRatio) {
-          drawH = targetH;
-          drawW = drawH * imgRatio;
-          drawX = (targetW - drawW) / 2;
-          drawY = 0;
-        } else {
-          drawW = targetW;
-          drawH = drawW / imgRatio;
-          drawX = 0;
-          drawY = (targetH - drawH) / 2;
+          console.warn("⚠️ BodyPix failed to load.", error);
+          bodyPixModel = null;
         }
 
-        targetCtx.drawImage(img, drawX, drawY, drawW, drawH);
-      }
+        aiRunning = true;
+        captureBtn.disabled = false;
+        stopBtn.disabled = false;
 
-      function drawBaseComposite() {
-        const logicalW = canvas.width;
-        const logicalH = canvas.height;
+        faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
+        segmentTimer = setInterval(segmentStep, SEGMENT_MS);
 
-        if (!logicalW || !logicalH) return;
+        await detectFaceStep();
+        await segmentStep();
 
-        ctx.clearRect(0, 0, logicalW, logicalH);
-
-        if (bgReady && bodyPixModel && lastSegmentation) {
-          tempCtx.clearRect(0, 0, logicalW, logicalH);
-          tempCtx.drawImage(video, 0, 0, logicalW, logicalH);
-
-          const mask = lastSegmentation.data;
-          const frameImageData = tempCtx.getImageData(0, 0, logicalW, logicalH);
-          const framePixels = frameImageData.data;
-
-          bgCtx.clearRect(0, 0, logicalW, logicalH);
-          drawBackgroundCover(bgImage, bgCtx, logicalW, logicalH);
-
-          const bgImageData = bgCtx.getImageData(0, 0, logicalW, logicalH);
-          const bgPixels = bgImageData.data;
-
-          const len = Math.min(mask.length, framePixels.length / 4);
-
-          for (let i = 0; i < len; i++) {
-            const offset = i * 4;
-            if (mask[i] === 0) {
-              framePixels[offset] = bgPixels[offset];
-              framePixels[offset + 1] = bgPixels[offset + 1];
-              framePixels[offset + 2] = bgPixels[offset + 2];
-              framePixels[offset + 3] = bgPixels[offset + 3];
-            }
-          }
-
-          ctx.putImageData(frameImageData, 0, 0);
-        } else if (activeFilter === "griffin" && bgReady) {
-          drawBackgroundCover(bgImage, ctx, logicalW, logicalH);
-        } else {
-          ctx.drawImage(video, 0, 0, logicalW, logicalH);
-        }
-      }
-
-      function addWatermarkToSnapshot(targetCtx, outputW, outputH) {
-        const pad = Math.max(16, Math.round(outputW * 0.018));
-        const boxH = Math.max(42, Math.round(outputH * 0.072));
-
-        targetCtx.save();
-        targetCtx.fillStyle = "rgba(17,17,17,0.58)";
-        targetCtx.beginPath();
-        targetCtx.roundRect(pad, outputH - boxH - pad, Math.min(outputW * 0.72, 420), boxH, 14);
-        targetCtx.fill();
-
-        targetCtx.fillStyle = "#ffffff";
-        targetCtx.font = `700 ${Math.max(14, Math.round(outputW * 0.018))}px system-ui, sans-serif`;
-        targetCtx.fillText("NKU COI AI Showcase", pad + 14, outputH - pad - boxH / 2 + 2);
-
-        targetCtx.font = `500 ${Math.max(12, Math.round(outputW * 0.014))}px system-ui, sans-serif`;
-        targetCtx.fillText(CREATOR_CREDIT_TEXT, pad + 14, outputH - pad - 12);
-        targetCtx.restore();
-      }
-
-      function renderFrame() {
-        if (!aiRunning || !videoReady) return;
-
-        drawBaseComposite();
-
-        let boxToUse = null;
-        let landmarksToUse = null;
-        const now = performance.now();
-
-        if (latestFaceBox) {
-          smoothedFaceBox = smoothBox(smoothedFaceBox, latestFaceBox, SMOOTH_ALPHA);
-          smoothedLandmarks = smoothLandmarks(smoothedLandmarks, latestLandmarks, LANDMARK_SMOOTH_ALPHA);
-          boxToUse = smoothedFaceBox;
-          landmarksToUse = smoothedLandmarks;
-        } else if (smoothedFaceBox && now - lastFaceTime < FACE_HOLD_MS) {
-          boxToUse = smoothedFaceBox;
-          landmarksToUse = smoothedLandmarks;
-        } else {
-          smoothedFaceBox = null;
-          smoothedLandmarks = null;
-        }
-
-        if (boxToUse && isValidBox(boxToUse.topLeft, boxToUse.bottomRight)) {
-          const { topLeft, bottomRight } = boxToUse;
-
-          if (activeFilter === "glasses") {
-            drawGlassesOnFace(topLeft, bottomRight, landmarksToUse);
-            setStatus("Glasses mode is active.", "active");
-          } else if (activeFilter === "helmet") {
-            drawHelmetOnFace(topLeft, bottomRight, landmarksToUse);
-            setStatus("Helmet mode is active.", "active");
-          } else if (activeFilter === "combo") {
-            drawComboOnFace(topLeft, bottomRight, landmarksToUse);
-            setStatus("Viking Combo mode is active.", "active");
-          } else {
-            setStatus("Griffin Hall background mode is active.", "active");
-          }
-
-          setScreenStatus("Face Locked", true);
-        } else {
-          setStatus("AI is running. Move into view to activate overlays.", "active");
-          setScreenStatus("Searching…", false);
-        }
-
+        setStatus("Camera and AI are ready.", "active");
         renderRaf = requestAnimationFrame(renderFrame);
+      } catch (error) {
+        console.error("Init error:", error);
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+        setScreenStatus("Offline", false);
+        setStatus(
+          "This device or browser may not fully support the demo. Try Chrome, Edge, Firefox, or Safari over HTTPS.",
+          "error"
+        );
       }
+    }
 
-      function captureSnapshot() {
-        if (!videoReady) return;
+    filterButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeFilter = btn.getAttribute("data-filter") || "glasses";
 
-        const outputW = canvas.width;
-        const outputH = canvas.height;
-        if (!outputW || !outputH) return;
-
-        const snapCanvas = document.createElement("canvas");
-        snapCanvas.width = outputW;
-        snapCanvas.height = outputH;
-
-        const sctx = snapCanvas.getContext("2d");
-        sctx.drawImage(canvas, 0, 0, outputW, outputH);
-        addWatermarkToSnapshot(sctx, outputW, outputH);
-
-        const dataURL = snapCanvas.toDataURL("image/png");
-        snapshotPreview.src = dataURL;
-        previewSection.style.display = "block";
-
-        const a = document.createElement("a");
-        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
-        a.href = dataURL;
-        a.download = `${TARGET_FOLDER_LABEL}-snapshot-${timestampText}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setStatus("Snapshot saved to your device with creator credit watermark.", "active");
-      }
-
-      async function copyShareLink() {
-        try {
-          const shareURL = window.location.href;
-
-          if (navigator.share && isMobileUA) {
-            await navigator.share({
-              title: document.title,
-              text: "Try this NKU College of Informatics AI showcase demo.",
-              url: shareURL
-            });
-            setStatus("Share sheet opened.", "active");
-            return;
-          }
-
-          await navigator.clipboard.writeText(shareURL);
-          setStatus("Share link copied to clipboard.", "active");
-        } catch (error) {
-          console.warn("Share/copy failed:", error);
-          setStatus("Could not copy the link on this device. You can copy the URL manually.", "error");
-        }
-      }
-
-      async function startExperience() {
-        try {
-          if (aiRunning) return;
-
-          startBtn.disabled = true;
-          captureBtn.disabled = true;
-          stopBtn.disabled = true;
-
-          setStatus("Requesting camera access…", "idle");
-          setScreenStatus("Loading…", false);
-
-          await setupCamera();
-
-          setStatus("Loading AI models…", "idle");
-          await getBestBackend();
-
-          faceModel = await blazeface.load();
-
-          try {
-            bodyPixModel = await bodyPix.load({
-              architecture: "MobileNetV1",
-              outputStride: 16,
-              multiplier: isMobileUA ? 0.5 : 0.75,
-              quantBytes: 2
-            });
-          } catch (error) {
-            console.warn("⚠️ BodyPix failed to load.", error);
-            bodyPixModel = null;
-          }
-
-          aiRunning = true;
-          captureBtn.disabled = false;
-          stopBtn.disabled = false;
-
-          faceDetectTimer = setInterval(detectFaceStep, FACE_DETECT_MS);
-          segmentTimer = setInterval(segmentStep, SEGMENT_MS);
-
-          await detectFaceStep();
-          await segmentStep();
-
-          setStatus("Camera and AI are ready.", "active");
-          renderRaf = requestAnimationFrame(renderFrame);
-        } catch (error) {
-          console.error("Init error:", error);
-          startBtn.disabled = false;
-          captureBtn.disabled = true;
-          stopBtn.disabled = true;
-          setScreenStatus("Offline", false);
-          setStatus(
-            "This device or browser may not fully support the demo. Try Chrome, Edge, Firefox, or Safari over HTTPS.",
-            "error"
-          );
-        }
-      }
-
-      filterButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          activeFilter = btn.getAttribute("data-filter") || "glasses";
-
-          filterButtons.forEach((b) => {
-            b.classList.remove("active");
-            b.setAttribute("aria-pressed", "false");
-            b.setAttribute("aria-checked", "false");
-          });
-
-          btn.classList.add("active");
-          btn.setAttribute("aria-pressed", "true");
-          btn.setAttribute("aria-checked", "true");
-
-          if (activeFilter === "glasses") {
-            setStatus("Glasses mode selected.", aiRunning ? "active" : "idle");
-          } else if (activeFilter === "helmet") {
-            setStatus("Helmet mode selected.", aiRunning ? "active" : "idle");
-          } else if (activeFilter === "combo") {
-            setStatus("Viking Combo mode selected.", aiRunning ? "active" : "idle");
-          } else {
-            setStatus("Griffin Hall mode selected.", aiRunning ? "active" : "idle");
-          }
+        filterButtons.forEach((b) => {
+          b.classList.remove("active");
+          b.setAttribute("aria-pressed", "false");
+          b.setAttribute("aria-checked", "false");
         });
+
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+        btn.setAttribute("aria-checked", "true");
+
+        if (activeFilter === "glasses") {
+          setStatus("Glasses mode selected.", aiRunning ? "active" : "idle");
+        } else if (activeFilter === "helmet") {
+          setStatus("Helmet mode selected.", aiRunning ? "active" : "idle");
+        } else if (activeFilter === "combo") {
+          setStatus("Viking Combo mode selected.", aiRunning ? "active" : "idle");
+        } else {
+          setStatus("Griffin Hall mode selected.", aiRunning ? "active" : "idle");
+        }
       });
+    });
 
-      startBtn.addEventListener("click", startExperience);
-      captureBtn.addEventListener("click", captureSnapshot);
-      stopBtn.addEventListener("click", stopCamera);
-      shareBtn.addEventListener("click", copyShareLink);
+    startBtn.addEventListener("click", startExperience);
+    captureBtn.addEventListener("click", captureSnapshot);
+    stopBtn.addEventListener("click", stopCamera);
+    shareBtn.addEventListener("click", shareDemo);
 
-      window.addEventListener("beforeunload", () => {
-        stopCamera();
-      });
+    window.addEventListener("beforeunload", () => {
+      stopCamera();
+    });
 
-      setScreenStatus("Offline", false);
-    })();
-  </script>
+    setScreenStatus("Offline", false);
+  })();
+</script>
 </body>
 </html>

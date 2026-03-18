@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Laugh to Unlock — NKU AI Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="A mobile-friendly browser AI demo that looks for a strong laugh pattern and unlocks a Digital Viking moment."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+  <style>
+    :root {
+      --nku-gold: #f7b718;
+      --nku-black: #111111;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --muted-2: #94a3b8;
+      --bg: #0b1220;
+      --bg-2: #111827;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-2: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.12);
+      --green: #22c55e;
+      --red: #fb7185;
+      --yellow: #facc15;
+      --radius: 18px;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(247, 183, 24, 0.08), transparent 20%),
+        radial-gradient(circle at top right, rgba(125, 211, 252, 0.08), transparent 20%),
+        linear-gradient(180deg, #0b1220 0%, #101827 100%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      padding: 12px;
+    }
+
+    .page-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .main-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .content-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fde68a;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .lead {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.97rem;
+      line-height: 1.65;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e5e7eb;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: #fde68a;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 18px 0 10px;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+      font-size: 0.93rem;
+      line-height: 1.55;
+    }
+
+    .step-num {
+      color: var(--nku-gold);
+      font-weight: 800;
+      min-width: 18px;
+    }
+
+    .info-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .info-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    .demo-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: clamp(360px, 60vh, 680px);
+      min-height: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+      isolation: isolate;
+    }
+
+    #video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 1;
+      display: block;
+      filter: saturate(1.02) contrast(1.02);
+    }
+
+    .skeleton {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(120deg, #1f2937 0%, #334155 50%, #1f2937 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    .stage-gradient {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, rgba(247,183,24,0.10), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2));
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 26%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.42), rgba(0,0,0,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 30%;
+      background: linear-gradient(0deg, rgba(0,0,0,0.54), rgba(0,0,0,0));
+    }
+
+    .screen-pill,
+    .screen-status {
+      position: absolute;
+      top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(11, 18, 32, 0.6);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      backdrop-filter: blur(8px);
+    }
+
+    .screen-pill {
+      left: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .screen-status {
+      right: 12px;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .screen-footer {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      color: #fff;
+    }
+
+    .screen-kicker {
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      opacity: 0.92;
+      margin-bottom: 4px;
+    }
+
+    .screen-title {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .screen-sub {
+      font-size: 0.74rem;
+      opacity: 0.92;
+      margin-top: 4px;
+    }
+
+    .coach-overlay {
+      position: absolute;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: min(88%, 560px);
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(11, 18, 32, 0.72);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .coach-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(247, 183, 24, 0.14);
+      border: 1px solid rgba(247, 183, 24, 0.28);
+      color: #fde68a;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .coach-message {
+      font-size: clamp(1rem, 2vw, 1.28rem);
+      line-height: 1.15;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .coach-sub {
+      margin-top: 6px;
+      color: #dbe8f7;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .coach-overlay.success {
+      border-color: rgba(34,197,94,0.34);
+      background: rgba(6, 26, 18, 0.72);
+    }
+
+    .coach-overlay.success .coach-badge {
+      background: rgba(34,197,94,0.14);
+      border-color: rgba(34,197,94,0.28);
+      color: #bbf7d0;
+    }
+
+    .coach-overlay.warn {
+      border-color: rgba(250,204,21,0.28);
+    }
+
+    .coach-overlay.error {
+      border-color: rgba(251,113,133,0.30);
+    }
+
+    .center-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: min(62vw, 300px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 2px solid rgba(247,183,24,0.2);
+      box-shadow: 0 0 32px rgba(247,183,24,0.12);
+      opacity: 0;
+      transform: scale(0.88);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .pulse-ring.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: spin 16s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: scale(1) rotate(360deg); }
+    }
+
+    .unlock-orb {
+      display: grid;
+      place-items: center;
+      width: min(28vw, 150px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0.75);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,0.22), transparent 30%),
+        radial-gradient(circle at center, rgba(247,183,24,0.24), rgba(247,183,24,0.10) 46%, rgba(255,255,255,0.04) 70%);
+      border: 1px solid rgba(247,183,24,0.32);
+      box-shadow: 0 0 36px rgba(247,183,24,0.18);
+      backdrop-filter: blur(12px);
+    }
+
+    .unlock-orb.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .orb-emoji {
+      font-size: clamp(3rem, 7vw, 5rem);
+      line-height: 1;
+    }
+
+    .unlock-banner {
+      position: absolute;
+      left: 50%;
+      bottom: 8%;
+      transform: translateX(-50%) translateY(12px);
+      width: min(92%, 680px);
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: rgba(11,18,32,0.74);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .unlock-banner.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .unlock-kicker {
+      margin-bottom: 6px;
+      color: #fde68a;
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .unlock-main {
+      margin: 0;
+      font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: white;
+    }
+
+    .unlock-main .gold {
+      color: var(--nku-gold);
+    }
+
+    .unlock-sub {
+      margin-top: 8px;
+      color: #dbe8f7;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .flash {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.9), rgba(247,183,24,0.55), transparent 60%);
+      transform: scale(0.9);
+    }
+
+    .flash.boom {
+      animation: flashBoom 900ms ease-out;
+    }
+
+    @keyframes flashBoom {
+      0%   { opacity: 0; transform: scale(0.8); }
+      18%  { opacity: 1; transform: scale(1.02); }
+      42%  { opacity: 0.45; transform: scale(1.12); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(180deg, #fff6cc 0%, var(--nku-gold) 100%);
+      box-shadow: 0 0 14px rgba(247,183,24,0.28);
+    }
+
+    .particle.burst {
+      animation: burst 1200ms ease-out forwards;
+    }
+
+    @keyframes burst {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.7) rotate(0deg);
+      }
+      10% { opacity: 1; }
+      100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot));
+      }
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #64748b;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .status-dot.warn {
+      background: var(--yellow);
+      box-shadow: 0 0 0 4px rgba(250,204,21,0.14);
+    }
+
+    .status-dot.error {
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(251,113,133,0.16);
+    }
+
+    .status-text {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1.45;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: var(--muted-2);
+      line-height: 1.55;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 999px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    .app-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .app-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-start {
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border: none;
+    }
+
+    .btn-stop {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .btn-capture {
+      background: rgba(125,211,252,0.14);
+      color: #dff5ff;
+      border-color: rgba(125,211,252,0.18);
+    }
+
+    .btn-copy {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .card-lite {
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+    }
+
+    .card-label {
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #fde68a;
+      margin-bottom: 8px;
+    }
+
+    .result-state {
+      font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .result-state.unlocked {
+      color: var(--nku-gold);
+    }
+
+    .result-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .score-big {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .score-num {
+      font-size: 2.4rem;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .score-caption {
+      color: var(--muted-2);
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .progress-track,
+    .bar {
+      width: 100%;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+
+    .progress-fill,
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.14s ease;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, #fde68a 0%, var(--nku-gold) 100%);
+    }
+
+    .signals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .signal-value {
+      font-size: 1.8rem;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .signal-copy {
+      min-height: 2.8em;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .bar-fill {
+      background: linear-gradient(90deg, #7dd3fc 0%, #22c55e 100%);
+    }
+
+    .share-area {
+      margin-top: 12px;
+      display: none;
+    }
+
+    .share-area.show {
+      display: block;
+    }
+
+    #snapshotCanvas {
+      width: 100%;
+      max-width: 540px;
+      display: block;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      box-shadow: var(--shadow);
+    }
+
+    .small-note {
+      margin: 10px 0 0;
+      color: var(--muted-2);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .footer-note {
+      padding: 0 18px 18px;
+      font-size: 0.84rem;
+      color: var(--muted-2);
+      line-height: 1.6;
+    }
+
+    .toast-lite {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(11,18,32,0.92);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .toast-lite.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .shake {
+      animation: shake 500ms ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(-5px); }
+      36% { transform: translateX(5px); }
+      54% { transform: translateX(-4px); }
+      72% { transform: translateX(4px); }
+      90% { transform: translateX(-1px); }
+    }
+
+    @media (max-width: 991.98px) {
+      .content-wrap,
+      .results-grid,
+      .signals-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      body {
+        padding: 10px;
+      }
+
+      .topbar {
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      .content-wrap {
+        padding: 14px;
+        gap: 14px;
+      }
+
+      .stage {
+        height: min(72svh, 560px);
+        min-height: 340px;
+      }
+
+      .screen-pill,
+      .screen-status {
+        font-size: 0.62rem;
+        padding: 6px 9px;
+      }
+
+      .screen-sub {
+        font-size: 0.7rem;
+      }
+
+      .unlock-banner {
+        width: 92%;
+      }
+
+      .coach-overlay {
+        top: 15%;
+        width: 90%;
+        padding: 10px 12px;
+      }
+
+      .coach-sub {
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar" aria-label="NKU AI demo header">
+      <div class="brand">
+        <div class="brand-pill">NKU · COI</div>
+        <div class="brand-sub">Laugh to Unlock</div>
+      </div>
+      <div class="brand-sub">Runs in your browser</div>
+    </header>
+
+    <main class="main-card" aria-labelledby="page-title">
+      <div class="content-wrap">
+        <section aria-label="Overview">
+          <div class="tag-row">
+            <span class="tag">Browser AI</span>
+            <span class="tag">Face Tracking</span>
+            <span class="tag">Mobile Friendly</span>
+          </div>
+
+          <p class="eyebrow">Interactive Demo</p>
+          <h1 id="page-title">Laugh to unlock Digital Viking mode.</h1>
+
+          <p class="lead">
+            This demo uses the camera and a browser-based AI model to watch for a strong laugh pattern.
+            When the laugh score stays high long enough, the unlock sequence appears on screen.
+          </p>
+
+          <h2 class="section-title">How to use it</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-num">1.</span>
+              <span>Select <strong>Start Camera &amp; AI</strong>.</span>
+            </li>
+            <li>
+              <span class="step-num">2.</span>
+              <span>Look at the camera and laugh naturally.</span>
+            </li>
+            <li>
+              <span class="step-num">3.</span>
+              <span>Once unlocked, create and download a share card if you want to save the moment.</span>
+            </li>
+          </ol>
+
+          <div class="info-card">
+            <p>
+              This is a playful demo rather than scientific emotion detection. A strong smile, animated talking,
+              or other expressive face movement may also raise the score.
+            </p>
+          </div>
+
+          <div class="info-card">
+            <p>
+              Best results: one face in frame, clear lighting, and a steady camera view.
+            </p>
+          </div>
+        </section>
+
+        <section aria-label="Live AI demo">
+          <div class="demo-panel">
+            <div id="stage" class="stage">
+              <div id="skeleton" class="skeleton" aria-hidden="true"></div>
+              <video id="video" autoplay playsinline muted aria-label="Live camera feed"></video>
+              <div class="stage-gradient"></div>
+
+              <div class="screen-ui" aria-hidden="true">
+                <div class="screen-gradient-top"></div>
+                <div class="screen-gradient-bottom"></div>
+
+                <div class="screen-pill">Laugh to Unlock</div>
+
+                <div class="screen-status">
+                  <span id="screenStatusDot" class="screen-status-dot"></span>
+                  <span id="screenStatusText">Offline</span>
+                </div>
+
+                <div class="screen-footer">
+                  <div class="screen-kicker">Live demo</div>
+                  <h2 class="screen-title">Digital Viking Challenge</h2>
+                  <div class="screen-sub">Camera · Browser AI · Face tracking</div>
+                </div>
+              </div>
+
+              <div id="coachOverlay" class="coach-overlay" aria-live="polite" aria-atomic="true">
+                <div id="coachBadge" class="coach-badge">AI Coach</div>
+                <div id="coachMessage" class="coach-message">Step into frame to begin.</div>
+                <div id="coachSub" class="coach-sub">Position your face in the center and look toward the camera.</div>
+              </div>
+
+              <div class="center-overlay">
+                <div id="pulseRing" class="pulse-ring"></div>
+
+                <div id="unlockOrb" class="unlock-orb">
+                  <div class="orb-emoji">⚔️</div>
+                </div>
+
+                <div id="unlockBanner" class="unlock-banner">
+                  <div class="unlock-kicker">Challenge complete</div>
+                  <h2 class="unlock-main"><span class="gold">Digital Viking</span> unlocked</h2>
+                  <div class="unlock-sub">The laugh score stayed high long enough to trigger the reveal.</div>
+                </div>
+              </div>
+
+              <div id="flash" class="flash"></div>
+              <div id="particles" class="particles" aria-hidden="true"></div>
+            </div>
+
+            <div class="status-row" role="status" aria-live="polite" aria-atomic="true">
+              <div class="status-main">
+                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+                <span id="statusText" class="status-text">Tap “Start Camera &amp; AI” to begin.</span>
+              </div>
+              <div class="status-hint">
+                Use Chrome or Edge over HTTPS for the most reliable results.
+              </div>
+            </div>
+
+            <div class="action-row">
+              <button id="startBtn" class="app-btn btn-start" type="button">🚀 Start Camera &amp; AI</button>
+              <button id="stopBtn" class="app-btn btn-stop" type="button" disabled>⏹️ Stop</button>
+              <button id="captureBtn" class="app-btn btn-capture" type="button" disabled>📸 Create Share Card</button>
+              <button id="copyBtn" class="app-btn btn-copy" type="button" disabled>📋 Copy Caption</button>
+            </div>
+
+            <div class="results-grid">
+              <article class="card-lite">
+                <div class="card-label">Live status</div>
+                <div id="resultState" class="result-state">Waiting for the laugh...</div>
+                <p id="resultCopy" class="result-copy">
+                  The system is looking for enough mouth openness plus repeat motion to trigger the unlock.
+                </p>
+              </article>
+
+              <article class="card-lite">
+                <div class="card-label">Unlock progress</div>
+                <div class="score-big">
+                  <div id="progressNum" class="score-num">0%</div>
+                  <div class="score-caption">sustained laughter required</div>
+                </div>
+                <div class="progress-track">
+                  <div id="progressFill" class="progress-fill"></div>
+                </div>
+              </article>
+            </div>
+
+            <div class="signals-grid">
+              <article class="card-lite">
+                <div class="card-label">Mouth openness</div>
+                <div id="mouthScore" class="signal-value">0</div>
+                <div class="signal-copy">How open the mouth appears relative to the face.</div>
+                <div class="bar"><div id="mouthBar" class="bar-fill"></div></div>
+              </article>
+
+              <article class="card-lite">
+                <div class="card-label">Motion signal</div>
+                <div id="motionScore" class="signal-value">0</div>
+                <div class="signal-copy">Movement across recent frames around the face and mouth.</div>
+                <div class="bar"><div id="motionBar" class="bar-fill"></div></div>
+              </article>
+
+              <article class="card-lite">
+                <div class="card-label">Laugh score</div>
+                <div id="laughScore" class="signal-value">0</div>
+                <div class="signal-copy">Combined score used to decide whether to unlock.</div>
+                <div class="bar"><div id="laughBar" class="bar-fill"></div></div>
+              </article>
+            </div>
+
+            <section id="shareArea" class="share-area" aria-live="polite">
+              <div class="card-lite">
+                <div class="card-label">Share card</div>
+                <canvas id="snapshotCanvas" width="1080" height="1350"></canvas>
+
+                <div class="action-row" style="margin-top: 12px;">
+                  <button id="downloadBtn" class="app-btn btn-start" type="button">⬇️ Download Image</button>
+                </div>
+
+                <p class="small-note">
+                  Suggested caption: “I unlocked Digital Viking mode with a browser-based AI demo built for interactive web experiences.”
+                </p>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">
+        Privacy-first design: processing stays in the browser and no backend is required for this demo.
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast-lite" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const video = document.getElementById("video");
+      const skeleton = document.getElementById("skeleton");
+      const stage = document.getElementById("stage");
+      const flash = document.getElementById("flash");
+      const particles = document.getElementById("particles");
+      const pulseRing = document.getElementById("pulseRing");
+      const unlockOrb = document.getElementById("unlockOrb");
+      const unlockBanner = document.getElementById("unlockBanner");
+
+      const coachOverlay = document.getElementById("coachOverlay");
+      const coachMessage = document.getElementById("coachMessage");
+      const coachSub = document.getElementById("coachSub");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+
+      const resultState = document.getElementById("resultState");
+      const resultCopy = document.getElementById("resultCopy");
+
+      const mouthScoreEl = document.getElementById("mouthScore");
+      const motionScoreEl = document.getElementById("motionScore");
+      const laughScoreEl = document.getElementById("laughScore");
+
+      const mouthBar = document.getElementById("mouthBar");
+      const motionBar = document.getElementById("motionBar");
+      const laughBar = document.getElementById("laughBar");
+
+      const progressNum = document.getElementById("progressNum");
+      const progressFill = document.getElementById("progressFill");
+
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const copyBtn = document.getElementById("copyBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      const shareArea = document.getElementById("shareArea");
+      const snapshotCanvas = document.getElementById("snapshotCanvas");
+      const snapshotCtx = snapshotCanvas.getContext("2d");
+
+      const toast = document.getElementById("toast");
+
+      let faceModel = null;
+      let mediaStream = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let rafId = null;
+      let lastTick = 0;
+
+      let mouthScore = 0;
+      let motionScore = 0;
+      let laughScore = 0;
+
+      let prevFaceCenterYNorm = null;
+      let prevMouthYNorm = null;
+
+      let laughHoldFrames = 0;
+      let unlocked = false;
+      let lastDisplayScore = 0;
+
+      const RENDER_INTERVAL_MS = 90;
+      const SMOOTH_ALPHA = 0.18;
+      const LAUGH_THRESHOLD = 68;
+      const MOUTH_THRESHOLD = 35;
+      const HOLD_REQUIRED = 18;
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function lerp(current, target, alpha) {
+        return current + alpha * (target - current);
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2200);
+      }
+
+      function setCoach(message, sub = "", mode = "idle") {
+        coachMessage.textContent = message;
+        coachSub.textContent = sub;
+
+        coachOverlay.classList.remove("success", "warn", "error");
+
+        if (mode === "success") {
+          coachOverlay.classList.add("success");
+        } else if (mode === "warn") {
+          coachOverlay.classList.add("warn");
+        } else if (mode === "error") {
+          coachOverlay.classList.add("error");
+        }
+      }
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        screenStatusText.textContent =
+          mode === "error" ? "Error" :
+          mode === "warn" ? "Searching…" :
+          mode === "active" ? "Live" :
+          "Offline";
+
+        statusDot.classList.remove("active", "warn", "error");
+        screenStatusDot.classList.remove("active");
+
+        if (mode === "active") {
+          statusDot.classList.add("active");
+          screenStatusDot.classList.add("active");
+        } else if (mode === "warn") {
+          statusDot.classList.add("warn");
+        } else if (mode === "error") {
+          statusDot.classList.add("error");
+        }
+      }
+
+      function setBar(el, value) {
+        el.style.width = clamp(Math.round(value), 0, 100) + "%";
+      }
+
+      function updateUI() {
+        const mouthRounded = Math.round(mouthScore);
+        const motionRounded = Math.round(motionScore);
+        const laughRounded = Math.round(laughScore);
+        const progressPercent = clamp(Math.round((laughHoldFrames / HOLD_REQUIRED) * 100), 0, 100);
+
+        mouthScoreEl.textContent = mouthRounded;
+        motionScoreEl.textContent = motionRounded;
+        laughScoreEl.textContent = laughRounded;
+
+        setBar(mouthBar, mouthRounded);
+        setBar(motionBar, motionRounded);
+        setBar(laughBar, laughRounded);
+
+        progressNum.textContent = progressPercent + "%";
+        progressFill.style.width = progressPercent + "%";
+
+        lastDisplayScore = laughRounded;
+
+        if (unlocked) {
+          resultState.textContent = "Digital Viking unlocked";
+          resultState.classList.add("unlocked");
+          resultCopy.textContent =
+            "The system detected enough sustained laugh movement to trigger the full reveal.";
+          captureBtn.disabled = false;
+          copyBtn.disabled = false;
+        } else if (laughHoldFrames > 0) {
+          resultState.textContent = "Building toward the unlock...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "The score is rising. Keep going until the laugh holds long enough.";
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+        } else {
+          resultState.textContent = "Waiting for the laugh...";
+          resultState.classList.remove("unlocked");
+          resultCopy.textContent =
+            "The system is watching for mouth openness plus repeated motion across frames.";
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+        }
+      }
+
+      async function getBestBackend() {
+        const backends = ["webgl", "wasm", "cpu"];
+        for (const backend of backends) {
+          try {
+            const ok = await tf.setBackend(backend);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (err) {
+            console.warn("Backend unavailable:", backend, err);
+          }
+        }
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Camera access is not supported in this browser.");
+        }
+
+        const isSmallScreen = window.matchMedia("(max-width: 767.98px)").matches;
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: isSmallScreen ? { ideal: 720, max: 1280 } : { ideal: 960, max: 1280 },
+            height: isSmallScreen ? { ideal: 960, max: 1280 } : { ideal: 720, max: 960 }
+          }
+        });
+
+        mediaStream = stream;
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            videoReady = true;
+            skeleton.style.display = "none";
+            resolve();
+          };
+        });
+      }
+
+      function calculateSignals(face, videoWidth, videoHeight) {
+        if (!face || !Array.isArray(face.landmarks) || face.landmarks.length < 4) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const topLeft = face.topLeft;
+        const bottomRight = face.bottomRight;
+        const rightEye = face.landmarks[0];
+        const leftEye = face.landmarks[1];
+        const mouth = face.landmarks[3];
+
+        if (!topLeft || !bottomRight || !rightEye || !leftEye || !mouth) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const [x1, y1] = topLeft;
+        const [x2, y2] = bottomRight;
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+
+        if (faceWidth <= 0 || faceHeight <= 0) {
+          return { mouth: 0, motion: 0, laugh: 0 };
+        }
+
+        const eyeMidY = (leftEye[1] + rightEye[1]) / 2;
+        const mouthDrop = mouth[1] - eyeMidY;
+        const mouthDropNorm = mouthDrop / faceHeight;
+
+        const mouthOpenRaw = clamp((mouthDropNorm - 0.20) / 0.23, 0, 1) * 100;
+
+        const faceCenterYNorm = ((y1 + y2) / 2) / videoHeight;
+        const mouthYNorm = mouth[1] / videoHeight;
+
+        let faceBounceScore = 0;
+        let mouthMovementScore = 0;
+
+        if (prevFaceCenterYNorm !== null) {
+          const faceDelta = Math.abs(faceCenterYNorm - prevFaceCenterYNorm);
+          faceBounceScore = clamp(faceDelta / 0.014, 0, 1) * 100;
+        }
+
+        if (prevMouthYNorm !== null) {
+          const mouthDelta = Math.abs(mouthYNorm - prevMouthYNorm);
+          mouthMovementScore = clamp(mouthDelta / 0.02, 0, 1) * 100;
+        }
+
+        prevFaceCenterYNorm = faceCenterYNorm;
+        prevMouthYNorm = mouthYNorm;
+
+        const motionRaw = clamp((mouthMovementScore * 0.68) + (faceBounceScore * 0.32), 0, 100);
+
+        let laughRaw = 0;
+        if (mouthOpenRaw > 35) {
+          laughRaw = (mouthOpenRaw * 0.56) + (motionRaw * 0.44);
+        } else {
+          laughRaw = (mouthOpenRaw * 0.74) + (motionRaw * 0.16);
+        }
+
+        return {
+          mouth: clamp(mouthOpenRaw, 0, 100),
+          motion: clamp(motionRaw, 0, 100),
+          laugh: clamp(laughRaw, 0, 100)
+        };
+      }
+
+      function getFaceGuidance(face, videoWidth, videoHeight) {
+        if (!face || !face.topLeft || !face.bottomRight) {
+          return {
+            message: "Step into frame",
+            sub: "Make sure your face is visible and look toward the camera.",
+            mode: "warn"
+          };
+        }
+
+        const [x1, y1] = face.topLeft;
+        const [x2, y2] = face.bottomRight;
+
+        const faceWidth = x2 - x1;
+        const faceHeight = y2 - y1;
+        const faceCenterX = x1 + faceWidth / 2;
+        const faceCenterY = y1 + faceHeight / 2;
+
+        const sizeRatio = faceWidth / videoWidth;
+        const centerOffsetX = Math.abs(faceCenterX - videoWidth / 2) / videoWidth;
+        const centerOffsetY = Math.abs(faceCenterY - videoHeight / 2) / videoHeight;
+
+        if (sizeRatio < 0.16) {
+          return {
+            message: "Move a little closer",
+            sub: "Your face looks small in frame. Step closer for stronger tracking.",
+            mode: "warn"
+          };
+        }
+
+        if (centerOffsetX > 0.16 || centerOffsetY > 0.18) {
+          return {
+            message: "Center your face",
+            sub: "Try to position your face more toward the middle of the screen.",
+            mode: "warn"
+          };
+        }
+
+        if (mouthScore < 18 && laughScore < 20) {
+          return {
+            message: "Give me a smile or laugh",
+            sub: "A stronger smile or laugh helps raise the unlock score.",
+            mode: "idle"
+          };
+        }
+
+        if (mouthScore >= 18 && laughScore < 45) {
+          return {
+            message: "Nice — keep going",
+            sub: "The system sees expression. Add a bigger laugh to raise the score.",
+            mode: "idle"
+          };
+        }
+
+        if (laughScore >= 45 && laughScore < LAUGH_THRESHOLD) {
+          return {
+            message: "Almost there",
+            sub: "You’re building momentum. Keep the laugh going a little longer.",
+            mode: "warn"
+          };
+        }
+
+        if (laughScore >= LAUGH_THRESHOLD && laughHoldFrames < HOLD_REQUIRED && !unlocked) {
+          return {
+            message: "Hold it — you’re about to unlock",
+            sub: "Stay expressive for just a moment longer.",
+            mode: "warn"
+          };
+        }
+
+        if (unlocked) {
+          return {
+            message: "Digital Viking unlocked",
+            sub: "Success. Create your share card to save the moment.",
+            mode: "success"
+          };
+        }
+
+        return {
+          message: "Looking good",
+          sub: "Face detected and tracking is active.",
+          mode: "idle"
+        };
+      }
+
+      function updateStateMachine() {
+        if (laughScore >= LAUGH_THRESHOLD && mouthScore >= MOUTH_THRESHOLD) {
+          laughHoldFrames = clamp(laughHoldFrames + 1, 0, HOLD_REQUIRED);
+        } else {
+          laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+        }
+
+        if (!unlocked && laughHoldFrames >= HOLD_REQUIRED) {
+          triggerUnlock();
+        }
+      }
+
+      function burstParticles(count = 28) {
+        particles.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement("span");
+          p.className = "particle";
+
+          const centerX = 50 + (Math.random() * 12 - 6);
+          const centerY = 50 + (Math.random() * 12 - 6);
+          const dx = (Math.random() * 320 - 160).toFixed(0) + "px";
+          const dy = (Math.random() * 220 - 160).toFixed(0) + "px";
+          const rot = (Math.random() * 540 - 270).toFixed(0) + "deg";
+
+          p.style.left = centerX + "%";
+          p.style.top = centerY + "%";
+          p.style.setProperty("--dx", dx);
+          p.style.setProperty("--dy", dy);
+          p.style.setProperty("--rot", rot);
+
+          particles.appendChild(p);
+          requestAnimationFrame(() => p.classList.add("burst"));
+        }
+      }
+
+      function playUnlockTone() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+
+          const ctx = new AudioContextClass();
+          const now = ctx.currentTime;
+          const notes = [220, 330, 440, 660];
+
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = i < 2 ? "triangle" : "sine";
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03 + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25 + i * 0.06);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now + i * 0.05);
+            osc.stop(now + 0.35 + i * 0.06);
+          });
+        } catch (err) {
+          console.warn("Audio unavailable:", err);
+        }
+      }
+
+      function speakUnlock() {
+        if (!("speechSynthesis" in window)) return;
+
+        try {
+          const u = new SpeechSynthesisUtterance("Digital Viking unlocked");
+          u.rate = 0.97;
+          u.pitch = 0.92;
+          u.volume = 0.9;
+          speechSynthesis.cancel();
+          speechSynthesis.speak(u);
+        } catch (err) {
+          console.warn("Speech unavailable:", err);
+        }
+      }
+
+      function triggerUnlock() {
+        unlocked = true;
+
+        pulseRing.classList.add("active");
+        unlockOrb.classList.add("active");
+        unlockBanner.classList.add("active");
+
+        stage.classList.add("shake");
+        flash.classList.remove("boom");
+        void flash.offsetWidth;
+        flash.classList.add("boom");
+
+        burstParticles();
+        playUnlockTone();
+        speakUnlock();
+
+        setCoach(
+          "Digital Viking unlocked",
+          "Success. Create your share card to save the moment.",
+          "success"
+        );
+        setStatus("Unlock complete.", "active");
+        updateUI();
+        showToast("⚔️ Digital Viking unlocked");
+
+        setTimeout(() => {
+          stage.classList.remove("shake");
+        }, 650);
+      }
+
+      async function renderLoop(ts) {
+        if (!aiRunning || !faceModel || !videoReady) return;
+
+        if (!mediaStream || !mediaStream.active || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          setStatus("Camera feed stopped. Restart to continue.", "error");
+          setCoach(
+            "Camera feed stopped",
+            "Restart the experience to continue.",
+            "error"
+          );
+          stopExperience(true);
+          return;
+        }
+
+        const elapsed = ts - lastTick;
+        if (elapsed < RENDER_INTERVAL_MS) {
+          rafId = requestAnimationFrame(renderLoop);
+          return;
+        }
+        lastTick = ts;
+
+        try {
+          const predictions = await faceModel.estimateFaces(video, false);
+
+          if (Array.isArray(predictions) && predictions.length > 0) {
+            const face = predictions[0];
+            const vW = video.videoWidth || 720;
+            const vH = video.videoHeight || 540;
+
+            const raw = calculateSignals(face, vW, vH);
+
+            mouthScore = lerp(mouthScore, raw.mouth, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, raw.motion, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, raw.laugh, SMOOTH_ALPHA);
+
+            updateStateMachine();
+            updateUI();
+
+            const guide = getFaceGuidance(face, vW, vH);
+            setCoach(guide.message, guide.sub, guide.mode);
+
+            if (!unlocked) {
+              setStatus("AI is running. Laugh naturally to raise the score.", "active");
+            }
+          } else {
+            mouthScore = lerp(mouthScore, 0, SMOOTH_ALPHA);
+            motionScore = lerp(motionScore, 0, SMOOTH_ALPHA);
+            laughScore = lerp(laughScore, 0, SMOOTH_ALPHA);
+
+            prevFaceCenterYNorm = null;
+            prevMouthYNorm = null;
+            laughHoldFrames = Math.max(0, laughHoldFrames - 1);
+
+            updateUI();
+
+            setCoach(
+              "Step into frame",
+              "Make sure your face is visible, centered, and well lit.",
+              "warn"
+            );
+
+            if (!unlocked) {
+              setStatus("AI is running. Step into frame and look at the camera.", "warn");
+            }
+          }
+        } catch (err) {
+          console.error("Inference error:", err);
+          setStatus("The AI hit an error. Refresh the page and try again.", "error");
+          setCoach(
+            "AI hit an error",
+            "Refresh the page and try again.",
+            "error"
+          );
+          aiRunning = false;
+          return;
+        }
+
+        rafId = requestAnimationFrame(renderLoop);
+      }
+
+      async function startExperience() {
+        try {
+          startBtn.disabled = true;
+          stopBtn.disabled = true;
+          captureBtn.disabled = true;
+          copyBtn.disabled = true;
+
+          setStatus("Requesting camera access…");
+          setCoach(
+            "Requesting camera access",
+            "Approve the browser prompt so the AI demo can begin.",
+            "idle"
+          );
+          screenStatusText.textContent = "Loading…";
+
+          await setupCamera();
+
+          setStatus("Loading AI model…");
+          setCoach(
+            "Loading browser AI",
+            "Getting the model ready for live face tracking.",
+            "idle"
+          );
+
+          await getBestBackend();
+          faceModel = await blazeface.load();
+
+          aiRunning = true;
+          stopBtn.disabled = false;
+
+          setStatus("Camera and AI are ready.", "active");
+          setCoach(
+            "AI Coach is live",
+            "Center your face and laugh naturally to begin the challenge.",
+            "idle"
+          );
+          showToast("Camera and AI are live");
+
+          rafId = requestAnimationFrame(renderLoop);
+        } catch (err) {
+          console.error("Startup error:", err);
+          setStatus(
+            "Could not start the camera or AI. Check permissions and use HTTPS or localhost.",
+            "error"
+          );
+          setCoach(
+            "Could not start",
+            "Check camera permissions and use HTTPS or localhost.",
+            "error"
+          );
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
+      }
+
+      function stopExperience(fromLoop = false) {
+        aiRunning = false;
+
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+
+        video.srcObject = null;
+        videoReady = false;
+        skeleton.style.display = "block";
+
+        mouthScore = 0;
+        motionScore = 0;
+        laughScore = 0;
+        prevFaceCenterYNorm = null;
+        prevMouthYNorm = null;
+        laughHoldFrames = 0;
+        unlocked = false;
+        lastDisplayScore = 0;
+
+        pulseRing.classList.remove("active");
+        unlockOrb.classList.remove("active");
+        unlockBanner.classList.remove("active");
+        particles.innerHTML = "";
+        shareArea.classList.remove("show");
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        captureBtn.disabled = true;
+        copyBtn.disabled = true;
+
+        updateUI();
+
+        setCoach(
+          "Camera is off",
+          "Restart when you want to try the challenge again.",
+          "idle"
+        );
+
+        if (!fromLoop) {
+          setStatus("Camera is off. Restart any time.", "idle");
+          showToast("Experience stopped");
+        } else {
+          screenStatusText.textContent = "Offline";
+        }
+      }
+
+      function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radius);
+        ctx.arcTo(x + width, y + height, x, y + height, radius);
+        ctx.arcTo(x, y + height, x, y, radius);
+        ctx.arcTo(x, y, x + width, y, radius);
+        ctx.closePath();
+      }
+
+      function roundRectFill(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.fill();
+      }
+
+      function roundRectStroke(ctx, x, y, width, height, radius) {
+        roundRect(ctx, x, y, width, height, radius);
+        ctx.stroke();
+      }
+
+      function drawSnapshotCard() {
+        const w = snapshotCanvas.width;
+        const h = snapshotCanvas.height;
+
+        snapshotCtx.clearRect(0, 0, w, h);
+
+        const bg = snapshotCtx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, "#0b1220");
+        bg.addColorStop(1, "#101827");
+        snapshotCtx.fillStyle = bg;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const glow = snapshotCtx.createRadialGradient(w * 0.5, h * 0.28, 30, w * 0.5, h * 0.28, 420);
+        glow.addColorStop(0, "rgba(247,183,24,0.40)");
+        glow.addColorStop(0.4, "rgba(247,183,24,0.14)");
+        glow.addColorStop(1, "rgba(247,183,24,0)");
+        snapshotCtx.fillStyle = glow;
+        snapshotCtx.fillRect(0, 0, w, h);
+
+        const frameX = 90;
+        const frameY = 164;
+        const frameW = w - 180;
+        const frameH = 720;
+        const radius = 34;
+
+        roundRect(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+        snapshotCtx.save();
+        snapshotCtx.clip();
+
+        if (videoReady) {
+          snapshotCtx.save();
+          snapshotCtx.scale(-1, 1);
+          snapshotCtx.drawImage(video, -frameX - frameW, frameY, frameW, frameH);
+          snapshotCtx.restore();
+        } else {
+          snapshotCtx.fillStyle = "#1f2937";
+          snapshotCtx.fillRect(frameX, frameY, frameW, frameH);
+        }
+        snapshotCtx.restore();
+
+        const overlayGrad = snapshotCtx.createLinearGradient(0, frameY, 0, frameY + frameH);
+        overlayGrad.addColorStop(0, "rgba(255,255,255,0.03)");
+        overlayGrad.addColorStop(1, "rgba(247,183,24,0.10)");
+        snapshotCtx.fillStyle = overlayGrad;
+        roundRectFill(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.lineWidth = 3;
+        snapshotCtx.strokeStyle = "rgba(247,183,24,0.55)";
+        roundRectStroke(snapshotCtx, frameX, frameY, frameW, frameH, radius);
+
+        snapshotCtx.fillStyle = "#fde68a";
+        snapshotCtx.font = "800 30px system-ui, sans-serif";
+        snapshotCtx.fillText("LAUGH TO UNLOCK", 90, 82);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "900 80px system-ui, sans-serif";
+        snapshotCtx.fillText("DIGITAL VIKING", 90, 1108);
+
+        snapshotCtx.fillStyle = "#f7b718";
+        snapshotCtx.font = "900 82px system-ui, sans-serif";
+        snapshotCtx.fillText("UNLOCKED", 90, 1198);
+
+        snapshotCtx.fillStyle = "#deebfa";
+        snapshotCtx.font = "600 30px system-ui, sans-serif";
+        snapshotCtx.fillText("Browser-based AI demo for interactive web experiences.", 90, 1252);
+
+        snapshotCtx.fillStyle = "rgba(255,255,255,0.06)";
+        roundRectFill(snapshotCtx, 90, 1282, w - 180, 86, 24);
+
+        snapshotCtx.fillStyle = "#ffffff";
+        snapshotCtx.font = "800 28px system-ui, sans-serif";
+        snapshotCtx.fillText("Laugh Score: " + lastDisplayScore, 124, 1336);
+
+        snapshotCtx.fillStyle = "#fde68a";
+        snapshotCtx.font = "800 28px system-ui, sans-serif";
+        snapshotCtx.fillText("⚔️ Challenge complete", 700, 1336);
+
+        shareArea.classList.add("show");
+        showToast("Share card created");
+      }
+
+      function downloadSnapshot() {
+        const link = document.createElement("a");
+        link.download = "digital-viking-share-card.png";
+        link.href = snapshotCanvas.toDataURL("image/png");
+        link.click();
+      }
+
+      async function copyCaption() {
+        const text =
+          "I unlocked Digital Viking mode with a browser-based AI demo built for interactive web experiences.";
+
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("Caption copied");
+        } catch (err) {
+          console.warn("Clipboard unavailable:", err);
+          showToast("Could not copy caption");
+        }
+      }
+
+      startBtn.addEventListener("click", startExperience);
+      stopBtn.addEventListener("click", () => stopExperience(false));
+      captureBtn.addEventListener("click", drawSnapshotCard);
+      downloadBtn.addEventListener("click", downloadSnapshot);
+      copyBtn.addEventListener("click", copyCaption);
+
+      updateUI();
+      setStatus("Tap “Start Camera & AI” to begin.", "idle");
+      setCoach(
+        "Step into frame to begin",
+        "When the camera starts, center your face and look toward the screen.",
+        "idle"
+      );
+    })();
+  </script>
+</body>
+</html>

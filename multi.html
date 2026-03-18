@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU College of Informatics Interactive AI Demo — Multi-Person Crowd Mode</title>
+  <title>NKU College of Informatics Interactive AI Demo — Crowd Celebration Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly interactive AI demo for the NKU College of Informatics featuring real-time multi-person face tracking, labels, counter, and crowd-aware overlays."
+    content="Mobile-friendly interactive AI demo for the NKU College of Informatics featuring real-time multi-person face tracking, crowd labels, live counter, and celebration auto-capture."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -236,12 +236,6 @@
       100% { background-position: 120% 0; }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .video-skeleton {
-        animation: none;
-      }
-    }
-
     .screen-ui {
       position: absolute;
       inset: 0;
@@ -294,9 +288,8 @@
     .screen-counter {
       top: 50px;
       right: 12px;
-      background: rgba(247, 183, 24, 0.9);
+      background: rgba(247, 183, 24, 0.92);
       color: #111;
-      border-color: rgba(255,255,255,0.2);
     }
 
     .screen-status-dot {
@@ -412,15 +405,15 @@
       text-align: left;
     }
 
-    .filter-btn:focus-visible {
-      outline: 2px solid var(--nku-gold);
-      outline-offset: 2px;
-    }
-
     .filter-btn.active {
       border-color: var(--nku-gold);
       box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
       font-weight: 700;
+    }
+
+    .filter-btn:focus-visible {
+      outline: 2px solid var(--nku-gold);
+      outline-offset: 2px;
     }
 
     .filter-thumb {
@@ -501,6 +494,67 @@
       color: var(--muted);
     }
 
+    .celebration-banner {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      z-index: 4;
+      padding: 18px 24px;
+      border-radius: 22px;
+      background: rgba(17, 17, 17, 0.82);
+      color: #fff;
+      text-align: center;
+      border: 2px solid rgba(247, 183, 24, 0.9);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      min-width: min(88%, 440px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .celebration-banner.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .celebration-kicker {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--nku-gold);
+      margin-bottom: 6px;
+    }
+
+    .celebration-title {
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      line-height: 1.05;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .celebration-sub {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .countdown-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 58px;
+      height: 58px;
+      margin-top: 14px;
+      border-radius: 999px;
+      background: var(--nku-gold);
+      color: #111;
+      font-size: 1.6rem;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(247, 183, 24, 0.3);
+    }
+
     @media (max-width: 991.98px) {
       .content-wrap {
         grid-template-columns: 1fr;
@@ -508,67 +562,48 @@
     }
 
     @media (max-width: 767.98px) {
-      .page-shell {
-        padding: 12px;
-      }
-
+      .page-shell { padding: 12px; }
       .topbar {
         border-radius: 18px;
         padding: 12px;
       }
-
-      .brand-sub {
-        font-size: 0.8rem;
-      }
-
+      .brand-sub { font-size: 0.8rem; }
       .content-wrap {
         padding: 14px;
         gap: 14px;
       }
-
-      .demo-panel {
-        padding: 10px;
-      }
-
+      .demo-panel { padding: 10px; }
       #videoContainer {
         height: min(72svh, 580px);
         min-height: 360px;
       }
-
       .screen-pill,
       .screen-status,
       .screen-counter {
         font-size: 0.62rem;
         padding: 6px 9px;
       }
-
-      .screen-counter {
-        top: 46px;
-      }
-
+      .screen-counter { top: 46px; }
       .screen-footer {
         left: 12px;
         right: 12px;
         bottom: 12px;
       }
-
-      .screen-sub {
-        font-size: 0.7rem;
-      }
+      .screen-sub { font-size: 0.7rem; }
     }
 
     @media (max-width: 480px) {
-      .filter-group {
-        grid-template-columns: 1fr;
-      }
-
+      .filter-group { grid-template-columns: 1fr; }
       #videoContainer {
         height: min(72svh, 540px);
         min-height: 340px;
       }
-
       .screen-pill {
         max-width: calc(100% - 120px);
+      }
+      .celebration-banner {
+        min-width: 90%;
+        padding: 16px 18px;
       }
     }
   </style>
@@ -581,7 +616,7 @@
         <div class="brand-pill">NKU · COI</div>
         <span class="brand-sub">Interactive AI Demo</span>
       </div>
-      <div class="brand-sub">Multi-person crowd mode</div>
+      <div class="brand-sub">Crowd celebration mode</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -590,44 +625,32 @@
           <div class="tag-row">
             <span class="tag">Browser AI</span>
             <span class="tag">Multi-Person</span>
-            <span class="tag">Crowd Labels</span>
-            <span class="tag">Live Counter</span>
+            <span class="tag">Auto Capture</span>
+            <span class="tag">Crowd Celebration</span>
           </div>
 
           <p class="eyebrow">College of Informatics</p>
           <h1 id="page-title">Interactive AI Crowd Mirror</h1>
 
           <p class="lead">
-            This upgraded version recognizes multiple people, labels each person on screen, shows a live crowd count, and can automatically assign different visual styles across a group.
+            This upgraded version recognizes multiple people, labels each person, shows a live crowd count, and triggers a celebration moment when a group enters the frame.
           </p>
 
           <h2 class="section-title">How to use it</h2>
           <ol class="steps">
-            <li>
-              <span class="step-num">1.</span>
-              <span>Select <strong>Start Camera &amp; AI</strong>.</span>
-            </li>
-            <li>
-              <span class="step-num">2.</span>
-              <span>Have one or more people step into view.</span>
-            </li>
-            <li>
-              <span class="step-num">3.</span>
-              <span>Choose a specific mode or use <strong>Auto Crowd</strong> for mixed overlays.</span>
-            </li>
-            <li>
-              <span class="step-num">4.</span>
-              <span>Capture a snapshot once everyone is styled.</span>
-            </li>
+            <li><span class="step-num">1.</span><span>Select <strong>Start Camera &amp; AI</strong>.</span></li>
+            <li><span class="step-num">2.</span><span>Have at least <strong>3 people</strong> step into view.</span></li>
+            <li><span class="step-num">3.</span><span>Watch the celebration trigger, countdown, and auto-snapshot.</span></li>
+            <li><span class="step-num">4.</span><span>Use Auto Crowd or choose a specific overlay mode.</span></li>
           </ol>
 
           <h2 class="section-title">What it demonstrates</h2>
           <p class="info-text">
             • Multi-face detection with BlazeFace<br />
             • Multi-person segmentation with BodyPix<br />
-            • Canvas overlays for groups<br />
-            • Live crowd counting and labeled participants<br />
-            • Auto-assigned visual effects for event demos
+            • Auto-assigned overlays for groups<br />
+            • Crowd counting and face labels<br />
+            • Countdown-based capture moment for events and demos
           </p>
         </section>
 
@@ -660,6 +683,13 @@
                   <h2 class="screen-title">NKU AI Crowd Mirror</h2>
                   <div class="screen-sub">Camera · Canvas · TensorFlow.js</div>
                 </div>
+              </div>
+
+              <div id="celebrationBanner" class="celebration-banner" aria-hidden="true">
+                <div class="celebration-kicker">Crowd Mode</div>
+                <h3 class="celebration-title" id="celebrationTitle">Activated</h3>
+                <div class="celebration-sub" id="celebrationSub">Get ready for the snapshot.</div>
+                <div class="countdown-number" id="countdownNumber">3</div>
               </div>
             </div>
 
@@ -729,6 +759,9 @@
 
       const TARGET_FOLDER_LABEL = "NKU_COI_AI_Crowd_Demo";
       const MAX_FACES = 6;
+      const CELEBRATION_THRESHOLD = 3;
+      const CELEBRATION_COUNTDOWN_SECONDS = 2;
+      const CELEBRATION_COOLDOWN_MS = 7000;
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -745,6 +778,11 @@
       const screenStatusDot = document.getElementById("screenStatusDot");
       const screenStatusText = document.getElementById("screenStatusText");
       const screenCounterText = document.getElementById("screenCounterText");
+
+      const celebrationBanner = document.getElementById("celebrationBanner");
+      const celebrationTitle = document.getElementById("celebrationTitle");
+      const celebrationSub = document.getElementById("celebrationSub");
+      const countdownNumber = document.getElementById("countdownNumber");
 
       const previewSection = document.getElementById("previewSection");
       const snapshotPreview = document.getElementById("snapshotPreview");
@@ -777,6 +815,11 @@
       let segmentTimer = null;
       let lastStatusMsg = "";
       let lastStatusMode = "";
+
+      let audioCtx = null;
+      let celebrationActive = false;
+      let celebrationTimeouts = [];
+      let lastCelebrationAt = 0;
 
       const isSmallScreen = () => window.matchMedia("(max-width: 767.98px)").matches;
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -834,10 +877,67 @@
         screenCounterText.textContent = `${count} detected`;
       }
 
+      function clearCelebrationTimers() {
+        celebrationTimeouts.forEach((id) => clearTimeout(id));
+        celebrationTimeouts = [];
+      }
+
+      function hideCelebrationBanner() {
+        celebrationBanner.classList.remove("show");
+        celebrationBanner.setAttribute("aria-hidden", "true");
+      }
+
+      function showCelebrationBanner(title, sub, countValue) {
+        celebrationTitle.textContent = title;
+        celebrationSub.textContent = sub;
+        countdownNumber.textContent = String(countValue);
+        celebrationBanner.classList.add("show");
+        celebrationBanner.setAttribute("aria-hidden", "false");
+      }
+
+      function ensureAudioContext() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+
+      function playBeep(frequency = 880, duration = 0.14, type = "sine", volume = 0.035) {
+        ensureAudioContext();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      function playCelebrationTone() {
+        playBeep(880, 0.12, "triangle", 0.04);
+        const t1 = setTimeout(() => playBeep(1174, 0.12, "triangle", 0.04), 140);
+        const t2 = setTimeout(() => playBeep(1568, 0.18, "triangle", 0.045), 280);
+        celebrationTimeouts.push(t1, t2);
+      }
+
       async function getBestBackend() {
         if (!window.tf) return;
-
         const backendsToTry = ["webgl", "wasm", "cpu"];
+
         for (const backendName of backendsToTry) {
           try {
             const ok = await tf.setBackend(backendName);
@@ -919,6 +1019,9 @@
 
       function stopCamera() {
         stopLoops();
+        clearCelebrationTimers();
+        celebrationActive = false;
+        hideCelebrationBanner();
 
         if (mediaStream) {
           mediaStream.getTracks().forEach((track) => track.stop());
@@ -1006,14 +1109,8 @@
         const [nx2, ny2] = newBox.bottomRight;
 
         return {
-          topLeft: [
-            ox1 + alpha * (nx1 - ox1),
-            oy1 + alpha * (ny1 - oy1)
-          ],
-          bottomRight: [
-            ox2 + alpha * (nx2 - ox2),
-            oy2 + alpha * (ny2 - oy2)
-          ]
+          topLeft: [ox1 + alpha * (nx1 - ox1), oy1 + alpha * (ny1 - oy1)],
+          bottomRight: [ox2 + alpha * (nx2 - ox2), oy2 + alpha * (ny2 - oy2)]
         };
       }
 
@@ -1038,9 +1135,7 @@
           const oldFace = oldFaces[index];
 
           const smoothedBox = smoothBox(
-            oldFace
-              ? { topLeft: oldFace.topLeft, bottomRight: oldFace.bottomRight }
-              : null,
+            oldFace ? { topLeft: oldFace.topLeft, bottomRight: oldFace.bottomRight } : null,
             { topLeft: face.topLeft, bottomRight: face.bottomRight },
             SMOOTH_ALPHA
           );
@@ -1100,10 +1195,13 @@
           }
         }
 
-        const drawX = centerX - overlayWidth / 2;
-        const drawY = eyeLineY - overlayHeight * 0.50;
-
-        ctx.drawImage(helmetImg, drawX, drawY, overlayWidth, overlayHeight);
+        ctx.drawImage(
+          helmetImg,
+          centerX - overlayWidth / 2,
+          eyeLineY - overlayHeight * 0.50,
+          overlayWidth,
+          overlayHeight
+        );
       }
 
       function drawBeardOnFace(topLeft, bottomRight) {
@@ -1135,7 +1233,6 @@
         if (!isValidBox(topLeft, bottomRight)) return;
 
         const { centerX, y1, faceWidth } = getFaceMetrics(topLeft, bottomRight);
-
         const paddingX = 12;
         const pillHeight = 28;
         const y = Math.max(10, y1 - 38);
@@ -1209,7 +1306,6 @@
 
       function combineSegmentationMasks(segmentations, width, height) {
         const combined = new Uint8Array(width * height);
-
         if (!Array.isArray(segmentations)) return combined;
 
         for (const seg of segmentations) {
@@ -1309,6 +1405,61 @@
         }
       }
 
+      function maybeTriggerCelebration(faceCount) {
+        const now = Date.now();
+
+        if (!aiRunning || celebrationActive) return;
+        if (faceCount < CELEBRATION_THRESHOLD) return;
+        if (now - lastCelebrationAt < CELEBRATION_COOLDOWN_MS) return;
+
+        celebrationActive = true;
+        lastCelebrationAt = now;
+
+        playCelebrationTone();
+        showCelebrationBanner(
+          "Crowd Mode Activated",
+          "Hold your pose. Auto snapshot incoming.",
+          2
+        );
+
+        setStatus(`Crowd Mode Activated for ${faceCount} people. Countdown started.`, "active");
+
+        const t1 = setTimeout(() => {
+          showCelebrationBanner(
+            "Crowd Mode Activated",
+            "Hold your pose. Auto snapshot incoming.",
+            2
+          );
+          playBeep(1046, 0.1, "triangle", 0.04);
+        }, 350);
+
+        const t2 = setTimeout(() => {
+          showCelebrationBanner(
+            "Crowd Mode Activated",
+            "Hold your pose. Auto snapshot incoming.",
+            1
+          );
+          playBeep(1318, 0.1, "triangle", 0.04);
+        }, 1150);
+
+        const t3 = setTimeout(() => {
+          showCelebrationBanner(
+            "Snapshot!",
+            "Captured automatically.",
+            "✓"
+          );
+          playBeep(1760, 0.18, "triangle", 0.05);
+          captureSnapshot(true);
+        }, 2050);
+
+        const t4 = setTimeout(() => {
+          hideCelebrationBanner();
+          celebrationActive = false;
+        }, 3200);
+
+        celebrationTimeouts.push(t1, t2, t3, t4);
+      }
+
       function renderFrame() {
         if (!aiRunning || !videoReady) return;
 
@@ -1354,28 +1505,33 @@
             }
           });
 
-          if (activeFilter === "auto") {
-            setStatus(`${visibleFaces.length} face(s) detected. Auto Crowd mode is assigning mixed overlays.`, "active");
-          } else if (activeFilter === "glasses") {
-            setStatus(`${visibleFaces.length} face(s) detected. Glasses mode is active.`, "active");
-          } else if (activeFilter === "helmet") {
-            setStatus(`${visibleFaces.length} face(s) detected. Helmet mode is active.`, "active");
-          } else if (activeFilter === "combo") {
-            setStatus(`${visibleFaces.length} face(s) detected. Viking Combo mode is active.`, "active");
-          } else {
-            setStatus(`${visibleFaces.length} person/people detected. Griffin Hall background is active.`, "active");
+          if (!celebrationActive) {
+            if (activeFilter === "auto") {
+              setStatus(`${visibleFaces.length} face(s) detected. Auto Crowd mode is assigning mixed overlays.`, "active");
+            } else if (activeFilter === "glasses") {
+              setStatus(`${visibleFaces.length} face(s) detected. Glasses mode is active.`, "active");
+            } else if (activeFilter === "helmet") {
+              setStatus(`${visibleFaces.length} face(s) detected. Helmet mode is active.`, "active");
+            } else if (activeFilter === "combo") {
+              setStatus(`${visibleFaces.length} face(s) detected. Viking Combo mode is active.`, "active");
+            } else {
+              setStatus(`${visibleFaces.length} person/people detected. Griffin Hall background is active.`, "active");
+            }
           }
 
           setScreenStatus(`${visibleFaces.length} Locked`, true);
+          maybeTriggerCelebration(visibleFaces.length);
         } else {
-          setStatus("AI is running. Move one or more people into view to activate overlays.", "active");
+          if (!celebrationActive) {
+            setStatus("AI is running. Move one or more people into view to activate overlays.", "active");
+          }
           setScreenStatus("Searching…", false);
         }
 
         renderRaf = requestAnimationFrame(renderFrame);
       }
 
-      function captureSnapshot() {
+      function captureSnapshot(autoTriggered = false) {
         if (!videoReady) return;
 
         const outputW = canvas.width;
@@ -1401,7 +1557,10 @@
         a.click();
         document.body.removeChild(a);
 
-        setStatus("Snapshot saved to your device.", "active");
+        setStatus(
+          autoTriggered ? "Crowd snapshot captured automatically." : "Snapshot saved to your device.",
+          "active"
+        );
       }
 
       async function startExperience() {
@@ -1415,6 +1574,8 @@
           setStatus("Requesting camera access…", "idle");
           setScreenStatus("Loading…", false);
           setCounter(0);
+
+          ensureAudioContext();
 
           await setupCamera();
 
@@ -1490,13 +1651,14 @@
       });
 
       startBtn.addEventListener("click", startExperience);
-      captureBtn.addEventListener("click", captureSnapshot);
+      captureBtn.addEventListener("click", () => captureSnapshot(false));
       stopBtn.addEventListener("click", stopCamera);
 
       window.addEventListener("beforeunload", stopCamera);
 
       setCounter(0);
       setScreenStatus("Offline", false);
+      hideCelebrationBanner();
     })();
   </script>
 </body>

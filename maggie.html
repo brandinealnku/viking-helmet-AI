@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dog Walk Counter | Live Dog Spotter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="Mobile-friendly browser AI dog counter for walks using the rear phone camera."
+  />
+  <meta name="theme-color" content="#111111" />
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+  <style>
+    :root {
+      --gold: #f7b718;
+      --black: #111111;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #0b0c0f;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(247,183,24,0.11), transparent 30%),
+        linear-gradient(180deg, #0b0c0f 0%, #12151a 100%);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page-shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--black);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      font-size: 0.85rem;
+      color: #d1d5db;
+    }
+
+    .main-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .content-wrap {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .side-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      background: rgba(255,255,255,0.08);
+      color: #f3f4f6;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.9rem, 3vw, 2.6rem);
+      line-height: 1.02;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .lead {
+      font-size: 0.98rem;
+      color: #d1d5db;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 18px 0 10px;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      color: var(--gold);
+      font-weight: 900;
+      min-width: 18px;
+    }
+
+    .info-text {
+      font-size: 0.9rem;
+      color: #d1d5db;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mode-btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 58px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 800;
+      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .mode-btn small {
+      display: block;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .mode-btn.active {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
+      background: rgba(247,183,24,0.08);
+    }
+
+    .action-row {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 52px;
+      border-radius: 999px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .app-btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-start {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+    }
+
+    .btn-capture {
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+    }
+
+    .btn-reset {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(247,183,24,0.35);
+      color: #fde68a;
+    }
+
+    .btn-stop {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(239,68,68,0.4);
+      color: #fecaca;
+    }
+
+    .app-btn:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #64748b;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.16);
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.16);
+    }
+
+    .status-text {
+      font-size: 0.93rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1.4;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .metric-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 900;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: clamp(1.15rem, 2vw, 1.8rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .demo-panel {
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      height: clamp(420px, 72vh, 820px);
+      min-height: 420px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #111827;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    #video {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    video,
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    canvas {
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .video-skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      z-index: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 120% 0; }
+    }
+
+    .screen-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .screen-gradient-top {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.58), rgba(0,0,0,0));
+    }
+
+    .screen-gradient-bottom {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 34%;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0));
+    }
+
+    .screen-pill,
+    .screen-status,
+    .screen-total {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(17,17,17,0.52);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .screen-pill {
+      top: 14px;
+      left: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-status {
+      top: 14px;
+      right: 14px;
+    }
+
+    .screen-total {
+      top: 56px;
+      right: 14px;
+      background: rgba(247,183,24,0.95);
+      color: #111;
+    }
+
+    .screen-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .screen-status-dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+    }
+
+    .big-counter-wrap {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: min(90%, 440px);
+    }
+
+    .big-counter-kicker {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 900;
+      color: rgba(255,255,255,0.86);
+    }
+
+    .big-counter-card {
+      background: rgba(17,17,17,0.6);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-left: 4px solid var(--gold);
+      border-radius: 24px;
+      padding: 14px 18px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.24);
+    }
+
+    .big-counter-label {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #e5e7eb;
+      margin-bottom: 4px;
+    }
+
+    .big-counter-number {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      line-height: 0.95;
+      font-weight: 1000;
+      letter-spacing: -0.06em;
+      color: var(--gold);
+      text-shadow: 0 6px 26px rgba(247,183,24,0.22);
+    }
+
+    .big-counter-sub {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.88);
+      margin-top: 6px;
+    }
+
+    .flash-badge {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      z-index: 5;
+      padding: 18px 24px;
+      border-radius: 22px;
+      background: rgba(17, 17, 17, 0.88);
+      color: #fff;
+      text-align: center;
+      border: 2px solid rgba(247, 183, 24, 0.95);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      min-width: min(88%, 420px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .flash-badge.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .flash-kicker {
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    .flash-title {
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      line-height: 1.05;
+      font-weight: 1000;
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .flash-sub {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .preview-section {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 460px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #fff;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    .small-note {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin: 8px 0 0;
+    }
+
+    .footer-note {
+      padding: 0 20px 20px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 1080px) {
+      .content-wrap {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .page-shell { padding: 12px; }
+      .topbar {
+        border-radius: 18px;
+        padding: 12px;
+      }
+      .content-wrap {
+        padding: 14px;
+        gap: 14px;
+      }
+      .mode-grid {
+        grid-template-columns: 1fr;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      #videoContainer {
+        height: min(74svh, 620px);
+        min-height: 360px;
+      }
+      .screen-pill,
+      .screen-status,
+      .screen-total {
+        font-size: 0.62rem;
+        padding: 6px 9px;
+      }
+      .screen-total { top: 48px; }
+      .big-counter-wrap {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        max-width: none;
+      }
+      .big-counter-card {
+        padding: 12px 14px;
+      }
+      .big-counter-number {
+        font-size: clamp(2.2rem, 12vw, 3.6rem);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar" aria-label="Dog walk counter header">
+      <div class="brand">
+        <div class="brand-pill">Dog Walk AI</div>
+        <span class="brand-sub">Live dog spotter</span>
+      </div>
+      <div class="brand-sub">Rear camera dog counting</div>
+    </header>
+
+    <main class="main-card" aria-labelledby="page-title">
+      <div class="content-wrap">
+        <section class="side-panel" aria-label="Dog walk controls and instructions">
+          <div class="tag-row">
+            <span class="tag">Rear Camera</span>
+            <span class="tag">Dog Detection</span>
+            <span class="tag">Walk Total</span>
+            <span class="tag">Live Counter</span>
+          </div>
+
+          <p class="eyebrow">Walking mode</p>
+          <h1 id="page-title">Count Dogs on Your Walk</h1>
+
+          <p class="lead">
+            Point your phone outward while walking and this demo will look for dogs, show how many are currently in frame, and keep a running total of dogs you’ve passed.
+          </p>
+
+          <h2 class="section-title">How to use it</h2>
+          <ol class="steps">
+            <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
+            <li><span class="step-num">2.</span><span>Hold the phone facing outward on your walk.</span></li>
+            <li><span class="step-num">3.</span><span>When a dog appears, it will be boxed and counted.</span></li>
+            <li><span class="step-num">4.</span><span>The <strong>Walk Total</strong> increases when a new dog is detected passing by.</span></li>
+          </ol>
+
+          <h2 class="section-title">Detection mode</h2>
+          <div class="mode-grid" role="radiogroup" aria-label="Choose detection mode">
+            <button class="mode-btn active" data-mode="balanced" type="button" role="radio" aria-pressed="true" aria-checked="true">
+              Balanced
+              <small>Best overall walk mode</small>
+            </button>
+
+            <button class="mode-btn" data-mode="fast" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Fast
+              <small>Better on slower phones</small>
+            </button>
+
+            <button class="mode-btn" data-mode="precise" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Precise
+              <small>Stricter confidence filter</small>
+            </button>
+
+            <button class="mode-btn" data-mode="minimal" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Minimal
+              <small>Cleaner view on the walk</small>
+            </button>
+          </div>
+
+          <div class="action-row">
+            <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
+            <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
+            <button id="resetBtn" type="button" class="app-btn btn-reset" disabled>🔁 Reset Walk Total</button>
+            <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>📴 Turn Camera Off</button>
+          </div>
+
+          <div class="status-row" aria-live="polite">
+            <div class="status-main">
+              <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+              <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
+            </div>
+            <div class="status-hint">
+              Best results: good daylight, a steady phone angle, and dogs that are large enough in frame to see clearly.
+            </div>
+          </div>
+
+          <div class="metrics-grid" aria-label="Dog walk metrics">
+            <div class="metric-card">
+              <div class="metric-label">Dogs Now</div>
+              <div id="metricLive" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Walk Total</div>
+              <div id="metricTotal" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Model</div>
+              <div id="metricModel" class="metric-value" style="font-size:1rem;">Offline</div>
+            </div>
+          </div>
+
+          <section id="previewSection" class="preview-section" aria-live="polite">
+            <h2 class="section-title" style="margin-top: 16px;">Saved snapshot</h2>
+            <div class="preview-image-wrapper">
+              <img id="snapshotPreview" alt="Saved dog walk snapshot preview" loading="lazy" />
+            </div>
+            <p class="small-note">Saved locally as a PNG image.</p>
+          </section>
+        </section>
+
+        <section class="demo-panel" aria-label="Live dog walk demo">
+          <div id="videoContainer">
+            <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+
+            <video id="video" autoplay playsinline muted aria-hidden="true"></video>
+            <canvas id="overlay" role="img" aria-label="Live dog detection view"></canvas>
+
+            <div class="screen-ui" aria-hidden="true">
+              <div class="screen-gradient-top"></div>
+              <div class="screen-gradient-bottom"></div>
+
+              <div class="screen-pill">Dog Spotter</div>
+
+              <div class="screen-status">
+                <span id="screenStatusDot" class="screen-status-dot"></span>
+                <span id="screenStatusText">Offline</span>
+              </div>
+
+              <div class="screen-total">
+                <span>🐶</span>
+                <span id="screenTotalText">Walk total 0</span>
+              </div>
+
+              <div class="big-counter-wrap">
+                <div class="big-counter-kicker">Live walk scan</div>
+                <div class="big-counter-card">
+                  <div class="big-counter-label">Dogs in Frame</div>
+                  <div id="bigCounterNumber" class="big-counter-number">0</div>
+                  <div id="bigCounterSub" class="big-counter-sub">Point the camera toward the sidewalk or park.</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="flashBadge" class="flash-badge" aria-hidden="true">
+              <div class="flash-kicker">Snapshot Captured</div>
+              <h3 id="flashTitle" class="flash-title">Walk Saved</h3>
+              <div id="flashSub" class="flash-sub">Saved as a PNG to your device.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">
+        Privacy-first design: AI processing stays in the browser and nothing is uploaded.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const TARGET_FOLDER_LABEL = "Dog_Walk_Counter";
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const startBtn = document.getElementById("startBtn");
+      const captureBtn = document.getElementById("captureBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const videoSkeleton = document.getElementById("videoSkeleton");
+
+      const screenStatusDot = document.getElementById("screenStatusDot");
+      const screenStatusText = document.getElementById("screenStatusText");
+      const screenTotalText = document.getElementById("screenTotalText");
+      const bigCounterNumber = document.getElementById("bigCounterNumber");
+      const bigCounterSub = document.getElementById("bigCounterSub");
+
+      const metricLive = document.getElementById("metricLive");
+      const metricTotal = document.getElementById("metricTotal");
+      const metricModel = document.getElementById("metricModel");
+
+      const previewSection = document.getElementById("previewSection");
+      const snapshotPreview = document.getElementById("snapshotPreview");
+
+      const flashBadge = document.getElementById("flashBadge");
+      const flashTitle = document.getElementById("flashTitle");
+      const flashSub = document.getElementById("flashSub");
+
+      const modeButtons = document.querySelectorAll(".mode-btn");
+
+      let model = null;
+      let mediaStream = null;
+      let videoReady = false;
+      let aiRunning = false;
+      let detectTimer = null;
+      let activeMode = "balanced";
+      let flashTimer = null;
+
+      let walkTotal = 0;
+      let smoothedLiveCount = 0;
+      let activeTracks = [];
+      let nextTrackId = 1;
+
+      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+      const MODE_CONFIG = {
+        balanced: { threshold: 0.52, interval: isMobileUA ? 360 : 260, drawLabels: true, drawBoxes: true },
+        fast:     { threshold: 0.42, interval: isMobileUA ? 460 : 340, drawLabels: true, drawBoxes: true },
+        precise:  { threshold: 0.68, interval: isMobileUA ? 380 : 280, drawLabels: true, drawBoxes: true },
+        minimal:  { threshold: 0.55, interval: isMobileUA ? 360 : 260, drawLabels: false, drawBoxes: true }
+      };
+
+      const TRACK_MAX_DISTANCE = 120;
+      const TRACK_TTL_MS = 1800;
+      const COUNT_COOLDOWN_MS = 2500;
+      const MIN_BOX_WIDTH = 34;
+      const MIN_BOX_HEIGHT = 28;
+
+      function setStatus(message, mode = "idle") {
+        statusText.textContent = message;
+        statusDot.classList.remove("active", "error");
+        if (mode === "active") statusDot.classList.add("active");
+        if (mode === "error") statusDot.classList.add("error");
+      }
+
+      function setScreenStatus(text, active) {
+        screenStatusText.textContent = text;
+        screenStatusDot.classList.toggle("active", !!active);
+      }
+
+      function updateLiveDisplay(count) {
+        smoothedLiveCount = Math.round((smoothedLiveCount * 0.65) + (count * 0.35));
+        metricLive.textContent = String(smoothedLiveCount);
+        bigCounterNumber.textContent = String(smoothedLiveCount);
+
+        if (smoothedLiveCount === 0) {
+          bigCounterSub.textContent = "Point the camera toward the sidewalk or park.";
+        } else if (smoothedLiveCount === 1) {
+          bigCounterSub.textContent = "1 dog currently visible.";
+        } else {
+          bigCounterSub.textContent = `${smoothedLiveCount} dogs currently visible.`;
+        }
+      }
+
+      function updateWalkTotalDisplay() {
+        metricTotal.textContent = String(walkTotal);
+        screenTotalText.textContent = `Walk total ${walkTotal}`;
+      }
+
+      function showFlash(title, sub) {
+        flashTitle.textContent = title;
+        flashSub.textContent = sub;
+        flashBadge.classList.add("show");
+        flashBadge.setAttribute("aria-hidden", "false");
+
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => {
+          flashBadge.classList.remove("show");
+          flashBadge.setAttribute("aria-hidden", "true");
+        }, 1700);
+      }
+
+      async function getBestBackend() {
+        const backendsToTry = ["webgl", "wasm", "cpu"];
+        for (const backendName of backendsToTry) {
+          try {
+            const ok = await tf.setBackend(backendName);
+            if (ok) {
+              await tf.ready();
+              return;
+            }
+          } catch (error) {
+            console.warn("Backend unavailable:", backendName, error);
+          }
+        }
+      }
+
+      function updateCanvasBufferSize() {
+        if (!video.videoWidth || !video.videoHeight) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+
+      async function setupCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("getUserMedia not supported");
+        }
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 }
+          }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = mediaStream;
+
+        await new Promise((resolve) => {
+          video.onloadedmetadata = async () => {
+            await video.play();
+            updateCanvasBufferSize();
+            videoReady = true;
+            videoSkeleton.style.display = "none";
+            resolve();
+          };
+        });
+
+        window.addEventListener("resize", handleResize, { passive: true });
+        window.addEventListener("orientationchange", handleResize, { passive: true });
+      }
+
+      function handleResize() {
+        if (!videoReady) return;
+        setTimeout(updateCanvasBufferSize, 120);
+      }
+
+      function stopLoops() {
+        if (detectTimer) clearInterval(detectTimer);
+        detectTimer = null;
+      }
+
+      function stopCamera() {
+        stopLoops();
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+
+        if (video.srcObject) {
+          video.srcObject = null;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        videoReady = false;
+        aiRunning = false;
+        smoothedLiveCount = 0;
+        activeTracks = [];
+        nextTrackId = 1;
+
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        resetBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        videoSkeleton.style.display = "block";
+        setScreenStatus("Offline", false);
+        updateLiveDisplay(0);
+        metricModel.textContent = "Offline";
+        setStatus("Camera turned off.", "idle");
+      }
+
+      function getDogDetections(predictions) {
+        const threshold = MODE_CONFIG[activeMode].threshold;
+
+        return predictions
+          .filter((item) => item.class === "dog" && item.score >= threshold)
+          .map((item) => {
+            const [x, y, w, h] = item.bbox;
+            return {
+              score: item.score,
+              bbox: [x, y, w, h],
+              cx: x + w / 2,
+              cy: y + h / 2,
+              width: w,
+              height: h
+            };
+          })
+          .filter((item) => item.width > MIN_BOX_WIDTH && item.height > MIN_BOX_HEIGHT)
+          .sort((a, b) => b.score - a.score);
+      }
+
+      function distance(a, b) {
+        const dx = a.cx - b.cx;
+        const dy = a.cy - b.cy;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      function updateTracks(dogs) {
+        const now = Date.now();
+
+        activeTracks = activeTracks.filter((track) => now - track.lastSeen < TRACK_TTL_MS);
+
+        const unmatchedTracks = new Set(activeTracks.map((track) => track.id));
+
+        dogs.forEach((dog) => {
+          let bestTrack = null;
+          let bestDistance = Infinity;
+
+          for (const track of activeTracks) {
+            const d = distance(dog, track);
+            if (d < bestDistance && d < TRACK_MAX_DISTANCE) {
+              bestDistance = d;
+              bestTrack = track;
+            }
+          }
+
+          if (bestTrack) {
+            bestTrack.cx = dog.cx;
+            bestTrack.cy = dog.cy;
+            bestTrack.bbox = dog.bbox;
+            bestTrack.score = dog.score;
+            bestTrack.lastSeen = now;
+            dog.trackId = bestTrack.id;
+            unmatchedTracks.delete(bestTrack.id);
+          } else {
+            const newTrack = {
+              id: nextTrackId++,
+              cx: dog.cx,
+              cy: dog.cy,
+              bbox: dog.bbox,
+              score: dog.score,
+              lastSeen: now,
+              countedAt: 0
+            };
+            activeTracks.push(newTrack);
+            dog.trackId = newTrack.id;
+          }
+        });
+
+        dogs.forEach((dog) => {
+          const track = activeTracks.find((t) => t.id === dog.trackId);
+          if (!track) return;
+
+          const enoughTimePassed = now - track.countedAt > COUNT_COOLDOWN_MS;
+          const reasonablyVisible = dog.width > 50 && dog.height > 40;
+
+          if (track.countedAt === 0 && reasonablyVisible) {
+            walkTotal += 1;
+            track.countedAt = now;
+            updateWalkTotalDisplay();
+            showFlash("Dog Spotted", `Walk total is now ${walkTotal}.`);
+          } else if (enoughTimePassed && reasonablyVisible && !isDogStillEssentiallySameSpot(track, dog)) {
+            walkTotal += 1;
+            track.countedAt = now;
+            updateWalkTotalDisplay();
+            showFlash("Dog Spotted", `Walk total is now ${walkTotal}.`);
+          }
+        });
+      }
+
+      function isDogStillEssentiallySameSpot(track, dog) {
+        const [x1, y1, w1, h1] = track.bbox;
+        const [x2, y2, w2, h2] = dog.bbox;
+        const centerShift = Math.sqrt(Math.pow((x1 + w1 / 2) - (x2 + w2 / 2), 2) + Math.pow((y1 + h1 / 2) - (y2 + h2 / 2), 2));
+        return centerShift < 35;
+      }
+
+      function drawRoundedRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      }
+
+      function drawOverlay(predictions) {
+        if (!videoReady) return;
+
+        const config = MODE_CONFIG[activeMode];
+        const dogs = getDogDetections(predictions);
+
+        updateTracks(dogs);
+        updateLiveDisplay(dogs.length);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        if (dogs.length > 0) {
+          setScreenStatus("Live", true);
+          setStatus(`${dogs.length} dog(s) detected in frame. Walk total: ${walkTotal}.`, "active");
+        } else {
+          setScreenStatus("Searching…", false);
+          setStatus("AI is running. Aim the rear camera outward and look for dogs.", "active");
+        }
+
+        dogs.forEach((dog, index) => {
+          const [x, y, width, height] = dog.bbox;
+          const scorePct = Math.round(dog.score * 100);
+
+          if (config.drawBoxes) {
+            ctx.strokeStyle = "rgba(247,183,24,0.98)";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(x, y, width, height);
+
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 1.25;
+            ctx.strokeRect(x + 5, y + 5, Math.max(0, width - 10), Math.max(0, height - 10));
+          }
+
+          if (config.drawLabels) {
+            const label = `Dog ${index + 1} · ${scorePct}%`;
+            ctx.font = "700 14px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+            const textWidth = ctx.measureText(label).width;
+            const pillWidth = textWidth + 22;
+            const pillHeight = 28;
+            const pillX = x;
+            const pillY = Math.max(10, y - 36);
+
+            ctx.fillStyle = "rgba(17,17,17,0.86)";
+            drawRoundedRect(pillX, pillY, pillWidth, pillHeight, 14);
+            ctx.fill();
+
+            ctx.strokeStyle = "rgba(247,183,24,0.98)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, pillX + 11, pillY + pillHeight / 2 + 0.5);
+          }
+        });
+
+        ctx.save();
+        ctx.fillStyle = "rgba(17,17,17,0.70)";
+        drawRoundedRect(18, 18, 178, 66, 18);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(247,183,24,0.95)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "800 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText("DOGS IN FRAME", 32, 42);
+
+        ctx.fillStyle = "#f7b718";
+        ctx.font = "1000 30px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText(String(smoothedLiveCount), 32, 74);
+        ctx.restore();
+      }
+
+      async function detectStep() {
+        if (!aiRunning || !videoReady || !model) return;
+
+        try {
+          const predictions = await model.detect(video, undefined, 0.4);
+          drawOverlay(predictions);
+        } catch (error) {
+          console.error("Detection error:", error);
+          setStatus("Detection error. Try restarting the camera.", "error");
+          setScreenStatus("Error", false);
+        }
+      }
+
+      function restartDetectionLoop() {
+        if (!aiRunning) return;
+        stopLoops();
+        detectTimer = setInterval(detectStep, MODE_CONFIG[activeMode].interval);
+      }
+
+      function captureSnapshot() {
+        if (!videoReady || !canvas.width || !canvas.height) return;
+
+        const snapCanvas = document.createElement("canvas");
+        snapCanvas.width = canvas.width;
+        snapCanvas.height = canvas.height;
+
+        const sctx = snapCanvas.getContext("2d");
+        sctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+
+        const dataURL = snapCanvas.toDataURL("image/png");
+        snapshotPreview.src = dataURL;
+        previewSection.style.display = "block";
+
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+        a.href = dataURL;
+        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        showFlash("Snapshot Saved", "Saved as a PNG to your device.");
+        setStatus("Snapshot saved to your device.", "active");
+      }
+
+      function resetWalkTotal() {
+        walkTotal = 0;
+        activeTracks = [];
+        nextTrackId = 1;
+        updateWalkTotalDisplay();
+        showFlash("Walk Reset", "Dog total reset to 0.");
+        setStatus("Walk total reset.", "active");
+      }
+
+      async function startExperience() {
+        try {
+          if (aiRunning) return;
+
+          startBtn.disabled = true;
+          captureBtn.disabled = true;
+          resetBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          setStatus("Requesting rear camera access…", "idle");
+          setScreenStatus("Loading…", false);
+          updateLiveDisplay(0);
+
+          await setupCamera();
+
+          setStatus("Loading AI model…", "idle");
+          metricModel.textContent = "Loading";
+
+          await getBestBackend();
+
+          model = await cocoSsd.load({
+            base: "lite_mobilenet_v2"
+          });
+
+          aiRunning = true;
+          captureBtn.disabled = false;
+          resetBtn.disabled = false;
+          stopBtn.disabled = false;
+          metricModel.textContent = "Ready";
+
+          restartDetectionLoop();
+          await detectStep();
+
+          setStatus("Rear camera and dog AI are ready.", "active");
+          setScreenStatus("Ready", true);
+        } catch (error) {
+          console.error("Start error:", error);
+
+          startBtn.disabled = false;
+          captureBtn.disabled = true;
+          resetBtn.disabled = true;
+          stopBtn.disabled = true;
+          metricModel.textContent = "Error";
+          updateLiveDisplay(0);
+          setScreenStatus("Offline", false);
+
+          let message = "This demo needs camera access and HTTPS to run.";
+
+          if (error && error.name === "NotAllowedError") {
+            message = "Camera permission was blocked. Allow camera access and try again.";
+          } else if (error && error.name === "NotFoundError") {
+            message = "No camera was found on this device.";
+          } else if (error && error.name === "NotReadableError") {
+            message = "The camera is already in use by another app or browser tab.";
+          }
+
+          setStatus(message, "error");
+        }
+      }
+
+      modeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeMode = btn.getAttribute("data-mode") || "balanced";
+
+          modeButtons.forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+            b.setAttribute("aria-checked", "false");
+          });
+
+          btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
+          btn.setAttribute("aria-checked", "true");
+
+          if (aiRunning) {
+            restartDetectionLoop();
+            detectStep();
+            setStatus(`Mode switched to ${btn.firstChild.textContent.trim()}.`, "active");
+          } else {
+            setStatus(`Mode set to ${btn.firstChild.textContent.trim()}.`, "idle");
+          }
+        });
+      });
+
+      startBtn.addEventListener("click", startExperience);
+      captureBtn.addEventListener("click", captureSnapshot);
+      resetBtn.addEventListener("click", resetWalkTotal);
+      stopBtn.addEventListener("click", stopCamera);
+      window.addEventListener("beforeunload", stopCamera);
+
+      updateLiveDisplay(0);
+      updateWalkTotalDisplay();
+      setScreenStatus("Offline", false);
+      metricModel.textContent = "Offline";
+    })();
+  </script>
+</body>
+</html>

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU COI Crowd Counter | Stage Demo</title>
+  <title>NKU COI Crowd Counter | Recordable Stage Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly browser AI crowd counter for live stage demos using the rear phone camera."
+    content="Mobile-friendly browser AI crowd counter with rear camera support and built-in recording."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -30,7 +30,6 @@
       --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
       --success: #22c55e;
       --danger: #ef4444;
-      --panel-bg: linear-gradient(180deg, #101114 0%, #181b20 100%);
     }
 
     * { box-sizing: border-box; }
@@ -265,6 +264,23 @@
       border: none;
     }
 
+    .btn-record {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+    }
+
+    .btn-record.recording {
+      background: #991b1b;
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.18);
+    }
+
+    .btn-stop-record {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(239,68,68,0.4);
+      color: #fecaca;
+    }
+
     .btn-stop {
       background: rgba(255,255,255,0.05);
       border-color: rgba(239,68,68,0.4);
@@ -429,7 +445,8 @@
 
     .screen-pill,
     .screen-status,
-    .screen-peak {
+    .screen-peak,
+    .screen-recording {
       position: absolute;
       display: inline-flex;
       align-items: center;
@@ -461,6 +478,31 @@
       right: 14px;
       background: rgba(247,183,24,0.95);
       color: #111;
+    }
+
+    .screen-recording {
+      top: 98px;
+      right: 14px;
+      background: rgba(220,38,38,0.95);
+      color: #fff;
+      display: none;
+    }
+
+    .screen-recording.show {
+      display: inline-flex;
+    }
+
+    .record-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #fff;
+      animation: pulseDot 1s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.82); }
     }
 
     .screen-status-dot {
@@ -632,11 +674,13 @@
       }
       .screen-pill,
       .screen-status,
-      .screen-peak {
+      .screen-peak,
+      .screen-recording {
         font-size: 0.62rem;
         padding: 6px 9px;
       }
       .screen-peak { top: 48px; }
+      .screen-recording { top: 82px; }
       .big-counter-wrap {
         left: 14px;
         right: 14px;
@@ -659,7 +703,7 @@
         <div class="brand-pill">NKU · COI</div>
         <span class="brand-sub">Live AI Crowd Counter</span>
       </div>
-      <div class="brand-sub">Rear camera stage demo</div>
+      <div class="brand-sub">Rear camera + recording</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -669,14 +713,14 @@
             <span class="tag">Phone Camera</span>
             <span class="tag">Crowd Count</span>
             <span class="tag">Live Boxes</span>
-            <span class="tag">Stage Ready</span>
+            <span class="tag">Record Demo</span>
           </div>
 
           <p class="eyebrow">College of Informatics</p>
-          <h1 id="page-title">Count the Crowd</h1>
+          <h1 id="page-title">Count + Record the Crowd</h1>
 
           <p class="lead">
-            Turn your phone toward the audience and let the browser count how many people it sees in real time.
+            Turn your phone toward the audience, count how many people it sees, and record the live AI demo right from the page.
           </p>
 
           <h2 class="section-title">How to use it</h2>
@@ -684,7 +728,7 @@
             <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
             <li><span class="step-num">2.</span><span>Allow camera access on your phone.</span></li>
             <li><span class="step-num">3.</span><span>Point the back camera toward the audience.</span></li>
-            <li><span class="step-num">4.</span><span>Hold steady for a moment so detections settle.</span></li>
+            <li><span class="step-num">4.</span><span>Tap <strong>Start Recording</strong> to save the demo as a video.</span></li>
           </ol>
 
           <h2 class="section-title">Detection mode</h2>
@@ -713,7 +757,9 @@
           <div class="action-row">
             <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
             <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
-            <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>⏹️ Turn Camera Off</button>
+            <button id="recordBtn" type="button" class="app-btn btn-record" disabled>⏺️ Start Recording</button>
+            <button id="stopRecordBtn" type="button" class="app-btn btn-stop-record" disabled>⏹️ Stop Recording</button>
+            <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>📴 Turn Camera Off</button>
           </div>
 
           <div class="status-row" aria-live="polite">
@@ -722,7 +768,7 @@
               <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
             </div>
             <div class="status-hint">
-              Best results: HTTPS, decent room lighting, and a steady phone angle.
+              Best results: use HTTPS, decent lighting, and hold the phone steady for a moment. Recording support depends on browser support for MediaRecorder.
             </div>
           </div>
 
@@ -773,6 +819,11 @@
                 <span id="screenPeakText">Peak 0</span>
               </div>
 
+              <div id="screenRecording" class="screen-recording">
+                <span class="record-dot"></span>
+                <span>Recording</span>
+              </div>
+
               <div class="big-counter-wrap">
                 <div class="big-counter-kicker">Live audience scan</div>
                 <div class="big-counter-card">
@@ -784,9 +835,9 @@
             </div>
 
             <div id="flashBadge" class="flash-badge" aria-hidden="true">
-              <div class="flash-kicker">Snapshot Captured</div>
-              <h3 id="flashTitle" class="flash-title">Crowd Saved</h3>
-              <div id="flashSub" class="flash-sub">Saved as a PNG to your device.</div>
+              <div class="flash-kicker">Saved</div>
+              <h3 id="flashTitle" class="flash-title">Done</h3>
+              <div id="flashSub" class="flash-sub">Your file was saved to your device.</div>
             </div>
           </div>
         </section>
@@ -802,7 +853,7 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_Stage_Crowd_Counter";
+      const TARGET_FOLDER_LABEL = "NKU_COI_Recordable_Crowd_Counter";
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -812,12 +863,15 @@
       const statusDot = document.getElementById("statusDot");
       const startBtn = document.getElementById("startBtn");
       const captureBtn = document.getElementById("captureBtn");
+      const recordBtn = document.getElementById("recordBtn");
+      const stopRecordBtn = document.getElementById("stopRecordBtn");
       const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
 
       const screenStatusDot = document.getElementById("screenStatusDot");
       const screenStatusText = document.getElementById("screenStatusText");
       const screenPeakText = document.getElementById("screenPeakText");
+      const screenRecording = document.getElementById("screenRecording");
       const bigCounterNumber = document.getElementById("bigCounterNumber");
       const bigCounterSub = document.getElementById("bigCounterSub");
 
@@ -845,6 +899,11 @@
       let peakCount = 0;
       let flashTimer = null;
 
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let recordMimeType = "";
+      let isRecording = false;
+
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
       const MODE_CONFIG = {
@@ -857,7 +916,6 @@
       function setStatus(message, mode = "idle") {
         statusText.textContent = message;
         statusDot.classList.remove("active", "error");
-
         if (mode === "active") statusDot.classList.add("active");
         if (mode === "error") statusDot.classList.add("error");
       }
@@ -874,9 +932,7 @@
         metricCount.textContent = String(smoothedCount);
         bigCounterNumber.textContent = String(smoothedCount);
 
-        if (count > peakCount) {
-          peakCount = count;
-        }
+        if (count > peakCount) peakCount = count;
 
         metricPeak.textContent = String(peakCount);
         screenPeakText.textContent = `Peak ${peakCount}`;
@@ -900,7 +956,7 @@
         flashTimer = setTimeout(() => {
           flashBadge.classList.remove("show");
           flashBadge.setAttribute("aria-hidden", "true");
-        }, 1600);
+        }, 1700);
       }
 
       async function getBestBackend() {
@@ -966,6 +1022,10 @@
       }
 
       function stopCamera() {
+        if (isRecording) {
+          stopRecording();
+        }
+
         stopLoops();
 
         if (mediaStream) {
@@ -986,6 +1046,8 @@
 
         startBtn.disabled = false;
         captureBtn.disabled = true;
+        recordBtn.disabled = true;
+        stopRecordBtn.disabled = true;
         stopBtn.disabled = true;
 
         videoSkeleton.style.display = "block";
@@ -1034,10 +1096,14 @@
 
         if (people.length > 0) {
           setScreenStatus("Live", true);
-          setStatus(`${people.length} people detected in frame.`, "active");
+          if (!isRecording) {
+            setStatus(`${people.length} people detected in frame.`, "active");
+          }
         } else {
           setScreenStatus("Searching…", false);
-          setStatus("AI is running. Aim the rear camera at the audience.", "active");
+          if (!isRecording) {
+            setStatus("AI is running. Aim the rear camera at the audience.", "active");
+          }
         }
 
         people.forEach((prediction, index) => {
@@ -1137,8 +1203,139 @@
         a.click();
         document.body.removeChild(a);
 
-        showFlash("Crowd Saved", "Saved as a PNG to your device.");
+        showFlash("Snapshot Saved", "Saved as a PNG to your device.");
         setStatus("Snapshot saved to your device.", "active");
+      }
+
+      function getSupportedRecordingMimeType() {
+        if (!window.MediaRecorder) return "";
+
+        const candidates = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ];
+
+        for (const type of candidates) {
+          try {
+            if (MediaRecorder.isTypeSupported(type)) return type;
+          } catch (error) {
+            console.warn("Mime type check failed for", type, error);
+          }
+        }
+
+        return "";
+      }
+
+      function setRecordingUI(recording) {
+        isRecording = recording;
+        recordBtn.classList.toggle("recording", recording);
+        screenRecording.classList.toggle("show", recording);
+
+        if (recording) {
+          recordBtn.textContent = "🔴 Recording…";
+          recordBtn.disabled = true;
+          stopRecordBtn.disabled = false;
+        } else {
+          recordBtn.textContent = "⏺️ Start Recording";
+          recordBtn.disabled = !(aiRunning && !!window.MediaRecorder);
+          stopRecordBtn.disabled = true;
+        }
+      }
+
+      function downloadRecordedVideo(blob) {
+        const extension = recordMimeType.includes("mp4") ? "mp4" : "webm";
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+
+        a.href = url;
+        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+      }
+
+      function startRecording() {
+        if (!aiRunning || !videoReady) {
+          setStatus("Start the camera first before recording.", "error");
+          return;
+        }
+
+        if (!window.MediaRecorder) {
+          setStatus("This browser does not support in-page recording.", "error");
+          return;
+        }
+
+        try {
+          recordMimeType = getSupportedRecordingMimeType();
+          if (!recordMimeType) {
+            setStatus("No supported video recording format was found in this browser.", "error");
+            return;
+          }
+
+          const stream = canvas.captureStream(25);
+          recordedChunks = [];
+
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: recordMimeType,
+            videoBitsPerSecond: 4000000
+          });
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: recordMimeType });
+            if (blob.size > 0) {
+              downloadRecordedVideo(blob);
+              showFlash("Recording Saved", "The video was saved to your device.");
+              setStatus("Recording stopped and saved.", "active");
+            } else {
+              setStatus("Recording stopped, but no video data was captured.", "error");
+            }
+
+            recordedChunks = [];
+            mediaRecorder = null;
+            setRecordingUI(false);
+          };
+
+          mediaRecorder.onerror = (event) => {
+            console.error("Recorder error:", event);
+            setStatus("Recording failed in this browser.", "error");
+            recordedChunks = [];
+            mediaRecorder = null;
+            setRecordingUI(false);
+          };
+
+          mediaRecorder.start(250);
+          setRecordingUI(true);
+          setStatus("Recording the demo output…", "active");
+        } catch (error) {
+          console.error("Start recording error:", error);
+          setStatus("Could not start recording on this device/browser.", "error");
+          setRecordingUI(false);
+        }
+      }
+
+      function stopRecording() {
+        if (!mediaRecorder) return;
+
+        try {
+          if (mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+          }
+        } catch (error) {
+          console.error("Stop recording error:", error);
+          setStatus("Could not stop recording cleanly.", "error");
+          setRecordingUI(false);
+        }
       }
 
       async function startExperience() {
@@ -1147,6 +1344,8 @@
 
           startBtn.disabled = true;
           captureBtn.disabled = true;
+          recordBtn.disabled = true;
+          stopRecordBtn.disabled = true;
           stopBtn.disabled = true;
 
           setStatus("Requesting rear camera access…", "idle");
@@ -1166,19 +1365,28 @@
 
           aiRunning = true;
           captureBtn.disabled = false;
+          recordBtn.disabled = !window.MediaRecorder;
+          stopRecordBtn.disabled = true;
           stopBtn.disabled = false;
           metricModel.textContent = "Ready";
 
           restartDetectionLoop();
           await detectStep();
 
-          setStatus("Rear camera and AI are ready.", "active");
+          if (!window.MediaRecorder) {
+            setStatus("Rear camera and AI are ready. Recording is not supported in this browser.", "active");
+          } else {
+            setStatus("Rear camera and AI are ready.", "active");
+          }
+
           setScreenStatus("Ready", true);
         } catch (error) {
           console.error("Start error:", error);
 
           startBtn.disabled = false;
           captureBtn.disabled = true;
+          recordBtn.disabled = true;
+          stopRecordBtn.disabled = true;
           stopBtn.disabled = true;
           metricModel.textContent = "Error";
           updateCounts(0);
@@ -1224,6 +1432,8 @@
 
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
+      recordBtn.addEventListener("click", startRecording);
+      stopRecordBtn.addEventListener("click", stopRecording);
       stopBtn.addEventListener("click", stopCamera);
       window.addEventListener("beforeunload", stopCamera);
 
@@ -1231,6 +1441,7 @@
       setScreenStatus("Offline", false);
       metricPeak.textContent = "0";
       metricModel.textContent = "Offline";
+      setRecordingUI(false);
     })();
   </script>
 </body>

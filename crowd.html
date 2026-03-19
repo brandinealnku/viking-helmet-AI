@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU COI Crowd Counter | GIF Capture Stage Demo</title>
+  <title>NKU COI Crowd Counter | Live Stage Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly browser AI crowd counter with rear camera support and built-in GIF capture."
+    content="Mobile-friendly browser AI crowd counter with rear camera support."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -18,9 +18,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-
-  <!-- GIF encoder -->
-  <script src="https://cdn.jsdelivr.net/gh/jnordberg/gif.js/dist/gif.js"></script>
 
   <style>
     :root {
@@ -260,23 +257,6 @@
       border: none;
     }
 
-    .btn-gif {
-      background: #7c3aed;
-      color: #fff;
-      border: none;
-    }
-
-    .btn-gif.capturing {
-      background: #5b21b6;
-      box-shadow: 0 0 0 4px rgba(124,58,237,0.18);
-    }
-
-    .btn-stop-gif {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(124,58,237,0.45);
-      color: #ddd6fe;
-    }
-
     .btn-stop {
       background: rgba(255,255,255,0.05);
       border-color: rgba(239,68,68,0.4);
@@ -441,8 +421,7 @@
 
     .screen-pill,
     .screen-status,
-    .screen-peak,
-    .screen-gif {
+    .screen-peak {
       position: absolute;
       display: inline-flex;
       align-items: center;
@@ -474,31 +453,6 @@
       right: 14px;
       background: rgba(247,183,24,0.95);
       color: #111;
-    }
-
-    .screen-gif {
-      top: 98px;
-      right: 14px;
-      background: rgba(124,58,237,0.95);
-      color: #fff;
-      display: none;
-    }
-
-    .screen-gif.show {
-      display: inline-flex;
-    }
-
-    .gif-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: #fff;
-      animation: pulseDot 1s infinite;
-    }
-
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.82); }
     }
 
     .screen-status-dot {
@@ -636,19 +590,6 @@
       margin: 8px 0 0;
     }
 
-    .gif-preview-wrap {
-      margin-top: 16px;
-    }
-
-    .gif-preview-player {
-      width: 100%;
-      max-width: 460px;
-      display: block;
-      border-radius: 16px;
-      background: #000;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
     .footer-note {
       padding: 0 20px 20px;
       font-size: 0.88rem;
@@ -683,13 +624,11 @@
       }
       .screen-pill,
       .screen-status,
-      .screen-peak,
-      .screen-gif {
+      .screen-peak {
         font-size: 0.62rem;
         padding: 6px 9px;
       }
       .screen-peak { top: 48px; }
-      .screen-gif { top: 82px; }
       .big-counter-wrap {
         left: 14px;
         right: 14px;
@@ -712,7 +651,7 @@
         <div class="brand-pill">NKU · COI</div>
         <span class="brand-sub">Live AI Crowd Counter</span>
       </div>
-      <div class="brand-sub">Rear camera + GIF capture</div>
+      <div class="brand-sub">Rear camera demo</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -722,14 +661,14 @@
             <span class="tag">Phone Camera</span>
             <span class="tag">Crowd Count</span>
             <span class="tag">Live Boxes</span>
-            <span class="tag">Save GIF</span>
+            <span class="tag">Snapshot</span>
           </div>
 
           <p class="eyebrow">College of Informatics</p>
-          <h1 id="page-title">Count + Save as GIF</h1>
+          <h1 id="page-title">Count the Crowd Live</h1>
 
           <p class="lead">
-            Turn your phone toward the audience, count how many people it sees, and save the live AI experience as an animated GIF.
+            Turn your phone toward the audience and count how many people the AI sees in real time.
           </p>
 
           <h2 class="section-title">How to use it</h2>
@@ -737,7 +676,7 @@
             <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
             <li><span class="step-num">2.</span><span>Allow camera access on your phone.</span></li>
             <li><span class="step-num">3.</span><span>Point the back camera toward the audience.</span></li>
-            <li><span class="step-num">4.</span><span>Tap <strong>Start GIF Capture</strong>, let it run a few seconds, then tap <strong>Stop + Render GIF</strong>.</span></li>
+            <li><span class="step-num">4.</span><span>Tap <strong>Capture Snapshot</strong> any time you want to save a still image.</span></li>
           </ol>
 
           <h2 class="section-title">Detection mode</h2>
@@ -766,8 +705,6 @@
           <div class="action-row">
             <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
             <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
-            <button id="gifBtn" type="button" class="app-btn btn-gif" disabled>🎞️ Start GIF Capture</button>
-            <button id="stopGifBtn" type="button" class="app-btn btn-stop-gif" disabled>🪄 Stop + Render GIF</button>
             <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>📴 Turn Camera Off</button>
           </div>
 
@@ -777,7 +714,7 @@
               <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
             </div>
             <div class="status-hint">
-              Best results: use HTTPS, decent lighting, and hold the phone steady for a moment. GIFs look best when you record only 3–6 seconds.
+              Best results: use HTTPS, decent lighting, and hold the phone steady for a moment.
             </div>
           </div>
 
@@ -828,11 +765,6 @@
                 <span id="screenPeakText">Peak 0</span>
               </div>
 
-              <div id="screenGif" class="screen-gif">
-                <span class="gif-dot"></span>
-                <span>Capturing GIF</span>
-              </div>
-
               <div class="big-counter-wrap">
                 <div class="big-counter-kicker">Live audience scan</div>
                 <div class="big-counter-card">
@@ -862,7 +794,7 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_Crowd_Counter_GIF";
+      const TARGET_FOLDER_LABEL = "NKU_COI_Crowd_Counter";
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -872,15 +804,12 @@
       const statusDot = document.getElementById("statusDot");
       const startBtn = document.getElementById("startBtn");
       const captureBtn = document.getElementById("captureBtn");
-      const gifBtn = document.getElementById("gifBtn");
-      const stopGifBtn = document.getElementById("stopGifBtn");
       const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
 
       const screenStatusDot = document.getElementById("screenStatusDot");
       const screenStatusText = document.getElementById("screenStatusText");
       const screenPeakText = document.getElementById("screenPeakText");
-      const screenGif = document.getElementById("screenGif");
       const bigCounterNumber = document.getElementById("bigCounterNumber");
       const bigCounterSub = document.getElementById("bigCounterSub");
 
@@ -907,14 +836,6 @@
       let smoothedCount = 0;
       let peakCount = 0;
       let flashTimer = null;
-
-      let gifEncoder = null;
-      let gifCaptureTimer = null;
-      let isGifCapturing = false;
-      let gifFrameCount = 0;
-      let gifDelay = 180;
-      let lastGifBlob = null;
-      let isRenderingGif = false;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -968,7 +889,7 @@
         flashTimer = setTimeout(() => {
           flashBadge.classList.remove("show");
           flashBadge.setAttribute("aria-hidden", "true");
-        }, 1800);
+        }, 1700);
       }
 
       async function getBestBackend() {
@@ -1033,16 +954,7 @@
         detectTimer = null;
       }
 
-      function stopGifCaptureTimer() {
-        if (gifCaptureTimer) {
-          clearInterval(gifCaptureTimer);
-          gifCaptureTimer = null;
-        }
-      }
-
       function stopCamera() {
-        if (isGifCapturing) stopGifCapture(true);
-
         stopLoops();
 
         if (mediaStream) {
@@ -1063,8 +975,6 @@
 
         startBtn.disabled = false;
         captureBtn.disabled = true;
-        gifBtn.disabled = true;
-        stopGifBtn.disabled = true;
         stopBtn.disabled = true;
 
         videoSkeleton.style.display = "block";
@@ -1113,14 +1023,10 @@
 
         if (people.length > 0) {
           setScreenStatus("Live", true);
-          if (!isGifCapturing && !isRenderingGif) {
-            setStatus(`${people.length} people detected in frame.`, "active");
-          }
+          setStatus(`${people.length} people detected in frame.`, "active");
         } else {
           setScreenStatus("Searching…", false);
-          if (!isGifCapturing && !isRenderingGif) {
-            setStatus("AI is running. Aim the rear camera at the audience.", "active");
-          }
+          setStatus("AI is running. Aim the rear camera at the audience.", "active");
         }
 
         people.forEach((prediction, index) => {
@@ -1224,202 +1130,12 @@
         setStatus("Snapshot saved to your device.", "active");
       }
 
-      function setGifUI(capturing) {
-        isGifCapturing = capturing;
-        gifBtn.classList.toggle("capturing", capturing);
-        screenGif.classList.toggle("show", capturing);
-
-        if (capturing) {
-          gifBtn.textContent = "🎞️ Capturing GIF…";
-          gifBtn.disabled = true;
-          stopGifBtn.disabled = false;
-        } else {
-          gifBtn.textContent = "🎞️ Start GIF Capture";
-          gifBtn.disabled = !(aiRunning && !isRenderingGif && typeof GIF !== "undefined");
-          stopGifBtn.disabled = true;
-        }
-      }
-
-      function downloadGif(blob) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
-        a.href = url;
-        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.gif`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-      }
-
-      function injectGifPreview(blob) {
-        let existing = document.getElementById("gifPreviewWrap");
-        if (existing) existing.remove();
-
-        const wrap = document.createElement("section");
-        wrap.id = "gifPreviewWrap";
-        wrap.className = "gif-preview-wrap";
-
-        const title = document.createElement("h2");
-        title.className = "section-title";
-        title.textContent = "Animated GIF preview";
-
-        const img = document.createElement("img");
-        img.className = "gif-preview-player";
-        img.alt = "Animated GIF preview of the crowd counter demo";
-        img.src = URL.createObjectURL(blob);
-
-        const note = document.createElement("p");
-        note.className = "small-note";
-        note.textContent = `GIF created with ${gifFrameCount} frame${gifFrameCount === 1 ? "" : "s"}.`;
-
-        wrap.appendChild(title);
-        wrap.appendChild(img);
-        wrap.appendChild(note);
-
-        previewSection.insertAdjacentElement("afterend", wrap);
-      }
-
-      function getGifWorkerPath() {
-        return "https://cdn.jsdelivr.net/gh/jnordberg/gif.js/dist/gif.worker.js";
-      }
-
-      function startGifCapture() {
-        if (!aiRunning || !videoReady) {
-          setStatus("Start the camera first before creating a GIF.", "error");
-          return;
-        }
-
-        if (typeof GIF === "undefined") {
-          setStatus("GIF encoder failed to load.", "error");
-          return;
-        }
-
-        if (!canvas.width || !canvas.height) {
-          setStatus("Canvas is not ready yet.", "error");
-          return;
-        }
-
-        try {
-          gifFrameCount = 0;
-          lastGifBlob = null;
-
-          gifEncoder = new GIF({
-            workers: 2,
-            quality: 10,
-            width: canvas.width,
-            height: canvas.height,
-            workerScript: getGifWorkerPath(),
-            background: "#111111"
-          });
-
-          setGifUI(true);
-          setStatus("Capturing GIF frames… keep the phone steady for a few seconds.", "active");
-
-          stopGifCaptureTimer();
-          gifCaptureTimer = setInterval(() => {
-            if (!gifEncoder || !videoReady) return;
-
-            try {
-              gifEncoder.addFrame(canvas, {
-                copy: true,
-                delay: gifDelay
-              });
-              gifFrameCount += 1;
-            } catch (error) {
-              console.error("GIF frame add error:", error);
-            }
-          }, gifDelay);
-        } catch (error) {
-          console.error("Start GIF capture error:", error);
-          gifEncoder = null;
-          setGifUI(false);
-          setStatus("Could not start GIF capture on this device.", "error");
-        }
-      }
-
-      function stopGifCapture(cancelOnly = false) {
-        if (!gifEncoder && !isGifCapturing) return;
-
-        stopGifCaptureTimer();
-
-        if (cancelOnly) {
-          gifEncoder = null;
-          gifFrameCount = 0;
-          isRenderingGif = false;
-          setGifUI(false);
-          return;
-        }
-
-        if (!gifEncoder) {
-          setGifUI(false);
-          return;
-        }
-
-        if (gifFrameCount < 2) {
-          gifEncoder = null;
-          gifFrameCount = 0;
-          setGifUI(false);
-          setStatus("Capture a little longer so the GIF has enough frames.", "error");
-          return;
-        }
-
-        try {
-          isRenderingGif = true;
-          gifBtn.disabled = true;
-          stopGifBtn.disabled = true;
-          stopBtn.disabled = true;
-          captureBtn.disabled = true;
-
-          setGifUI(false);
-          setStatus(`Rendering GIF from ${gifFrameCount} frames…`, "active");
-
-          const encoder = gifEncoder;
-          gifEncoder = null;
-
-          encoder.on("finished", (blob) => {
-            isRenderingGif = false;
-            lastGifBlob = blob;
-
-            downloadGif(blob);
-            injectGifPreview(blob);
-
-            gifBtn.disabled = false;
-            stopGifBtn.disabled = true;
-            stopBtn.disabled = false;
-            captureBtn.disabled = false;
-
-            showFlash("GIF Saved", "Animated GIF saved to your device.");
-            setStatus("GIF rendered and saved to your device.", "active");
-          });
-
-          encoder.on("progress", (progress) => {
-            const pct = Math.round(progress * 100);
-            setStatus(`Rendering GIF… ${pct}%`, "active");
-          });
-
-          encoder.render();
-        } catch (error) {
-          console.error("GIF render error:", error);
-          isRenderingGif = false;
-          gifFrameCount = 0;
-          gifEncoder = null;
-          gifBtn.disabled = false;
-          stopGifBtn.disabled = true;
-          stopBtn.disabled = false;
-          captureBtn.disabled = false;
-          setStatus("GIF rendering failed.", "error");
-        }
-      }
-
       async function startExperience() {
         try {
           if (aiRunning) return;
 
           startBtn.disabled = true;
           captureBtn.disabled = true;
-          gifBtn.disabled = true;
-          stopGifBtn.disabled = true;
           stopBtn.disabled = true;
 
           setStatus("Requesting rear camera access…", "idle");
@@ -1439,28 +1155,19 @@
 
           aiRunning = true;
           captureBtn.disabled = false;
-          gifBtn.disabled = typeof GIF === "undefined";
-          stopGifBtn.disabled = true;
           stopBtn.disabled = false;
           metricModel.textContent = "Ready";
 
           restartDetectionLoop();
           await detectStep();
 
-          if (typeof GIF === "undefined") {
-            setStatus("Rear camera and AI are ready. GIF capture library did not load.", "active");
-          } else {
-            setStatus("Rear camera and AI are ready.", "active");
-          }
-
+          setStatus("Rear camera and AI are ready.", "active");
           setScreenStatus("Ready", true);
         } catch (error) {
           console.error("Start error:", error);
 
           startBtn.disabled = false;
           captureBtn.disabled = true;
-          gifBtn.disabled = true;
-          stopGifBtn.disabled = true;
           stopBtn.disabled = true;
           metricModel.textContent = "Error";
           updateCounts(0);
@@ -1506,8 +1213,6 @@
 
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
-      gifBtn.addEventListener("click", startGifCapture);
-      stopGifBtn.addEventListener("click", () => stopGifCapture(false));
       stopBtn.addEventListener("click", stopCamera);
       window.addEventListener("beforeunload", stopCamera);
 
@@ -1515,7 +1220,6 @@
       setScreenStatus("Offline", false);
       metricPeak.textContent = "0";
       metricModel.textContent = "Offline";
-      setGifUI(false);
     })();
   </script>
 </body>

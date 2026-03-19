@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU COI Crowd Counter | Recordable Stage Demo</title>
+  <title>NKU COI Crowd Counter | GIF Capture Stage Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly browser AI crowd counter with rear camera support and built-in recording."
+    content="Mobile-friendly browser AI crowd counter with rear camera support and built-in GIF capture."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -18,6 +18,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+  <!-- GIF encoder -->
+  <script src="https://cdn.jsdelivr.net/gh/jnordberg/gif.js/dist/gif.js"></script>
 
   <style>
     :root {
@@ -192,13 +195,6 @@
       min-width: 18px;
     }
 
-    .info-text {
-      font-size: 0.9rem;
-      color: #d1d5db;
-      line-height: 1.65;
-      margin: 0;
-    }
-
     .mode-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -264,21 +260,21 @@
       border: none;
     }
 
-    .btn-record {
-      background: #dc2626;
+    .btn-gif {
+      background: #7c3aed;
       color: #fff;
       border: none;
     }
 
-    .btn-record.recording {
-      background: #991b1b;
-      box-shadow: 0 0 0 4px rgba(239,68,68,0.18);
+    .btn-gif.capturing {
+      background: #5b21b6;
+      box-shadow: 0 0 0 4px rgba(124,58,237,0.18);
     }
 
-    .btn-stop-record {
+    .btn-stop-gif {
       background: rgba(255,255,255,0.05);
-      border-color: rgba(239,68,68,0.4);
-      color: #fecaca;
+      border-color: rgba(124,58,237,0.45);
+      color: #ddd6fe;
     }
 
     .btn-stop {
@@ -446,7 +442,7 @@
     .screen-pill,
     .screen-status,
     .screen-peak,
-    .screen-recording {
+    .screen-gif {
       position: absolute;
       display: inline-flex;
       align-items: center;
@@ -480,19 +476,19 @@
       color: #111;
     }
 
-    .screen-recording {
+    .screen-gif {
       top: 98px;
       right: 14px;
-      background: rgba(220,38,38,0.95);
+      background: rgba(124,58,237,0.95);
       color: #fff;
       display: none;
     }
 
-    .screen-recording.show {
+    .screen-gif.show {
       display: inline-flex;
     }
 
-    .record-dot {
+    .gif-dot {
       width: 9px;
       height: 9px;
       border-radius: 999px;
@@ -640,11 +636,11 @@
       margin: 8px 0 0;
     }
 
-    .video-preview-wrap {
+    .gif-preview-wrap {
       margin-top: 16px;
     }
 
-    .video-preview-player {
+    .gif-preview-player {
       width: 100%;
       max-width: 460px;
       display: block;
@@ -688,12 +684,12 @@
       .screen-pill,
       .screen-status,
       .screen-peak,
-      .screen-recording {
+      .screen-gif {
         font-size: 0.62rem;
         padding: 6px 9px;
       }
       .screen-peak { top: 48px; }
-      .screen-recording { top: 82px; }
+      .screen-gif { top: 82px; }
       .big-counter-wrap {
         left: 14px;
         right: 14px;
@@ -716,7 +712,7 @@
         <div class="brand-pill">NKU · COI</div>
         <span class="brand-sub">Live AI Crowd Counter</span>
       </div>
-      <div class="brand-sub">Rear camera + recording</div>
+      <div class="brand-sub">Rear camera + GIF capture</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -726,14 +722,14 @@
             <span class="tag">Phone Camera</span>
             <span class="tag">Crowd Count</span>
             <span class="tag">Live Boxes</span>
-            <span class="tag">Record Demo</span>
+            <span class="tag">Save GIF</span>
           </div>
 
           <p class="eyebrow">College of Informatics</p>
-          <h1 id="page-title">Count + Record the Crowd</h1>
+          <h1 id="page-title">Count + Save as GIF</h1>
 
           <p class="lead">
-            Turn your phone toward the audience, count how many people it sees, and record the live AI demo right from the page.
+            Turn your phone toward the audience, count how many people it sees, and save the live AI experience as an animated GIF.
           </p>
 
           <h2 class="section-title">How to use it</h2>
@@ -741,7 +737,7 @@
             <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
             <li><span class="step-num">2.</span><span>Allow camera access on your phone.</span></li>
             <li><span class="step-num">3.</span><span>Point the back camera toward the audience.</span></li>
-            <li><span class="step-num">4.</span><span>Tap <strong>Start Recording</strong> to save the demo as a video.</span></li>
+            <li><span class="step-num">4.</span><span>Tap <strong>Start GIF Capture</strong>, let it run a few seconds, then tap <strong>Stop + Render GIF</strong>.</span></li>
           </ol>
 
           <h2 class="section-title">Detection mode</h2>
@@ -770,8 +766,8 @@
           <div class="action-row">
             <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
             <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
-            <button id="recordBtn" type="button" class="app-btn btn-record" disabled>⏺️ Start Recording</button>
-            <button id="stopRecordBtn" type="button" class="app-btn btn-stop-record" disabled>⏹️ Stop Recording</button>
+            <button id="gifBtn" type="button" class="app-btn btn-gif" disabled>🎞️ Start GIF Capture</button>
+            <button id="stopGifBtn" type="button" class="app-btn btn-stop-gif" disabled>🪄 Stop + Render GIF</button>
             <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>📴 Turn Camera Off</button>
           </div>
 
@@ -781,7 +777,7 @@
               <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
             </div>
             <div class="status-hint">
-              Best results: use HTTPS, decent lighting, and hold the phone steady for a moment. Recording support depends on browser support for MediaRecorder.
+              Best results: use HTTPS, decent lighting, and hold the phone steady for a moment. GIFs look best when you record only 3–6 seconds.
             </div>
           </div>
 
@@ -832,9 +828,9 @@
                 <span id="screenPeakText">Peak 0</span>
               </div>
 
-              <div id="screenRecording" class="screen-recording">
-                <span class="record-dot"></span>
-                <span>Recording</span>
+              <div id="screenGif" class="screen-gif">
+                <span class="gif-dot"></span>
+                <span>Capturing GIF</span>
               </div>
 
               <div class="big-counter-wrap">
@@ -866,7 +862,7 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_Recordable_Crowd_Counter";
+      const TARGET_FOLDER_LABEL = "NKU_COI_Crowd_Counter_GIF";
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -876,15 +872,15 @@
       const statusDot = document.getElementById("statusDot");
       const startBtn = document.getElementById("startBtn");
       const captureBtn = document.getElementById("captureBtn");
-      const recordBtn = document.getElementById("recordBtn");
-      const stopRecordBtn = document.getElementById("stopRecordBtn");
+      const gifBtn = document.getElementById("gifBtn");
+      const stopGifBtn = document.getElementById("stopGifBtn");
       const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
 
       const screenStatusDot = document.getElementById("screenStatusDot");
       const screenStatusText = document.getElementById("screenStatusText");
       const screenPeakText = document.getElementById("screenPeakText");
-      const screenRecording = document.getElementById("screenRecording");
+      const screenGif = document.getElementById("screenGif");
       const bigCounterNumber = document.getElementById("bigCounterNumber");
       const bigCounterSub = document.getElementById("bigCounterSub");
 
@@ -912,11 +908,13 @@
       let peakCount = 0;
       let flashTimer = null;
 
-      let mediaRecorder = null;
-      let recordedChunks = [];
-      let recordMimeType = "";
-      let isRecording = false;
-      let recordedBlob = null;
+      let gifEncoder = null;
+      let gifCaptureTimer = null;
+      let isGifCapturing = false;
+      let gifFrameCount = 0;
+      let gifDelay = 180;
+      let lastGifBlob = null;
+      let isRenderingGif = false;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -970,12 +968,7 @@
         flashTimer = setTimeout(() => {
           flashBadge.classList.remove("show");
           flashBadge.setAttribute("aria-hidden", "true");
-        }, 1700);
-      }
-
-      function isSafariLike() {
-        const ua = navigator.userAgent;
-        return /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Android/i.test(ua);
+        }, 1800);
       }
 
       async function getBestBackend() {
@@ -1040,8 +1033,15 @@
         detectTimer = null;
       }
 
+      function stopGifCaptureTimer() {
+        if (gifCaptureTimer) {
+          clearInterval(gifCaptureTimer);
+          gifCaptureTimer = null;
+        }
+      }
+
       function stopCamera() {
-        if (isRecording) stopRecording();
+        if (isGifCapturing) stopGifCapture(true);
 
         stopLoops();
 
@@ -1063,8 +1063,8 @@
 
         startBtn.disabled = false;
         captureBtn.disabled = true;
-        recordBtn.disabled = true;
-        stopRecordBtn.disabled = true;
+        gifBtn.disabled = true;
+        stopGifBtn.disabled = true;
         stopBtn.disabled = true;
 
         videoSkeleton.style.display = "block";
@@ -1113,10 +1113,14 @@
 
         if (people.length > 0) {
           setScreenStatus("Live", true);
-          if (!isRecording) setStatus(`${people.length} people detected in frame.`, "active");
+          if (!isGifCapturing && !isRenderingGif) {
+            setStatus(`${people.length} people detected in frame.`, "active");
+          }
         } else {
           setScreenStatus("Searching…", false);
-          if (!isRecording) setStatus("AI is running. Aim the rear camera at the audience.", "active");
+          if (!isGifCapturing && !isRenderingGif) {
+            setStatus("AI is running. Aim the rear camera at the audience.", "active");
+          }
         }
 
         people.forEach((prediction, index) => {
@@ -1220,189 +1224,191 @@
         setStatus("Snapshot saved to your device.", "active");
       }
 
-      function getPreferredRecordingOptions() {
-        if (!window.MediaRecorder) return null;
+      function setGifUI(capturing) {
+        isGifCapturing = capturing;
+        gifBtn.classList.toggle("capturing", capturing);
+        screenGif.classList.toggle("show", capturing);
 
-        const safariFirst = [
-          "video/mp4;codecs=h264,aac",
-          "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-          "video/mp4"
-        ];
-
-        const genericFirst = [
-          "video/webm;codecs=vp9,opus",
-          "video/webm;codecs=vp8,opus",
-          "video/webm",
-          "video/mp4;codecs=h264,aac",
-          "video/mp4"
-        ];
-
-        const candidates = isSafariLike() ? safariFirst.concat(genericFirst) : genericFirst;
-
-        for (const type of candidates) {
-          try {
-            if (MediaRecorder.isTypeSupported(type)) {
-              return { mimeType: type };
-            }
-          } catch (error) {
-            console.warn("Mime type check failed:", type, error);
-          }
-        }
-
-        return {};
-      }
-
-      function setRecordingUI(recording) {
-        isRecording = recording;
-        recordBtn.classList.toggle("recording", recording);
-        screenRecording.classList.toggle("show", recording);
-
-        if (recording) {
-          recordBtn.textContent = "🔴 Recording…";
-          recordBtn.disabled = true;
-          stopRecordBtn.disabled = false;
+        if (capturing) {
+          gifBtn.textContent = "🎞️ Capturing GIF…";
+          gifBtn.disabled = true;
+          stopGifBtn.disabled = false;
         } else {
-          recordBtn.textContent = "⏺️ Start Recording";
-          recordBtn.disabled = !(aiRunning && !!window.MediaRecorder);
-          stopRecordBtn.disabled = true;
+          gifBtn.textContent = "🎞️ Start GIF Capture";
+          gifBtn.disabled = !(aiRunning && !isRenderingGif && typeof GIF !== "undefined");
+          stopGifBtn.disabled = true;
         }
       }
 
-      function downloadRecordedVideo(blob, mimeType) {
-        const lower = (mimeType || "").toLowerCase();
-        const extension = lower.includes("mp4") ? "mp4" : "webm";
-
+      function downloadGif(blob) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
-
         a.href = url;
-        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.${extension}`;
+        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.gif`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       }
 
-      function injectPlaybackPreview(blob, mimeType) {
-        let existing = document.getElementById("recordingPreviewWrap");
+      function injectGifPreview(blob) {
+        let existing = document.getElementById("gifPreviewWrap");
         if (existing) existing.remove();
 
         const wrap = document.createElement("section");
-        wrap.id = "recordingPreviewWrap";
-        wrap.className = "video-preview-wrap";
+        wrap.id = "gifPreviewWrap";
+        wrap.className = "gif-preview-wrap";
 
         const title = document.createElement("h2");
         title.className = "section-title";
-        title.textContent = "Recorded video preview";
+        title.textContent = "Animated GIF preview";
 
-        const videoEl = document.createElement("video");
-        videoEl.controls = true;
-        videoEl.playsInline = true;
-        videoEl.className = "video-preview-player";
+        const img = document.createElement("img");
+        img.className = "gif-preview-player";
+        img.alt = "Animated GIF preview of the crowd counter demo";
+        img.src = URL.createObjectURL(blob);
 
         const note = document.createElement("p");
         note.className = "small-note";
-        note.textContent = `Format: ${mimeType || "unknown"}`;
-
-        const url = URL.createObjectURL(blob);
-        videoEl.src = url;
-
-        videoEl.addEventListener("error", () => {
-          note.textContent = `The browser saved the recording, but could not preview this format cleanly here. Format: ${mimeType || "unknown"}`;
-        });
+        note.textContent = `GIF created with ${gifFrameCount} frame${gifFrameCount === 1 ? "" : "s"}.`;
 
         wrap.appendChild(title);
-        wrap.appendChild(videoEl);
+        wrap.appendChild(img);
         wrap.appendChild(note);
 
         previewSection.insertAdjacentElement("afterend", wrap);
       }
 
-      function startRecording() {
+      function getGifWorkerPath() {
+        return "https://cdn.jsdelivr.net/gh/jnordberg/gif.js/dist/gif.worker.js";
+      }
+
+      function startGifCapture() {
         if (!aiRunning || !videoReady) {
-          setStatus("Start the camera first before recording.", "error");
+          setStatus("Start the camera first before creating a GIF.", "error");
           return;
         }
 
-        if (!window.MediaRecorder) {
-          setStatus("This browser does not support in-page recording.", "error");
+        if (typeof GIF === "undefined") {
+          setStatus("GIF encoder failed to load.", "error");
+          return;
+        }
+
+        if (!canvas.width || !canvas.height) {
+          setStatus("Canvas is not ready yet.", "error");
           return;
         }
 
         try {
-          const stream = canvas.captureStream(25);
-          recordedChunks = [];
-          recordedBlob = null;
+          gifFrameCount = 0;
+          lastGifBlob = null;
 
-          const options = getPreferredRecordingOptions() || {};
-          mediaRecorder = new MediaRecorder(stream, options);
+          gifEncoder = new GIF({
+            workers: 2,
+            quality: 10,
+            width: canvas.width,
+            height: canvas.height,
+            workerScript: getGifWorkerPath(),
+            background: "#111111"
+          });
 
-          recordMimeType = mediaRecorder.mimeType || options.mimeType || "video/webm";
+          setGifUI(true);
+          setStatus("Capturing GIF frames… keep the phone steady for a few seconds.", "active");
 
-          mediaRecorder.ondataavailable = (event) => {
-            if (event.data && event.data.size > 0) {
-              recordedChunks.push(event.data);
-            }
-          };
+          stopGifCaptureTimer();
+          gifCaptureTimer = setInterval(() => {
+            if (!gifEncoder || !videoReady) return;
 
-          mediaRecorder.onstop = () => {
             try {
-              recordedBlob = new Blob(recordedChunks, { type: recordMimeType });
-
-              if (!recordedBlob || recordedBlob.size === 0) {
-                setStatus("Recording stopped, but no video data was captured.", "error");
-                recordedChunks = [];
-                mediaRecorder = null;
-                setRecordingUI(false);
-                return;
-              }
-
-              downloadRecordedVideo(recordedBlob, recordMimeType);
-              injectPlaybackPreview(recordedBlob, recordMimeType);
-
-              showFlash("Recording Saved", "The video was saved to your device.");
-              setStatus(`Recording stopped and saved as ${recordMimeType}.`, "active");
+              gifEncoder.addFrame(canvas, {
+                copy: true,
+                delay: gifDelay
+              });
+              gifFrameCount += 1;
             } catch (error) {
-              console.error("Blob creation/playback preview error:", error);
-              setStatus("Recording saved, but preview generation failed.", "error");
+              console.error("GIF frame add error:", error);
             }
-
-            recordedChunks = [];
-            mediaRecorder = null;
-            setRecordingUI(false);
-          };
-
-          mediaRecorder.onerror = (event) => {
-            console.error("Recorder error:", event);
-            setStatus("Recording failed in this browser.", "error");
-            recordedChunks = [];
-            mediaRecorder = null;
-            setRecordingUI(false);
-          };
-
-          mediaRecorder.start();
-          setRecordingUI(true);
-          setStatus(`Recording demo output… (${recordMimeType || "default format"})`, "active");
+          }, gifDelay);
         } catch (error) {
-          console.error("Start recording error:", error);
-          setStatus("Could not start recording on this device/browser.", "error");
-          setRecordingUI(false);
+          console.error("Start GIF capture error:", error);
+          gifEncoder = null;
+          setGifUI(false);
+          setStatus("Could not start GIF capture on this device.", "error");
         }
       }
 
-      function stopRecording() {
-        if (!mediaRecorder) return;
+      function stopGifCapture(cancelOnly = false) {
+        if (!gifEncoder && !isGifCapturing) return;
+
+        stopGifCaptureTimer();
+
+        if (cancelOnly) {
+          gifEncoder = null;
+          gifFrameCount = 0;
+          isRenderingGif = false;
+          setGifUI(false);
+          return;
+        }
+
+        if (!gifEncoder) {
+          setGifUI(false);
+          return;
+        }
+
+        if (gifFrameCount < 2) {
+          gifEncoder = null;
+          gifFrameCount = 0;
+          setGifUI(false);
+          setStatus("Capture a little longer so the GIF has enough frames.", "error");
+          return;
+        }
 
         try {
-          if (mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-          }
+          isRenderingGif = true;
+          gifBtn.disabled = true;
+          stopGifBtn.disabled = true;
+          stopBtn.disabled = true;
+          captureBtn.disabled = true;
+
+          setGifUI(false);
+          setStatus(`Rendering GIF from ${gifFrameCount} frames…`, "active");
+
+          const encoder = gifEncoder;
+          gifEncoder = null;
+
+          encoder.on("finished", (blob) => {
+            isRenderingGif = false;
+            lastGifBlob = blob;
+
+            downloadGif(blob);
+            injectGifPreview(blob);
+
+            gifBtn.disabled = false;
+            stopGifBtn.disabled = true;
+            stopBtn.disabled = false;
+            captureBtn.disabled = false;
+
+            showFlash("GIF Saved", "Animated GIF saved to your device.");
+            setStatus("GIF rendered and saved to your device.", "active");
+          });
+
+          encoder.on("progress", (progress) => {
+            const pct = Math.round(progress * 100);
+            setStatus(`Rendering GIF… ${pct}%`, "active");
+          });
+
+          encoder.render();
         } catch (error) {
-          console.error("Stop recording error:", error);
-          setStatus("Could not stop recording cleanly.", "error");
-          setRecordingUI(false);
+          console.error("GIF render error:", error);
+          isRenderingGif = false;
+          gifFrameCount = 0;
+          gifEncoder = null;
+          gifBtn.disabled = false;
+          stopGifBtn.disabled = true;
+          stopBtn.disabled = false;
+          captureBtn.disabled = false;
+          setStatus("GIF rendering failed.", "error");
         }
       }
 
@@ -1412,8 +1418,8 @@
 
           startBtn.disabled = true;
           captureBtn.disabled = true;
-          recordBtn.disabled = true;
-          stopRecordBtn.disabled = true;
+          gifBtn.disabled = true;
+          stopGifBtn.disabled = true;
           stopBtn.disabled = true;
 
           setStatus("Requesting rear camera access…", "idle");
@@ -1433,16 +1439,16 @@
 
           aiRunning = true;
           captureBtn.disabled = false;
-          recordBtn.disabled = !window.MediaRecorder;
-          stopRecordBtn.disabled = true;
+          gifBtn.disabled = typeof GIF === "undefined";
+          stopGifBtn.disabled = true;
           stopBtn.disabled = false;
           metricModel.textContent = "Ready";
 
           restartDetectionLoop();
           await detectStep();
 
-          if (!window.MediaRecorder) {
-            setStatus("Rear camera and AI are ready. Recording is not supported in this browser.", "active");
+          if (typeof GIF === "undefined") {
+            setStatus("Rear camera and AI are ready. GIF capture library did not load.", "active");
           } else {
             setStatus("Rear camera and AI are ready.", "active");
           }
@@ -1453,8 +1459,8 @@
 
           startBtn.disabled = false;
           captureBtn.disabled = true;
-          recordBtn.disabled = true;
-          stopRecordBtn.disabled = true;
+          gifBtn.disabled = true;
+          stopGifBtn.disabled = true;
           stopBtn.disabled = true;
           metricModel.textContent = "Error";
           updateCounts(0);
@@ -1500,8 +1506,8 @@
 
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
-      recordBtn.addEventListener("click", startRecording);
-      stopRecordBtn.addEventListener("click", stopRecording);
+      gifBtn.addEventListener("click", startGifCapture);
+      stopGifBtn.addEventListener("click", () => stopGifCapture(false));
       stopBtn.addEventListener("click", stopCamera);
       window.addEventListener("beforeunload", stopCamera);
 
@@ -1509,7 +1515,7 @@
       setScreenStatus("Offline", false);
       metricPeak.textContent = "0";
       metricModel.textContent = "Offline";
-      setRecordingUI(false);
+      setGifUI(false);
     })();
   </script>
 </body>

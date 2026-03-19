@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NKU COI Crowd Counter | Brandi Neal</title>
+  <title>NKU COI Crowd Counter | Stage Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly browser AI crowd counter using the rear phone camera to detect and count people in view."
+    content="Mobile-friendly browser AI crowd counter for live stage demos using the rear phone camera."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -23,15 +23,14 @@
     :root {
       --nku-gold: #f7b718;
       --nku-black: #111111;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --soft-bg: #f8fafc;
-      --card-bg: #ffffff;
-      --border: #e5e7eb;
-      --shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-      --radius: 18px;
-      --success: #16a34a;
-      --danger: #dc2626;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      --success: #22c55e;
+      --danger: #ef4444;
+      --panel-bg: linear-gradient(180deg, #101114 0%, #181b20 100%);
     }
 
     * { box-sizing: border-box; }
@@ -39,18 +38,21 @@
     html, body {
       margin: 0;
       min-height: 100%;
+      background: #0b0c0f;
     }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
+      background:
+        radial-gradient(circle at top, rgba(247,183,24,0.11), transparent 30%),
+        linear-gradient(180deg, #0b0c0f 0%, #12151a 100%);
     }
 
     .page-shell {
-      max-width: 1120px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 16px;
     }
@@ -61,12 +63,13 @@
       justify-content: space-between;
       gap: 12px;
       padding: 12px 14px;
-      background: rgba(255,255,255,0.95);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 999px;
       box-shadow: var(--shadow);
       margin-bottom: 16px;
       flex-wrap: wrap;
+      backdrop-filter: blur(12px);
     }
 
     .brand {
@@ -85,7 +88,7 @@
       background: var(--nku-gold);
       color: var(--nku-black);
       font-size: 0.72rem;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -93,45 +96,30 @@
 
     .brand-sub {
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #d1d5db;
     }
 
     .main-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 24px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
       box-shadow: var(--shadow);
       overflow: hidden;
+      backdrop-filter: blur(10px);
     }
 
     .content-wrap {
       display: grid;
-      grid-template-columns: 1fr 1.15fr;
+      grid-template-columns: 380px 1fr;
       gap: 20px;
       padding: 20px;
     }
 
-    .eyebrow {
-      font-size: 0.76rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    h1 {
-      font-size: clamp(1.7rem, 3vw, 2.3rem);
-      line-height: 1.05;
-      margin: 0 0 10px 0;
-      letter-spacing: -0.02em;
-    }
-
-    .lead {
-      font-size: 0.98rem;
-      color: #4b5563;
-      line-height: 1.6;
-      margin-bottom: 18px;
+    .side-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 18px;
     }
 
     .tag-row {
@@ -142,18 +130,43 @@
     }
 
     .tag {
-      background: #f3f4f6;
-      color: #374151;
+      background: rgba(255,255,255,0.08);
+      color: #f3f4f6;
       border-radius: 999px;
       padding: 6px 10px;
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.9rem, 3vw, 2.6rem);
+      line-height: 1.02;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .lead {
+      font-size: 0.98rem;
+      color: #d1d5db;
+      line-height: 1.6;
+      margin-bottom: 18px;
     }
 
     .section-title {
-      font-size: 0.8rem;
-      font-weight: 800;
-      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: #cbd5e1;
       text-transform: uppercase;
       letter-spacing: 0.14em;
       margin: 18px 0 10px;
@@ -169,40 +182,195 @@
       display: flex;
       gap: 10px;
       margin-bottom: 10px;
-      color: #374151;
+      color: #e5e7eb;
       font-size: 0.94rem;
       line-height: 1.5;
     }
 
     .step-num {
       color: var(--nku-gold);
-      font-weight: 800;
+      font-weight: 900;
       min-width: 18px;
     }
 
     .info-text {
       font-size: 0.9rem;
-      color: #4b5563;
+      color: #d1d5db;
       line-height: 1.65;
       margin: 0;
     }
 
-    .demo-panel {
-      background: var(--soft-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mode-btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 58px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      font-weight: 800;
+    }
+
+    .mode-btn small {
+      display: block;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .mode-btn.active {
+      border-color: var(--nku-gold);
+      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
+      background: rgba(247,183,24,0.08);
+    }
+
+    .action-row {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .app-btn {
+      width: 100%;
+      min-height: 52px;
+      border-radius: 999px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .app-btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-start {
+      background: #fff;
+      border-color: #d1d5db;
+      color: #111827;
+    }
+
+    .btn-capture {
+      background: var(--nku-gold);
+      color: var(--nku-black);
+      border: none;
+    }
+
+    .btn-stop {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(239,68,68,0.4);
+      color: #fecaca;
+    }
+
+    .app-btn:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #64748b;
+      flex: 0 0 auto;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.16);
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.16);
+    }
+
+    .status-text {
+      font-size: 0.93rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1.4;
+    }
+
+    .status-hint {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .metric-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
       padding: 14px;
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 900;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: clamp(1.15rem, 2vw, 1.8rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .demo-panel {
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 14px;
+      min-width: 0;
     }
 
     #videoContainer {
       position: relative;
       width: 100%;
-      height: clamp(400px, 66vh, 760px);
-      min-height: 400px;
-      border-radius: 16px;
+      height: clamp(420px, 72vh, 820px);
+      min-height: 420px;
+      border-radius: 20px;
       overflow: hidden;
-      border: 1px solid #d1d5db;
-      background: radial-gradient(circle, #f3f4f6 0%, #e5e7eb 70%);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #111827;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
 
     #video {
@@ -220,14 +388,14 @@
     }
 
     canvas {
-      pointer-events: none;
       z-index: 2;
+      pointer-events: none;
     }
 
     .video-skeleton {
       position: absolute;
       inset: 0;
-      background: linear-gradient(120deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+      background: linear-gradient(120deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
       background-size: 200% 100%;
       animation: shimmer 1.2s infinite;
       z-index: 0;
@@ -248,57 +416,51 @@
     .screen-gradient-top {
       position: absolute;
       inset: 0 0 auto 0;
-      height: 26%;
-      background: linear-gradient(180deg, rgba(17,17,17,0.5), rgba(17,17,17,0));
+      height: 28%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.58), rgba(0,0,0,0));
     }
 
     .screen-gradient-bottom {
       position: absolute;
       inset: auto 0 0 0;
-      height: 30%;
-      background: linear-gradient(0deg, rgba(17,17,17,0.6), rgba(17,17,17,0));
+      height: 34%;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0));
     }
 
     .screen-pill,
     .screen-status,
-    .screen-counter,
-    .screen-mode {
+    .screen-peak {
       position: absolute;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 11px;
+      padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(17,17,17,0.45);
+      background: rgba(17,17,17,0.52);
       color: #fff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      backdrop-filter: blur(8px);
+      font-size: 0.72rem;
+      font-weight: 800;
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.14);
     }
 
     .screen-pill {
-      top: 12px;
-      left: 12px;
+      top: 14px;
+      left: 14px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
 
     .screen-status {
-      top: 12px;
-      right: 12px;
+      top: 14px;
+      right: 14px;
     }
 
-    .screen-counter {
-      top: 50px;
-      right: 12px;
-      background: rgba(247, 183, 24, 0.96);
+    .screen-peak {
+      top: 56px;
+      right: 14px;
+      background: rgba(247,183,24,0.95);
       color: #111;
-    }
-
-    .screen-mode {
-      top: 88px;
-      right: 12px;
     }
 
     .screen-status-dot {
@@ -313,218 +475,55 @@
       box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
     }
 
-    .screen-footer {
+    .big-counter-wrap {
       position: absolute;
-      left: 14px;
-      right: 14px;
-      bottom: 14px;
-      color: #fff;
+      left: 20px;
+      bottom: 20px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: min(90%, 420px);
     }
 
-    .screen-kicker {
-      font-size: 0.64rem;
+    .big-counter-kicker {
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.18em;
+      font-weight: 900;
+      color: rgba(255,255,255,0.86);
+    }
+
+    .big-counter-card {
+      background: rgba(17,17,17,0.6);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-left: 4px solid var(--nku-gold);
+      border-radius: 24px;
+      padding: 14px 18px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.24);
+    }
+
+    .big-counter-label {
+      font-size: 0.92rem;
       font-weight: 800;
-      opacity: 0.9;
+      color: #e5e7eb;
       margin-bottom: 4px;
     }
 
-    .screen-title {
-      font-size: clamp(1rem, 2vw, 1.25rem);
-      line-height: 1.05;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: -0.02em;
+    .big-counter-number {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      line-height: 0.95;
+      font-weight: 1000;
+      letter-spacing: -0.06em;
+      color: var(--nku-gold);
+      text-shadow: 0 6px 26px rgba(247,183,24,0.22);
     }
 
-    .screen-sub {
-      font-size: 0.76rem;
-      opacity: 0.92;
-      margin-top: 4px;
-    }
-
-    .status-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 14px 0;
-    }
-
-    .status-main {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: #d1d5db;
-      flex: 0 0 auto;
-      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-    }
-
-    .status-dot.active {
-      background: #16a34a;
-      box-shadow: 0 0 0 4px rgba(22,163,74,0.14);
-      transform: scale(1.05);
-    }
-
-    .status-dot.error {
-      background: #f97373;
-      box-shadow: 0 0 0 4px rgba(248,113,113,0.15);
-      transform: scale(1.05);
-    }
-
-    .status-text {
-      font-size: 0.93rem;
-      font-weight: 600;
-      color: #374151;
-      line-height: 1.4;
-    }
-
-    .status-hint {
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .control-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .mode-btn {
-      border: 1px solid var(--border);
-      background: #fff;
-      color: #374151;
-      border-radius: 14px;
-      padding: 12px;
-      min-height: 58px;
-      cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-      text-align: left;
-      font-weight: 700;
-    }
-
-    .mode-btn small {
-      display: block;
-      font-weight: 500;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .mode-btn.active {
-      border-color: var(--nku-gold);
-      box-shadow: 0 0 0 3px rgba(247, 183, 24, 0.18);
-    }
-
-    .mode-btn:focus-visible {
-      outline: 2px solid var(--nku-gold);
-      outline-offset: 2px;
-    }
-
-    .action-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    .app-btn {
-      width: 100%;
-      min-height: 50px;
-      border-radius: 999px;
-      font-weight: 700;
-      border: 1px solid transparent;
-    }
-
-    .btn-start {
-      background: #fff;
-      border-color: #d1d5db;
-      color: #111827;
-    }
-
-    .btn-capture {
-      background: var(--nku-gold);
-      color: var(--nku-black);
-      border: none;
-    }
-
-    .btn-stop {
-      background: #fff;
-      border-color: #fecaca;
-      color: #b91c1c;
-    }
-
-    .app-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .metric-card {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px;
-    }
-
-    .metric-label {
-      font-size: 0.76rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 800;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .metric-value {
-      font-size: clamp(1.15rem, 2vw, 1.65rem);
-      font-weight: 900;
-      line-height: 1;
-      color: #111827;
-    }
-
-    .preview-section {
-      margin-top: 14px;
-      display: none;
-    }
-
-    .preview-image-wrapper {
-      width: 100%;
-      max-width: 420px;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: #fff;
-    }
-
-    #snapshotPreview {
-      width: 100%;
-      display: block;
-    }
-
-    .small-note {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin: 8px 0 0;
-    }
-
-    .footer-note {
-      padding: 0 20px 20px;
-      font-size: 0.88rem;
-      color: var(--muted);
+    .big-counter-sub {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.88);
+      margin-top: 6px;
     }
 
     .flash-badge {
@@ -532,10 +531,10 @@
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%) scale(0.92);
-      z-index: 4;
+      z-index: 5;
       padding: 18px 24px;
       border-radius: 22px;
-      background: rgba(17, 17, 17, 0.84);
+      background: rgba(17, 17, 17, 0.88);
       color: #fff;
       text-align: center;
       border: 2px solid rgba(247, 183, 24, 0.95);
@@ -553,7 +552,7 @@
 
     .flash-kicker {
       font-size: 0.72rem;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--nku-gold);
@@ -563,7 +562,7 @@
     .flash-title {
       font-size: clamp(1.2rem, 3vw, 2rem);
       line-height: 1.05;
-      font-weight: 900;
+      font-weight: 1000;
       margin: 0;
       letter-spacing: -0.03em;
     }
@@ -574,7 +573,38 @@
       opacity: 0.95;
     }
 
-    @media (max-width: 991.98px) {
+    .preview-section {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .preview-image-wrapper {
+      width: 100%;
+      max-width: 460px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #fff;
+    }
+
+    #snapshotPreview {
+      width: 100%;
+      display: block;
+    }
+
+    .small-note {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin: 8px 0 0;
+    }
+
+    .footer-note {
+      padding: 0 20px 20px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 1080px) {
       .content-wrap {
         grid-template-columns: 1fr;
       }
@@ -586,213 +616,184 @@
         border-radius: 18px;
         padding: 12px;
       }
-      .brand-sub { font-size: 0.8rem; }
       .content-wrap {
         padding: 14px;
         gap: 14px;
       }
-      .demo-panel { padding: 10px; }
+      .mode-grid {
+        grid-template-columns: 1fr;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
       #videoContainer {
-        height: min(72svh, 580px);
+        height: min(74svh, 620px);
         min-height: 360px;
       }
       .screen-pill,
       .screen-status,
-      .screen-counter,
-      .screen-mode {
+      .screen-peak {
         font-size: 0.62rem;
         padding: 6px 9px;
       }
-      .screen-counter { top: 46px; }
-      .screen-mode { top: 80px; }
-      .screen-footer {
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
+      .screen-peak { top: 48px; }
+      .big-counter-wrap {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        max-width: none;
       }
-      .screen-sub { font-size: 0.7rem; }
-      .metrics-grid {
-        grid-template-columns: 1fr;
+      .big-counter-card {
+        padding: 12px 14px;
       }
-    }
-
-    @media (max-width: 480px) {
-      .control-grid {
-        grid-template-columns: 1fr;
-      }
-      #videoContainer {
-        height: min(72svh, 540px);
-        min-height: 340px;
-      }
-      .flash-badge {
-        min-width: 90%;
-        padding: 16px 18px;
+      .big-counter-number {
+        font-size: clamp(2.2rem, 12vw, 3.6rem);
       }
     }
   </style>
 </head>
-
 <body>
   <div class="page-shell">
-    <header class="topbar" aria-label="NKU College of Informatics crowd counter header">
+    <header class="topbar" aria-label="NKU crowd counter header">
       <div class="brand">
         <div class="brand-pill">NKU · COI</div>
-        <span class="brand-sub">Browser AI Crowd Counter</span>
+        <span class="brand-sub">Live AI Crowd Counter</span>
       </div>
-      <div class="brand-sub">Rear camera people detection</div>
+      <div class="brand-sub">Rear camera stage demo</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
       <div class="content-wrap">
-        <section aria-label="Demo description">
+        <section class="side-panel" aria-label="Demo controls and instructions">
           <div class="tag-row">
-            <span class="tag">Rear Camera</span>
+            <span class="tag">Phone Camera</span>
             <span class="tag">Crowd Count</span>
-            <span class="tag">People Detection</span>
-            <span class="tag">Browser AI</span>
+            <span class="tag">Live Boxes</span>
+            <span class="tag">Stage Ready</span>
           </div>
 
           <p class="eyebrow">College of Informatics</p>
-          <h1 id="page-title">Live Crowd Counter</h1>
+          <h1 id="page-title">Count the Crowd</h1>
 
           <p class="lead">
-            Point your phone toward the audience and this demo will detect and count how many people are visible in the frame in real time.
+            Turn your phone toward the audience and let the browser count how many people it sees in real time.
           </p>
 
           <h2 class="section-title">How to use it</h2>
           <ol class="steps">
             <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
-            <li><span class="step-num">2.</span><span>Allow camera access when prompted.</span></li>
-            <li><span class="step-num">3.</span><span>Turn your phone toward the crowd.</span></li>
-            <li><span class="step-num">4.</span><span>Watch the live people count update on screen.</span></li>
+            <li><span class="step-num">2.</span><span>Allow camera access on your phone.</span></li>
+            <li><span class="step-num">3.</span><span>Point the back camera toward the audience.</span></li>
+            <li><span class="step-num">4.</span><span>Hold steady for a moment so detections settle.</span></li>
           </ol>
 
-          <h2 class="section-title">Detection modes</h2>
-          <p class="info-text">
-            <strong>Balanced</strong> gives a steady mix of speed and accuracy.<br />
-            <strong>Fast</strong> is lighter for older phones.<br />
-            <strong>Precise</strong> is a bit more selective and can reduce false positives.
-          </p>
+          <h2 class="section-title">Detection mode</h2>
+          <div class="mode-grid" role="radiogroup" aria-label="Choose detection mode">
+            <button class="mode-btn active" data-mode="balanced" type="button" role="radio" aria-pressed="true" aria-checked="true">
+              Balanced
+              <small>Best for most live demos</small>
+            </button>
 
-          <h2 class="section-title">What it demonstrates</h2>
-          <p class="info-text">
-            • Real-time person detection in the browser<br />
-            • Rear mobile camera support<br />
-            • Live count of visible people<br />
-            • On-device AI processing with TensorFlow.js<br />
-            • Snapshot capture for demos and events
-          </p>
+            <button class="mode-btn" data-mode="fast" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Fast
+              <small>Lighter on slower phones</small>
+            </button>
+
+            <button class="mode-btn" data-mode="precise" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Precise
+              <small>Stricter confidence filter</small>
+            </button>
+
+            <button class="mode-btn" data-mode="minimal" type="button" role="radio" aria-pressed="false" aria-checked="false">
+              Minimal
+              <small>Cleaner stage look</small>
+            </button>
+          </div>
+
+          <div class="action-row">
+            <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
+            <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
+            <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>⏹️ Turn Camera Off</button>
+          </div>
+
+          <div class="status-row" aria-live="polite">
+            <div class="status-main">
+              <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+              <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
+            </div>
+            <div class="status-hint">
+              Best results: HTTPS, decent room lighting, and a steady phone angle.
+            </div>
+          </div>
+
+          <div class="metrics-grid" aria-label="Detection metrics">
+            <div class="metric-card">
+              <div class="metric-label">Live Count</div>
+              <div id="metricCount" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Peak Count</div>
+              <div id="metricPeak" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Model</div>
+              <div id="metricModel" class="metric-value" style="font-size:1rem;">Offline</div>
+            </div>
+          </div>
+
+          <section id="previewSection" class="preview-section" aria-live="polite">
+            <h2 class="section-title" style="margin-top: 16px;">Saved snapshot</h2>
+            <div class="preview-image-wrapper">
+              <img id="snapshotPreview" alt="Saved crowd counter snapshot preview" loading="lazy" />
+            </div>
+            <p class="small-note">Saved locally as a PNG image.</p>
+          </section>
         </section>
 
-        <section aria-label="Live crowd counter demo">
-          <div class="demo-panel">
-            <div id="videoContainer" aria-label="Live crowd detection area">
-              <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
+        <section class="demo-panel" aria-label="Live crowd counting demo">
+          <div id="videoContainer">
+            <div class="video-skeleton" id="videoSkeleton" aria-hidden="true"></div>
 
-              <video id="video" autoplay playsinline muted aria-hidden="true"></video>
-              <canvas id="overlay" role="img" aria-label="Live crowd counter overlay"></canvas>
+            <video id="video" autoplay playsinline muted aria-hidden="true"></video>
+            <canvas id="overlay" role="img" aria-label="Live crowd counter view"></canvas>
 
-              <div class="screen-ui" aria-hidden="true">
-                <div class="screen-gradient-top"></div>
-                <div class="screen-gradient-bottom"></div>
+            <div class="screen-ui" aria-hidden="true">
+              <div class="screen-gradient-top"></div>
+              <div class="screen-gradient-bottom"></div>
 
-                <div class="screen-pill">Crowd AI</div>
+              <div class="screen-pill">Crowd AI</div>
 
-                <div class="screen-status">
-                  <span id="screenStatusDot" class="screen-status-dot"></span>
-                  <span id="screenStatusText">Offline</span>
-                </div>
+              <div class="screen-status">
+                <span id="screenStatusDot" class="screen-status-dot"></span>
+                <span id="screenStatusText">Offline</span>
+              </div>
 
-                <div class="screen-counter">
-                  <span>👥</span>
-                  <span id="screenCounterText">0 people</span>
-                </div>
+              <div class="screen-peak">
+                <span>🏆</span>
+                <span id="screenPeakText">Peak 0</span>
+              </div>
 
-                <div class="screen-mode">
-                  <span>Mode:</span>
-                  <span id="screenModeText">Balanced</span>
-                </div>
-
-                <div class="screen-footer">
-                  <div class="screen-kicker">Live demo</div>
-                  <h2 class="screen-title">NKU AI Crowd Counter</h2>
-                  <div class="screen-sub">Rear camera · TensorFlow.js · COCO-SSD</div>
+              <div class="big-counter-wrap">
+                <div class="big-counter-kicker">Live audience scan</div>
+                <div class="big-counter-card">
+                  <div class="big-counter-label">Crowd Count</div>
+                  <div id="bigCounterNumber" class="big-counter-number">0</div>
+                  <div id="bigCounterSub" class="big-counter-sub">Point the camera at the crowd.</div>
                 </div>
               </div>
-
-              <div id="flashBadge" class="flash-badge" aria-hidden="true">
-                <div class="flash-kicker">Snapshot Captured</div>
-                <h3 class="flash-title" id="flashTitle">Crowd Saved</h3>
-                <div class="flash-sub" id="flashSub">Saved as a PNG to your device.</div>
-              </div>
             </div>
 
-            <div class="status-row" aria-live="polite">
-              <div class="status-main">
-                <span id="statusDot" class="status-dot" aria-hidden="true"></span>
-                <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
-              </div>
-              <div class="status-hint">
-                Best results: use HTTPS, decent lighting, and hold the phone steady for a moment so detections can settle.
-              </div>
+            <div id="flashBadge" class="flash-badge" aria-hidden="true">
+              <div class="flash-kicker">Snapshot Captured</div>
+              <h3 id="flashTitle" class="flash-title">Crowd Saved</h3>
+              <div id="flashSub" class="flash-sub">Saved as a PNG to your device.</div>
             </div>
-
-            <div class="control-grid" role="radiogroup" aria-label="Choose detection mode">
-              <button class="mode-btn active" data-mode="balanced" type="button" role="radio" aria-pressed="true" aria-checked="true">
-                Balanced
-                <small>Best overall demo mode</small>
-              </button>
-
-              <button class="mode-btn" data-mode="fast" type="button" role="radio" aria-pressed="false" aria-checked="false">
-                Fast
-                <small>Better for slower phones</small>
-              </button>
-
-              <button class="mode-btn" data-mode="precise" type="button" role="radio" aria-pressed="false" aria-checked="false">
-                Precise
-                <small>Stricter confidence threshold</small>
-              </button>
-
-              <button class="mode-btn" data-mode="boxes" type="button" role="radio" aria-pressed="false" aria-checked="false">
-                Boxes Only
-                <small>Simple clean detection view</small>
-              </button>
-            </div>
-
-            <div class="action-row">
-              <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
-              <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
-              <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>⏹️ Turn Camera Off</button>
-            </div>
-
-            <div class="metrics-grid" aria-label="Detection metrics">
-              <div class="metric-card">
-                <div class="metric-label">Live Count</div>
-                <div id="metricCount" class="metric-value">0</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Highest Seen</div>
-                <div id="metricPeak" class="metric-value">0</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Model Status</div>
-                <div id="metricModel" class="metric-value" style="font-size:1rem;">Offline</div>
-              </div>
-            </div>
-
-            <section id="previewSection" class="preview-section" aria-live="polite">
-              <h2 class="section-title" style="margin-top: 16px;">Saved snapshot</h2>
-              <div class="preview-image-wrapper">
-                <img id="snapshotPreview" alt="Saved crowd counter snapshot preview" loading="lazy" />
-              </div>
-              <p class="small-note">Saved locally as a PNG image.</p>
-            </section>
           </div>
         </section>
       </div>
 
       <div class="footer-note">
-        Privacy-first design: processing stays on the device and nothing is uploaded.
+        Privacy-first design: the AI runs in the browser and nothing is uploaded.
       </div>
     </main>
   </div>
@@ -801,7 +802,8 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_Crowd_Counter";
+      const TARGET_FOLDER_LABEL = "NKU_COI_Stage_Crowd_Counter";
+
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
       const ctx = canvas.getContext("2d");
@@ -815,8 +817,9 @@
 
       const screenStatusDot = document.getElementById("screenStatusDot");
       const screenStatusText = document.getElementById("screenStatusText");
-      const screenCounterText = document.getElementById("screenCounterText");
-      const screenModeText = document.getElementById("screenModeText");
+      const screenPeakText = document.getElementById("screenPeakText");
+      const bigCounterNumber = document.getElementById("bigCounterNumber");
+      const bigCounterSub = document.getElementById("bigCounterSub");
 
       const metricCount = document.getElementById("metricCount");
       const metricPeak = document.getElementById("metricPeak");
@@ -836,46 +839,27 @@
       let videoReady = false;
       let aiRunning = false;
       let detectTimer = null;
-      let lastPredictions = [];
+      let activeMode = "balanced";
+      let currentCount = 0;
       let smoothedCount = 0;
       let peakCount = 0;
-      let activeMode = "balanced";
       let flashTimer = null;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
       const MODE_CONFIG = {
-        balanced: {
-          threshold: 0.52,
-          interval: isMobileUA ? 320 : 220,
-          labelMode: "full"
-        },
-        fast: {
-          threshold: 0.42,
-          interval: isMobileUA ? 420 : 300,
-          labelMode: "full"
-        },
-        precise: {
-          threshold: 0.68,
-          interval: isMobileUA ? 360 : 260,
-          labelMode: "full"
-        },
-        boxes: {
-          threshold: 0.52,
-          interval: isMobileUA ? 320 : 220,
-          labelMode: "boxes"
-        }
+        balanced: { threshold: 0.52, interval: isMobileUA ? 320 : 220, drawLabels: true, drawBoxes: true },
+        fast:     { threshold: 0.40, interval: isMobileUA ? 430 : 300, drawLabels: true, drawBoxes: true },
+        precise:  { threshold: 0.68, interval: isMobileUA ? 360 : 250, drawLabels: true, drawBoxes: true },
+        minimal:  { threshold: 0.55, interval: isMobileUA ? 320 : 220, drawLabels: false, drawBoxes: true }
       };
 
       function setStatus(message, mode = "idle") {
         statusText.textContent = message;
         statusDot.classList.remove("active", "error");
 
-        if (mode === "active") {
-          statusDot.classList.add("active");
-        } else if (mode === "error") {
-          statusDot.classList.add("error");
-        }
+        if (mode === "active") statusDot.classList.add("active");
+        if (mode === "error") statusDot.classList.add("error");
       }
 
       function setScreenStatus(text, active) {
@@ -883,24 +867,27 @@
         screenStatusDot.classList.toggle("active", !!active);
       }
 
-      function setCounterDisplay(count) {
-        screenCounterText.textContent = `${count} ${count === 1 ? "person" : "people"}`;
-        metricCount.textContent = String(count);
+      function updateCounts(count) {
+        currentCount = count;
+        smoothedCount = Math.round((smoothedCount * 0.65) + (count * 0.35));
+
+        metricCount.textContent = String(smoothedCount);
+        bigCounterNumber.textContent = String(smoothedCount);
 
         if (count > peakCount) {
           peakCount = count;
-          metricPeak.textContent = String(peakCount);
         }
-      }
 
-      function updateModeDisplay() {
-        const nice =
-          activeMode === "balanced" ? "Balanced" :
-          activeMode === "fast" ? "Fast" :
-          activeMode === "precise" ? "Precise" :
-          "Boxes Only";
+        metricPeak.textContent = String(peakCount);
+        screenPeakText.textContent = `Peak ${peakCount}`;
 
-        screenModeText.textContent = nice;
+        if (smoothedCount === 0) {
+          bigCounterSub.textContent = "Point the camera at the crowd.";
+        } else if (smoothedCount === 1) {
+          bigCounterSub.textContent = "1 person currently visible.";
+        } else {
+          bigCounterSub.textContent = `${smoothedCount} people currently visible.`;
+        }
       }
 
       function showFlash(title, sub) {
@@ -917,8 +904,6 @@
       }
 
       async function getBestBackend() {
-        if (!window.tf) return;
-
         const backendsToTry = ["webgl", "wasm", "cpu"];
         for (const backendName of backendsToTry) {
           try {
@@ -940,7 +925,7 @@
       }
 
       async function setupCamera() {
-        if (!navigator.mediaDevices?.getUserMedia) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error("getUserMedia not supported");
         }
 
@@ -996,7 +981,7 @@
 
         videoReady = false;
         aiRunning = false;
-        lastPredictions = [];
+        currentCount = 0;
         smoothedCount = 0;
 
         startBtn.disabled = false;
@@ -1005,24 +990,19 @@
 
         videoSkeleton.style.display = "block";
         setScreenStatus("Offline", false);
-        setCounterDisplay(0);
+        updateCounts(0);
         metricModel.textContent = "Offline";
         setStatus("Camera turned off.", "idle");
       }
 
-      function smoothCount(nextCount) {
-        smoothedCount = Math.round((smoothedCount * 0.65) + (nextCount * 0.35));
-        return smoothedCount;
-      }
-
-      function getPeopleFromPredictions(predictions) {
+      function getFilteredPeople(predictions) {
         const threshold = MODE_CONFIG[activeMode].threshold;
 
         return predictions
           .filter((item) => item.class === "person" && item.score >= threshold)
           .filter((item) => {
             const [x, y, w, h] = item.bbox;
-            return w > 24 && h > 40;
+            return w > 24 && h > 45 && x >= 0 && y >= 0;
           })
           .sort((a, b) => b.score - a.score);
       }
@@ -1041,38 +1021,43 @@
         ctx.closePath();
       }
 
-      function drawDetections(predictions) {
+      function drawOverlay(predictions) {
         if (!videoReady) return;
+
+        const config = MODE_CONFIG[activeMode];
+        const people = getFilteredPeople(predictions);
+
+        updateCounts(people.length);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const people = getPeopleFromPredictions(predictions);
-        const count = smoothCount(people.length);
-        setCounterDisplay(count);
 
         if (people.length > 0) {
           setScreenStatus("Live", true);
           setStatus(`${people.length} people detected in frame.`, "active");
         } else {
           setScreenStatus("Searching…", false);
-          setStatus("AI is running. Aim the rear camera at the crowd.", "active");
+          setStatus("AI is running. Aim the rear camera at the audience.", "active");
         }
 
         people.forEach((prediction, index) => {
           const [x, y, width, height] = prediction.bbox;
-          const label = `Person ${index + 1}`;
           const scorePct = Math.round(prediction.score * 100);
 
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = "rgba(247, 183, 24, 0.98)";
-          ctx.strokeRect(x, y, width, height);
+          if (config.drawBoxes) {
+            ctx.strokeStyle = "rgba(247,183,24,0.98)";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(x, y, width, height);
 
-          const labelMode = MODE_CONFIG[activeMode].labelMode;
-          if (labelMode !== "boxes") {
-            const pillText = `${label} · ${scorePct}%`;
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 1.25;
+            ctx.strokeRect(x + 5, y + 5, width - 10, height - 10);
+          }
+
+          if (config.drawLabels) {
+            const label = `Person ${index + 1} · ${scorePct}%`;
             ctx.font = "700 14px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-            const textWidth = ctx.measureText(pillText).width;
+            const textWidth = ctx.measureText(label).width;
             const pillWidth = textWidth + 22;
             const pillHeight = 28;
             const pillX = x;
@@ -1082,32 +1067,32 @@
             drawRoundedRect(pillX, pillY, pillWidth, pillHeight, 14);
             ctx.fill();
 
-            ctx.strokeStyle = "rgba(247, 183, 24, 0.98)";
+            ctx.strokeStyle = "rgba(247,183,24,0.98)";
             ctx.lineWidth = 2;
             ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
             ctx.textBaseline = "middle";
-            ctx.fillText(pillText, pillX + 11, pillY + pillHeight / 2 + 0.5);
+            ctx.fillText(label, pillX + 11, pillY + pillHeight / 2 + 0.5);
           }
         });
 
         ctx.save();
         ctx.fillStyle = "rgba(17,17,17,0.70)";
-        drawRoundedRect(16, 16, 160, 64, 18);
+        drawRoundedRect(18, 18, 182, 66, 18);
         ctx.fill();
 
-        ctx.strokeStyle = "rgba(247, 183, 24, 0.95)";
+        ctx.strokeStyle = "rgba(247,183,24,0.95)";
         ctx.lineWidth = 2;
         ctx.stroke();
 
         ctx.fillStyle = "#ffffff";
-        ctx.font = "700 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText("LIVE CROWD COUNT", 28, 40);
+        ctx.font = "800 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText("LIVE CROWD COUNT", 32, 42);
 
         ctx.fillStyle = "#f7b718";
-        ctx.font = "900 28px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText(String(count), 28, 70);
+        ctx.font = "1000 30px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText(String(smoothedCount), 32, 74);
         ctx.restore();
       }
 
@@ -1116,11 +1101,10 @@
 
         try {
           const predictions = await model.detect(video, undefined, 0.4);
-          lastPredictions = predictions;
-          drawDetections(predictions);
+          drawOverlay(predictions);
         } catch (error) {
           console.error("Detection error:", error);
-          setStatus("Detection hit an error. Try restarting the camera.", "error");
+          setStatus("Detection error. Try restarting the camera.", "error");
           setScreenStatus("Error", false);
         }
       }
@@ -1167,13 +1151,13 @@
 
           setStatus("Requesting rear camera access…", "idle");
           setScreenStatus("Loading…", false);
-          setCounterDisplay(0);
-          updateModeDisplay();
+          updateCounts(0);
 
           await setupCamera();
 
           setStatus("Loading AI model…", "idle");
           metricModel.textContent = "Loading";
+
           await getBestBackend();
 
           model = await cocoSsd.load({
@@ -1197,7 +1181,7 @@
           captureBtn.disabled = true;
           stopBtn.disabled = true;
           metricModel.textContent = "Error";
-          setCounterDisplay(0);
+          updateCounts(0);
           setScreenStatus("Offline", false);
 
           let message = "This demo needs camera access and HTTPS to run.";
@@ -1228,14 +1212,12 @@
           btn.setAttribute("aria-pressed", "true");
           btn.setAttribute("aria-checked", "true");
 
-          updateModeDisplay();
-
           if (aiRunning) {
             restartDetectionLoop();
             detectStep();
-            setStatus(`Detection mode switched to ${screenModeText.textContent}.`, "active");
+            setStatus(`Mode switched to ${btn.firstChild.textContent.trim()}.`, "active");
           } else {
-            setStatus(`Detection mode set to ${screenModeText.textContent}.`, "idle");
+            setStatus(`Mode set to ${btn.firstChild.textContent.trim()}.`, "idle");
           }
         });
       });
@@ -1243,11 +1225,9 @@
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
       stopBtn.addEventListener("click", stopCamera);
-
       window.addEventListener("beforeunload", stopCamera);
 
-      updateModeDisplay();
-      setCounterDisplay(0);
+      updateCounts(0);
       setScreenStatus("Offline", false);
       metricPeak.textContent = "0";
       metricModel.textContent = "Offline";

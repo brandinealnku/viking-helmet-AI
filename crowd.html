@@ -640,6 +640,19 @@
       margin: 8px 0 0;
     }
 
+    .video-preview-wrap {
+      margin-top: 16px;
+    }
+
+    .video-preview-player {
+      width: 100%;
+      max-width: 460px;
+      display: block;
+      border-radius: 16px;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
     .footer-note {
       padding: 0 20px 20px;
       font-size: 0.88rem;
@@ -903,6 +916,7 @@
       let recordedChunks = [];
       let recordMimeType = "";
       let isRecording = false;
+      let recordedBlob = null;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -957,6 +971,11 @@
           flashBadge.classList.remove("show");
           flashBadge.setAttribute("aria-hidden", "true");
         }, 1700);
+      }
+
+      function isSafariLike() {
+        const ua = navigator.userAgent;
+        return /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Android/i.test(ua);
       }
 
       async function getBestBackend() {
@@ -1022,9 +1041,7 @@
       }
 
       function stopCamera() {
-        if (isRecording) {
-          stopRecording();
-        }
+        if (isRecording) stopRecording();
 
         stopLoops();
 
@@ -1096,14 +1113,10 @@
 
         if (people.length > 0) {
           setScreenStatus("Live", true);
-          if (!isRecording) {
-            setStatus(`${people.length} people detected in frame.`, "active");
-          }
+          if (!isRecording) setStatus(`${people.length} people detected in frame.`, "active");
         } else {
           setScreenStatus("Searching…", false);
-          if (!isRecording) {
-            setStatus("AI is running. Aim the rear camera at the audience.", "active");
-          }
+          if (!isRecording) setStatus("AI is running. Aim the rear camera at the audience.", "active");
         }
 
         people.forEach((prediction, index) => {
@@ -1207,25 +1220,36 @@
         setStatus("Snapshot saved to your device.", "active");
       }
 
-      function getSupportedRecordingMimeType() {
-        if (!window.MediaRecorder) return "";
+      function getPreferredRecordingOptions() {
+        if (!window.MediaRecorder) return null;
 
-        const candidates = [
-          "video/webm;codecs=vp9,opus",
-          "video/webm;codecs=vp8,opus",
-          "video/webm",
+        const safariFirst = [
+          "video/mp4;codecs=h264,aac",
+          "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
           "video/mp4"
         ];
 
+        const genericFirst = [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4;codecs=h264,aac",
+          "video/mp4"
+        ];
+
+        const candidates = isSafariLike() ? safariFirst.concat(genericFirst) : genericFirst;
+
         for (const type of candidates) {
           try {
-            if (MediaRecorder.isTypeSupported(type)) return type;
+            if (MediaRecorder.isTypeSupported(type)) {
+              return { mimeType: type };
+            }
           } catch (error) {
-            console.warn("Mime type check failed for", type, error);
+            console.warn("Mime type check failed:", type, error);
           }
         }
 
-        return "";
+        return {};
       }
 
       function setRecordingUI(recording) {
@@ -1244,8 +1268,10 @@
         }
       }
 
-      function downloadRecordedVideo(blob) {
-        const extension = recordMimeType.includes("mp4") ? "mp4" : "webm";
+      function downloadRecordedVideo(blob, mimeType) {
+        const lower = (mimeType || "").toLowerCase();
+        const extension = lower.includes("mp4") ? "mp4" : "webm";
+
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
@@ -1256,7 +1282,42 @@
         a.click();
         document.body.removeChild(a);
 
-        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      function injectPlaybackPreview(blob, mimeType) {
+        let existing = document.getElementById("recordingPreviewWrap");
+        if (existing) existing.remove();
+
+        const wrap = document.createElement("section");
+        wrap.id = "recordingPreviewWrap";
+        wrap.className = "video-preview-wrap";
+
+        const title = document.createElement("h2");
+        title.className = "section-title";
+        title.textContent = "Recorded video preview";
+
+        const videoEl = document.createElement("video");
+        videoEl.controls = true;
+        videoEl.playsInline = true;
+        videoEl.className = "video-preview-player";
+
+        const note = document.createElement("p");
+        note.className = "small-note";
+        note.textContent = `Format: ${mimeType || "unknown"}`;
+
+        const url = URL.createObjectURL(blob);
+        videoEl.src = url;
+
+        videoEl.addEventListener("error", () => {
+          note.textContent = `The browser saved the recording, but could not preview this format cleanly here. Format: ${mimeType || "unknown"}`;
+        });
+
+        wrap.appendChild(title);
+        wrap.appendChild(videoEl);
+        wrap.appendChild(note);
+
+        previewSection.insertAdjacentElement("afterend", wrap);
       }
 
       function startRecording() {
@@ -1271,19 +1332,14 @@
         }
 
         try {
-          recordMimeType = getSupportedRecordingMimeType();
-          if (!recordMimeType) {
-            setStatus("No supported video recording format was found in this browser.", "error");
-            return;
-          }
-
           const stream = canvas.captureStream(25);
           recordedChunks = [];
+          recordedBlob = null;
 
-          mediaRecorder = new MediaRecorder(stream, {
-            mimeType: recordMimeType,
-            videoBitsPerSecond: 4000000
-          });
+          const options = getPreferredRecordingOptions() || {};
+          mediaRecorder = new MediaRecorder(stream, options);
+
+          recordMimeType = mediaRecorder.mimeType || options.mimeType || "video/webm";
 
           mediaRecorder.ondataavailable = (event) => {
             if (event.data && event.data.size > 0) {
@@ -1292,13 +1348,25 @@
           };
 
           mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: recordMimeType });
-            if (blob.size > 0) {
-              downloadRecordedVideo(blob);
+            try {
+              recordedBlob = new Blob(recordedChunks, { type: recordMimeType });
+
+              if (!recordedBlob || recordedBlob.size === 0) {
+                setStatus("Recording stopped, but no video data was captured.", "error");
+                recordedChunks = [];
+                mediaRecorder = null;
+                setRecordingUI(false);
+                return;
+              }
+
+              downloadRecordedVideo(recordedBlob, recordMimeType);
+              injectPlaybackPreview(recordedBlob, recordMimeType);
+
               showFlash("Recording Saved", "The video was saved to your device.");
-              setStatus("Recording stopped and saved.", "active");
-            } else {
-              setStatus("Recording stopped, but no video data was captured.", "error");
+              setStatus(`Recording stopped and saved as ${recordMimeType}.`, "active");
+            } catch (error) {
+              console.error("Blob creation/playback preview error:", error);
+              setStatus("Recording saved, but preview generation failed.", "error");
             }
 
             recordedChunks = [];
@@ -1314,9 +1382,9 @@
             setRecordingUI(false);
           };
 
-          mediaRecorder.start(250);
+          mediaRecorder.start();
           setRecordingUI(true);
-          setStatus("Recording the demo output…", "active");
+          setStatus(`Recording demo output… (${recordMimeType || "default format"})`, "active");
         } catch (error) {
           console.error("Start recording error:", error);
           setStatus("Could not start recording on this device/browser.", "error");

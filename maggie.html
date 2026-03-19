@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dog Walk Counter | Live Dog Spotter</title>
+  <title>Dog Walk Journal | Live Dog Spotter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta
     name="description"
-    content="Mobile-friendly browser AI dog counter for walks using the rear phone camera."
+    content="Mobile-friendly browser AI dog spotting journal using the rear phone camera."
   />
   <meta name="theme-color" content="#111111" />
 
@@ -49,7 +49,7 @@
     }
 
     .page-shell {
-      max-width: 1240px;
+      max-width: 1380px;
       margin: 0 auto;
       padding: 16px;
     }
@@ -107,16 +107,18 @@
 
     .content-wrap {
       display: grid;
-      grid-template-columns: 380px 1fr;
+      grid-template-columns: 360px minmax(0, 1fr) 360px;
       gap: 20px;
       padding: 20px;
     }
 
-    .side-panel {
+    .side-panel,
+    .journal-panel {
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 24px;
       padding: 18px;
+      min-width: 0;
     }
 
     .tag-row {
@@ -146,7 +148,7 @@
     }
 
     h1 {
-      font-size: clamp(1.9rem, 3vw, 2.6rem);
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
       line-height: 1.02;
       margin: 0 0 10px 0;
       letter-spacing: -0.03em;
@@ -266,6 +268,18 @@
       background: rgba(255,255,255,0.05);
       border-color: rgba(247,183,24,0.35);
       color: #fde68a;
+    }
+
+    .btn-export {
+      background: rgba(34,197,94,0.12);
+      border-color: rgba(34,197,94,0.3);
+      color: #bbf7d0;
+    }
+
+    .btn-clear {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(239,68,68,0.3);
+      color: #fecaca;
     }
 
     .btn-stop {
@@ -601,15 +615,90 @@
       margin: 8px 0 0;
     }
 
+    .journal-list {
+      display: grid;
+      gap: 10px;
+      max-height: 78vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .journal-empty {
+      border: 1px dashed rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 16px;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .journal-card {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .journal-thumb {
+      width: 86px;
+      height: 86px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .journal-meta {
+      min-width: 0;
+    }
+
+    .journal-title {
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: #fff;
+      margin: 0 0 4px;
+    }
+
+    .journal-line {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+      margin: 2px 0;
+      word-break: break-word;
+    }
+
+    .journal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(247,183,24,0.14);
+      color: #fde68a;
+      border: 1px solid rgba(247,183,24,0.24);
+      font-size: 0.72rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
     .footer-note {
       padding: 0 20px 20px;
       font-size: 0.88rem;
       color: #cbd5e1;
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1280px) {
       .content-wrap {
-        grid-template-columns: 1fr;
+        grid-template-columns: 340px minmax(0, 1fr);
+      }
+      .journal-panel {
+        grid-column: 1 / -1;
+      }
+      .journal-list {
+        max-height: 420px;
       }
     }
 
@@ -620,6 +709,7 @@
         padding: 12px;
       }
       .content-wrap {
+        grid-template-columns: 1fr;
         padding: 14px;
         gap: 14px;
       }
@@ -652,17 +742,24 @@
       .big-counter-number {
         font-size: clamp(2.2rem, 12vw, 3.6rem);
       }
+      .journal-card {
+        grid-template-columns: 72px 1fr;
+      }
+      .journal-thumb {
+        width: 72px;
+        height: 72px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page-shell">
-    <header class="topbar" aria-label="Dog walk counter header">
+    <header class="topbar" aria-label="Dog walk journal header">
       <div class="brand">
-        <div class="brand-pill">Dog Walk AI</div>
-        <span class="brand-sub">Live dog spotter</span>
+        <div class="brand-pill">Dog Walk Journal</div>
+        <span class="brand-sub">Live dog spotter + saved sightings</span>
       </div>
-      <div class="brand-sub">Rear camera dog counting</div>
+      <div class="brand-sub">Rear camera dog spotting journal</div>
     </header>
 
     <main class="main-card" aria-labelledby="page-title">
@@ -672,22 +769,22 @@
             <span class="tag">Rear Camera</span>
             <span class="tag">Dog Detection</span>
             <span class="tag">Walk Total</span>
-            <span class="tag">Live Counter</span>
+            <span class="tag">Journal</span>
           </div>
 
           <p class="eyebrow">Walking mode</p>
-          <h1 id="page-title">Count Dogs on Your Walk</h1>
+          <h1 id="page-title">Count + Save Dogs on Your Walk</h1>
 
           <p class="lead">
-            Point your phone outward while walking and this demo will look for dogs, show how many are currently in frame, and keep a running total of dogs you’ve passed.
+            Point your phone outward while walking and this demo will detect dogs, count them, and save each new sighting to a mini journal with a snapshot, time, and location.
           </p>
 
           <h2 class="section-title">How to use it</h2>
           <ol class="steps">
             <li><span class="step-num">1.</span><span>Tap <strong>Start Rear Camera</strong>.</span></li>
-            <li><span class="step-num">2.</span><span>Hold the phone facing outward on your walk.</span></li>
-            <li><span class="step-num">3.</span><span>When a dog appears, it will be boxed and counted.</span></li>
-            <li><span class="step-num">4.</span><span>The <strong>Walk Total</strong> increases when a new dog is detected passing by.</span></li>
+            <li><span class="step-num">2.</span><span>Allow camera and location access if you want GPS in the journal.</span></li>
+            <li><span class="step-num">3.</span><span>Walk with the phone facing outward.</span></li>
+            <li><span class="step-num">4.</span><span>Each newly counted dog is saved into the journal automatically.</span></li>
           </ol>
 
           <h2 class="section-title">Detection mode</h2>
@@ -709,7 +806,7 @@
 
             <button class="mode-btn" data-mode="minimal" type="button" role="radio" aria-pressed="false" aria-checked="false">
               Minimal
-              <small>Cleaner view on the walk</small>
+              <small>Cleaner walk view</small>
             </button>
           </div>
 
@@ -717,6 +814,8 @@
             <button id="startBtn" type="button" class="app-btn btn-start">🚀 Start Rear Camera</button>
             <button id="captureBtn" type="button" class="app-btn btn-capture" disabled>📸 Capture Snapshot</button>
             <button id="resetBtn" type="button" class="app-btn btn-reset" disabled>🔁 Reset Walk Total</button>
+            <button id="exportBtn" type="button" class="app-btn btn-export" disabled>⬇️ Export Journal JSON</button>
+            <button id="clearJournalBtn" type="button" class="app-btn btn-clear" disabled>🗑️ Clear Journal</button>
             <button id="stopBtn" type="button" class="app-btn btn-stop" disabled>📴 Turn Camera Off</button>
           </div>
 
@@ -726,7 +825,7 @@
               <span id="statusText" class="status-text">Tap “Start Rear Camera” to begin.</span>
             </div>
             <div class="status-hint">
-              Best results: good daylight, a steady phone angle, and dogs that are large enough in frame to see clearly.
+              Best results: good daylight, steady phone angle, and dogs that are clearly visible in frame.
             </div>
           </div>
 
@@ -740,8 +839,8 @@
               <div id="metricTotal" class="metric-value">0</div>
             </div>
             <div class="metric-card">
-              <div class="metric-label">Model</div>
-              <div id="metricModel" class="metric-value" style="font-size:1rem;">Offline</div>
+              <div class="metric-label">Journal</div>
+              <div id="metricJournal" class="metric-value">0</div>
             </div>
           </div>
 
@@ -788,16 +887,30 @@
             </div>
 
             <div id="flashBadge" class="flash-badge" aria-hidden="true">
-              <div class="flash-kicker">Snapshot Captured</div>
-              <h3 id="flashTitle" class="flash-title">Walk Saved</h3>
-              <div id="flashSub" class="flash-sub">Saved as a PNG to your device.</div>
+              <div class="flash-kicker">Dog Spotted</div>
+              <h3 id="flashTitle" class="flash-title">Saved to Journal</h3>
+              <div id="flashSub" class="flash-sub">A new dog entry was added.</div>
             </div>
           </div>
         </section>
+
+        <aside class="journal-panel" aria-label="Dog spotting journal">
+          <p class="eyebrow">Journal</p>
+          <h2 style="margin:0 0 10px; font-size:1.5rem; color:#fff; letter-spacing:-0.02em;">Saved Sightings</h2>
+          <p class="info-text" style="margin-bottom:14px;">
+            Each newly counted dog is logged here with a thumbnail, time, confidence, and GPS if available.
+          </p>
+
+          <div id="journalList" class="journal-list">
+            <div class="journal-empty" id="journalEmpty">
+              No dog sightings saved yet. Start the camera and pass a dog to create your first journal entry.
+            </div>
+          </div>
+        </aside>
       </div>
 
       <div class="footer-note">
-        Privacy-first design: AI processing stays in the browser and nothing is uploaded.
+        Privacy-first design: AI processing stays in the browser and journal data remains on this device unless you export it.
       </div>
     </main>
   </div>
@@ -806,7 +919,7 @@
     (function () {
       "use strict";
 
-      const TARGET_FOLDER_LABEL = "Dog_Walk_Counter";
+      const TARGET_FOLDER_LABEL = "Dog_Walk_Journal";
 
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
@@ -817,6 +930,8 @@
       const startBtn = document.getElementById("startBtn");
       const captureBtn = document.getElementById("captureBtn");
       const resetBtn = document.getElementById("resetBtn");
+      const exportBtn = document.getElementById("exportBtn");
+      const clearJournalBtn = document.getElementById("clearJournalBtn");
       const stopBtn = document.getElementById("stopBtn");
       const videoSkeleton = document.getElementById("videoSkeleton");
 
@@ -828,7 +943,7 @@
 
       const metricLive = document.getElementById("metricLive");
       const metricTotal = document.getElementById("metricTotal");
-      const metricModel = document.getElementById("metricModel");
+      const metricJournal = document.getElementById("metricJournal");
 
       const previewSection = document.getElementById("previewSection");
       const snapshotPreview = document.getElementById("snapshotPreview");
@@ -836,6 +951,9 @@
       const flashBadge = document.getElementById("flashBadge");
       const flashTitle = document.getElementById("flashTitle");
       const flashSub = document.getElementById("flashSub");
+
+      const journalList = document.getElementById("journalList");
+      const journalEmpty = document.getElementById("journalEmpty");
 
       const modeButtons = document.querySelectorAll(".mode-btn");
 
@@ -851,6 +969,9 @@
       let smoothedLiveCount = 0;
       let activeTracks = [];
       let nextTrackId = 1;
+      let journalEntries = [];
+      let latestGeo = null;
+      let geoWatchId = null;
 
       const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -896,6 +1017,12 @@
       function updateWalkTotalDisplay() {
         metricTotal.textContent = String(walkTotal);
         screenTotalText.textContent = `Walk total ${walkTotal}`;
+      }
+
+      function updateJournalMetric() {
+        metricJournal.textContent = String(journalEntries.length);
+        exportBtn.disabled = journalEntries.length === 0;
+        clearJournalBtn.disabled = journalEntries.length === 0;
       }
 
       function showFlash(title, sub) {
@@ -963,6 +1090,43 @@
         window.addEventListener("orientationchange", handleResize, { passive: true });
       }
 
+      function startGeoWatch() {
+        if (!("geolocation" in navigator)) {
+          latestGeo = null;
+          return;
+        }
+
+        try {
+          geoWatchId = navigator.geolocation.watchPosition(
+            (pos) => {
+              latestGeo = {
+                latitude: Number(pos.coords.latitude.toFixed(6)),
+                longitude: Number(pos.coords.longitude.toFixed(6)),
+                accuracyMeters: Math.round(pos.coords.accuracy || 0),
+                timestamp: new Date(pos.timestamp).toISOString()
+              };
+            },
+            (err) => {
+              console.warn("Geolocation watch error:", err);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 10000,
+              timeout: 10000
+            }
+          );
+        } catch (error) {
+          console.warn("Could not start geolocation:", error);
+        }
+      }
+
+      function stopGeoWatch() {
+        if (geoWatchId != null && "geolocation" in navigator) {
+          navigator.geolocation.clearWatch(geoWatchId);
+          geoWatchId = null;
+        }
+      }
+
       function handleResize() {
         if (!videoReady) return;
         setTimeout(updateCanvasBufferSize, 120);
@@ -975,6 +1139,7 @@
 
       function stopCamera() {
         stopLoops();
+        stopGeoWatch();
 
         if (mediaStream) {
           mediaStream.getTracks().forEach((track) => track.stop());
@@ -1001,7 +1166,6 @@
         videoSkeleton.style.display = "block";
         setScreenStatus("Offline", false);
         updateLiveDisplay(0);
-        metricModel.textContent = "Offline";
         setStatus("Camera turned off.", "idle");
       }
 
@@ -1031,12 +1195,112 @@
         return Math.sqrt(dx * dx + dy * dy);
       }
 
+      function isDogStillEssentiallySameSpot(track, dog) {
+        const [x1, y1, w1, h1] = track.bbox;
+        const [x2, y2, w2, h2] = dog.bbox;
+        const centerShift = Math.sqrt(
+          Math.pow((x1 + w1 / 2) - (x2 + w2 / 2), 2) +
+          Math.pow((y1 + h1 / 2) - (y2 + h2 / 2), 2)
+        );
+        return centerShift < 35;
+      }
+
+      function captureAnnotatedSnapshotDataURL() {
+        if (!videoReady || !canvas.width || !canvas.height) return "";
+        return canvas.toDataURL("image/jpeg", 0.88);
+      }
+
+      function formatDisplayTime(isoString) {
+        const d = new Date(isoString);
+        return d.toLocaleString();
+      }
+
+      function renderJournal() {
+        journalList.innerHTML = "";
+
+        if (journalEntries.length === 0) {
+          journalList.appendChild(journalEmpty);
+          updateJournalMetric();
+          return;
+        }
+
+        const sorted = [...journalEntries].reverse();
+
+        sorted.forEach((entry) => {
+          const card = document.createElement("article");
+          card.className = "journal-card";
+
+          const img = document.createElement("img");
+          img.className = "journal-thumb";
+          img.alt = `Dog sighting ${entry.id}`;
+          img.src = entry.snapshotDataUrl;
+
+          const meta = document.createElement("div");
+          meta.className = "journal-meta";
+
+          const badge = document.createElement("div");
+          badge.className = "journal-badge";
+          badge.textContent = `Dog #${entry.id}`;
+
+          const title = document.createElement("h3");
+          title.className = "journal-title";
+          title.textContent = `Sighted at ${formatDisplayTime(entry.timestamp)}`;
+
+          const line1 = document.createElement("p");
+          line1.className = "journal-line";
+          line1.textContent = `Confidence: ${entry.confidencePct}%`;
+
+          const line2 = document.createElement("p");
+          line2.className = "journal-line";
+          line2.textContent = entry.geo
+            ? `Location: ${entry.geo.latitude}, ${entry.geo.longitude} (±${entry.geo.accuracyMeters}m)`
+            : "Location: not available";
+
+          const line3 = document.createElement("p");
+          line3.className = "journal-line";
+          line3.textContent = `Box: ${entry.bbox.width} × ${entry.bbox.height}`;
+
+          meta.appendChild(badge);
+          meta.appendChild(title);
+          meta.appendChild(line1);
+          meta.appendChild(line2);
+          meta.appendChild(line3);
+
+          card.appendChild(img);
+          card.appendChild(meta);
+
+          journalList.appendChild(card);
+        });
+
+        updateJournalMetric();
+      }
+
+      function addJournalEntry(dog) {
+        const snapshotDataUrl = captureAnnotatedSnapshotDataURL();
+        if (!snapshotDataUrl) return;
+
+        const entry = {
+          id: journalEntries.length + 1,
+          timestamp: new Date().toISOString(),
+          confidencePct: Math.round(dog.score * 100),
+          bbox: {
+            x: Math.round(dog.bbox[0]),
+            y: Math.round(dog.bbox[1]),
+            width: Math.round(dog.bbox[2]),
+            height: Math.round(dog.bbox[3])
+          },
+          geo: latestGeo ? { ...latestGeo } : null,
+          snapshotDataUrl
+        };
+
+        journalEntries.push(entry);
+        renderJournal();
+      }
+
       function updateTracks(dogs) {
         const now = Date.now();
 
         activeTracks = activeTracks.filter((track) => now - track.lastSeen < TRACK_TTL_MS);
-
-        const unmatchedTracks = new Set(activeTracks.map((track) => track.id));
 
         dogs.forEach((dog) => {
           let bestTrack = null;
@@ -1057,7 +1321,6 @@
             bestTrack.score = dog.score;
             bestTrack.lastSeen = now;
             dog.trackId = bestTrack.id;
-            unmatchedTracks.delete(bestTrack.id);
           } else {
             const newTrack = {
               id: nextTrackId++,
@@ -1084,21 +1347,16 @@
             walkTotal += 1;
             track.countedAt = now;
             updateWalkTotalDisplay();
-            showFlash("Dog Spotted", `Walk total is now ${walkTotal}.`);
+            addJournalEntry(dog);
+            showFlash("Dog Spotted", `Walk total is now ${walkTotal}. Saved to journal.`);
           } else if (enoughTimePassed && reasonablyVisible && !isDogStillEssentiallySameSpot(track, dog)) {
             walkTotal += 1;
             track.countedAt = now;
             updateWalkTotalDisplay();
-            showFlash("Dog Spotted", `Walk total is now ${walkTotal}.`);
+            addJournalEntry(dog);
+            showFlash("Dog Spotted", `Walk total is now ${walkTotal}. Saved to journal.`);
           }
         });
-      }
-
-      function isDogStillEssentiallySameSpot(track, dog) {
-        const [x1, y1, w1, h1] = track.bbox;
-        const [x2, y2, w2, h2] = dog.bbox;
-        const centerShift = Math.sqrt(Math.pow((x1 + w1 / 2) - (x2 + w2 / 2), 2) + Math.pow((y1 + h1 / 2) - (y2 + h2 / 2), 2));
-        return centerShift < 35;
       }
 
       function drawRoundedRect(x, y, w, h, r) {
@@ -1245,6 +1503,45 @@
         setStatus("Walk total reset.", "active");
       }
 
+      function exportJournalJson() {
+        if (journalEntries.length === 0) {
+          setStatus("There are no journal entries to export yet.", "error");
+          return;
+        }
+
+        const exportPayload = journalEntries.map((entry) => ({
+          id: entry.id,
+          timestamp: entry.timestamp,
+          confidencePct: entry.confidencePct,
+          bbox: entry.bbox,
+          geo: entry.geo
+        }));
+
+        const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+          type: "application/json"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+
+        a.href = url;
+        a.download = `${TARGET_FOLDER_LABEL}-journal-${timestampText}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        setStatus("Journal JSON exported.", "active");
+      }
+
+      function clearJournal() {
+        journalEntries = [];
+        renderJournal();
+        showFlash("Journal Cleared", "All saved dog sightings were removed.");
+        setStatus("Journal cleared.", "active");
+      }
+
       async function startExperience() {
         try {
           if (aiRunning) return;
@@ -1259,9 +1556,9 @@
           updateLiveDisplay(0);
 
           await setupCamera();
+          startGeoWatch();
 
           setStatus("Loading AI model…", "idle");
-          metricModel.textContent = "Loading";
 
           await getBestBackend();
 
@@ -1273,12 +1570,11 @@
           captureBtn.disabled = false;
           resetBtn.disabled = false;
           stopBtn.disabled = false;
-          metricModel.textContent = "Ready";
 
           restartDetectionLoop();
           await detectStep();
 
-          setStatus("Rear camera and dog AI are ready.", "active");
+          setStatus("Rear camera and dog journal AI are ready.", "active");
           setScreenStatus("Ready", true);
         } catch (error) {
           console.error("Start error:", error);
@@ -1287,7 +1583,6 @@
           captureBtn.disabled = true;
           resetBtn.disabled = true;
           stopBtn.disabled = true;
-          metricModel.textContent = "Error";
           updateLiveDisplay(0);
           setScreenStatus("Offline", false);
 
@@ -1332,13 +1627,16 @@
       startBtn.addEventListener("click", startExperience);
       captureBtn.addEventListener("click", captureSnapshot);
       resetBtn.addEventListener("click", resetWalkTotal);
+      exportBtn.addEventListener("click", exportJournalJson);
+      clearJournalBtn.addEventListener("click", clearJournal);
       stopBtn.addEventListener("click", stopCamera);
       window.addEventListener("beforeunload", stopCamera);
 
       updateLiveDisplay(0);
       updateWalkTotalDisplay();
+      updateJournalMetric();
+      renderJournal();
       setScreenStatus("Offline", false);
-      metricModel.textContent = "Offline";
     })();
   </script>
 </body>

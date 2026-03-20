@@ -790,578 +790,445 @@
   </div>
 
   <script>
-    (function () {
-      "use strict";
+  (function () {
+    "use strict";
 
-      const TARGET_FOLDER_LABEL = "NKU_COI_Tracked_Crowd_Counter";
+    const TARGET_FOLDER_LABEL = "NKU_COI_Crowd_Counter";
 
-      const video = document.getElementById("video");
-      const canvas = document.getElementById("overlay");
-      const ctx = canvas.getContext("2d");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
 
-      const statusText = document.getElementById("statusText");
-      const statusDot = document.getElementById("statusDot");
-      const startBtn = document.getElementById("startBtn");
-      const captureBtn = document.getElementById("captureBtn");
-      const stopBtn = document.getElementById("stopBtn");
-      const videoSkeleton = document.getElementById("videoSkeleton");
+    const statusText = document.getElementById("statusText");
+    const statusDot = document.getElementById("statusDot");
+    const startBtn = document.getElementById("startBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const videoSkeleton = document.getElementById("videoSkeleton");
 
-      const screenStatusDot = document.getElementById("screenStatusDot");
-      const screenStatusText = document.getElementById("screenStatusText");
-      const screenPeakText = document.getElementById("screenPeakText");
-      const bigCounterNumber = document.getElementById("bigCounterNumber");
-      const bigCounterSub = document.getElementById("bigCounterSub");
+    const screenStatusDot = document.getElementById("screenStatusDot");
+    const screenStatusText = document.getElementById("screenStatusText");
+    const screenPeakText = document.getElementById("screenPeakText");
+    const bigCounterNumber = document.getElementById("bigCounterNumber");
+    const bigCounterSub = document.getElementById("bigCounterSub");
 
-      const metricCount = document.getElementById("metricCount");
-      const metricPeak = document.getElementById("metricPeak");
-      const metricTracked = document.getElementById("metricTracked");
-      const metricModel = document.getElementById("metricModel");
+    const metricCount = document.getElementById("metricCount");
+    const metricPeak = document.getElementById("metricPeak");
+    const metricTracked = document.getElementById("metricTracked");
+    const metricModel = document.getElementById("metricModel");
 
-      const previewSection = document.getElementById("previewSection");
-      const snapshotPreview = document.getElementById("snapshotPreview");
+    const previewSection = document.getElementById("previewSection");
+    const snapshotPreview = document.getElementById("snapshotPreview");
 
-      const flashBadge = document.getElementById("flashBadge");
-      const flashTitle = document.getElementById("flashTitle");
-      const flashSub = document.getElementById("flashSub");
+    const flashBadge = document.getElementById("flashBadge");
+    const flashTitle = document.getElementById("flashTitle");
+    const flashSub = document.getElementById("flashSub");
 
-      const modeButtons = document.querySelectorAll(".mode-btn");
+    const modeButtons = document.querySelectorAll(".mode-btn");
 
-      let model = null;
-      let mediaStream = null;
-      let videoReady = false;
-      let aiRunning = false;
-      let detectTimer = null;
-      let activeMode = "balanced";
-      let currentCount = 0;
-      let smoothedCount = 0;
-      let peakCount = 0;
-      let flashTimer = null;
+    let model = null;
+    let mediaStream = null;
+    let videoReady = false;
+    let aiRunning = false;
+    let animationFrameId = null;
+    let activeMode = "balanced";
+    let currentCount = 0;
+    let peakCount = 0;
+    let flashTimer = null;
+    let isDetecting = false;
+    let lastDetectTime = 0;
 
-      const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-      const MODE_CONFIG = {
-        balanced: { threshold: 0.52, interval: isMobileUA ? 320 : 220, drawLabels: true, drawBoxes: true },
-        fast:     { threshold: 0.40, interval: isMobileUA ? 430 : 300, drawLabels: true, drawBoxes: true },
-        precise:  { threshold: 0.68, interval: isMobileUA ? 360 : 250, drawLabels: true, drawBoxes: true },
-        minimal:  { threshold: 0.55, interval: isMobileUA ? 320 : 220, drawLabels: false, drawBoxes: true }
+    const MODE_CONFIG = {
+      balanced: { threshold: 0.45, interval: isMobileUA ? 350 : 220, drawBoxes: true },
+      fast:     { threshold: 0.35, interval: isMobileUA ? 450 : 300, drawBoxes: true },
+      precise:  { threshold: 0.60, interval: isMobileUA ? 380 : 250, drawBoxes: true },
+      minimal:  { threshold: 0.45, interval: isMobileUA ? 350 : 220, drawBoxes: false }
+    };
+
+    function setStatus(message, mode = "idle") {
+      statusText.textContent = message;
+      statusDot.classList.remove("active", "error");
+      if (mode === "active") statusDot.classList.add("active");
+      if (mode === "error") statusDot.classList.add("error");
+    }
+
+    function setScreenStatus(text, active) {
+      screenStatusText.textContent = text;
+      screenStatusDot.classList.toggle("active", !!active);
+    }
+
+    function updateCounts(count) {
+      currentCount = count;
+      if (count > peakCount) peakCount = count;
+
+      metricCount.textContent = String(count);
+      bigCounterNumber.textContent = String(count);
+      metricPeak.textContent = String(peakCount);
+      screenPeakText.textContent = `Peak ${peakCount}`;
+      metricTracked.textContent = String(count);
+
+      if (count === 0) {
+        bigCounterSub.textContent = "Point the camera at the crowd.";
+      } else if (count === 1) {
+        bigCounterSub.textContent = "1 person currently visible.";
+      } else {
+        bigCounterSub.textContent = `${count} people currently visible.`;
+      }
+    }
+
+    function showFlash(title, sub) {
+      flashTitle.textContent = title;
+      flashSub.textContent = sub;
+      flashBadge.classList.add("show");
+      flashBadge.setAttribute("aria-hidden", "false");
+
+      clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => {
+        flashBadge.classList.remove("show");
+        flashBadge.setAttribute("aria-hidden", "true");
+      }, 1700);
+    }
+
+    async function getBestBackend() {
+      const backendsToTry = ["webgl", "wasm", "cpu"];
+      for (const backendName of backendsToTry) {
+        try {
+          const ok = await tf.setBackend(backendName);
+          if (ok) {
+            await tf.ready();
+            return;
+          }
+        } catch (error) {
+          console.warn("Backend unavailable:", backendName, error);
+        }
+      }
+    }
+
+    function updateCanvasBufferSize() {
+      if (!video.videoWidth || !video.videoHeight) return;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    }
+
+    async function setupCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("getUserMedia not supported");
+      }
+
+      const constraints = {
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       };
 
-      const tracker = {
-        nextId: 1,
-        tracks: new Map(),
-        maxMisses: 8,
-        matchDistance: isMobileUA ? 140 : 160
-      };
+      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = mediaStream;
 
-      function setStatus(message, mode = "idle") {
-        statusText.textContent = message;
-        statusDot.classList.remove("active", "error");
-        if (mode === "active") statusDot.classList.add("active");
-        if (mode === "error") statusDot.classList.add("error");
-      }
-
-      function setScreenStatus(text, active) {
-        screenStatusText.textContent = text;
-        screenStatusDot.classList.toggle("active", !!active);
-      }
-
-      function updateCounts(count) {
-        currentCount = count;
-        smoothedCount = Math.round((smoothedCount * 0.65) + (count * 0.35));
-
-        metricCount.textContent = String(smoothedCount);
-        bigCounterNumber.textContent = String(smoothedCount);
-
-        if (count > peakCount) peakCount = count;
-
-        metricPeak.textContent = String(peakCount);
-        screenPeakText.textContent = `Peak ${peakCount}`;
-
-        if (smoothedCount === 0) {
-          bigCounterSub.textContent = "Point the camera at the crowd.";
-        } else if (smoothedCount === 1) {
-          bigCounterSub.textContent = "1 person currently visible.";
-        } else {
-          bigCounterSub.textContent = `${smoothedCount} people currently visible.`;
-        }
-      }
-
-      function updateTrackedMetric() {
-        metricTracked.textContent = String(tracker.tracks.size);
-      }
-
-      function showFlash(title, sub) {
-        flashTitle.textContent = title;
-        flashSub.textContent = sub;
-        flashBadge.classList.add("show");
-        flashBadge.setAttribute("aria-hidden", "false");
-
-        clearTimeout(flashTimer);
-        flashTimer = setTimeout(() => {
-          flashBadge.classList.remove("show");
-          flashBadge.setAttribute("aria-hidden", "true");
-        }, 1700);
-      }
-
-      async function getBestBackend() {
-        const backendsToTry = ["webgl", "wasm", "cpu"];
-        for (const backendName of backendsToTry) {
-          try {
-            const ok = await tf.setBackend(backendName);
-            if (ok) {
-              await tf.ready();
-              return;
-            }
-          } catch (error) {
-            console.warn("Backend unavailable:", backendName, error);
-          }
-        }
-      }
-
-      function updateCanvasBufferSize() {
-        if (!video.videoWidth || !video.videoHeight) return;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-      }
-
-      async function setupCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error("getUserMedia not supported");
-        }
-
-        const constraints = {
-          audio: false,
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 }
-          }
+      await new Promise((resolve) => {
+        video.onloadedmetadata = async () => {
+          await video.play();
+          updateCanvasBufferSize();
+          videoReady = true;
+          videoSkeleton.style.display = "none";
+          resolve();
         };
+      });
 
-        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = mediaStream;
+      window.addEventListener("resize", handleResize, { passive: true });
+      window.addEventListener("orientationchange", handleResize, { passive: true });
+    }
 
-        await new Promise((resolve) => {
-          video.onloadedmetadata = async () => {
-            await video.play();
-            updateCanvasBufferSize();
-            videoReady = true;
-            videoSkeleton.style.display = "none";
-            resolve();
-          };
+    function handleResize() {
+      if (!videoReady) return;
+      setTimeout(updateCanvasBufferSize, 120);
+    }
+
+    function stopLoops() {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+      isDetecting = false;
+    }
+
+    function stopCamera() {
+      stopLoops();
+
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
+      }
+
+      if (video.srcObject) {
+        video.srcObject = null;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      videoReady = false;
+      aiRunning = false;
+      currentCount = 0;
+      peakCount = 0;
+
+      startBtn.disabled = false;
+      captureBtn.disabled = true;
+      stopBtn.disabled = true;
+
+      videoSkeleton.style.display = "block";
+      setScreenStatus("Offline", false);
+      updateCounts(0);
+      metricModel.textContent = "Offline";
+      setStatus("Camera turned off.", "idle");
+    }
+
+    function getPeople(predictions) {
+      const threshold = MODE_CONFIG[activeMode].threshold;
+
+      return predictions
+        .filter(item => item.class === "person" && item.score >= threshold)
+        .map(item => {
+          const [x, y, w, h] = item.bbox;
+          return { ...item, x, y, w, h };
+        });
+    }
+
+    function drawRoundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function drawOverlay(predictions) {
+      if (!videoReady) return;
+
+      const config = MODE_CONFIG[activeMode];
+      const people = getPeople(predictions);
+
+      updateCounts(people.length);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if (people.length > 0) {
+        setScreenStatus("Live", true);
+        setStatus(`${people.length} person${people.length === 1 ? "" : "s"} detected in frame.`, "active");
+      } else {
+        setScreenStatus("Searching…", false);
+        setStatus("AI is running. Aim the rear camera at the audience.", "active");
+      }
+
+      if (config.drawBoxes) {
+        people.forEach((person, index) => {
+          const { x, y, w, h, score } = person;
+          const scorePct = Math.round(score * 100);
+
+          ctx.strokeStyle = "#f7b718";
+          ctx.lineWidth = 4;
+          ctx.strokeRect(x, y, w, h);
+
+          ctx.fillStyle = "rgba(17,17,17,0.88)";
+          const label = `Person ${index + 1} · ${scorePct}%`;
+          ctx.font = "700 14px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+          const labelWidth = ctx.measureText(label).width + 20;
+          const labelX = x;
+          const labelY = Math.max(8, y - 34);
+
+          drawRoundedRect(labelX, labelY, labelWidth, 28, 12);
+          ctx.fill();
+
+          ctx.strokeStyle = "#f7b718";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, labelX + 10, labelY + 14);
+        });
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(17,17,17,0.70)";
+      drawRoundedRect(18, 18, 210, 78, 18);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(247,183,24,0.95)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText("LIVE PEOPLE COUNT", 32, 42);
+
+      ctx.fillStyle = "#f7b718";
+      ctx.font = "1000 30px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText(String(currentCount), 32, 76);
+      ctx.restore();
+    }
+
+    async function detectStep() {
+      if (!aiRunning || !videoReady || !model || isDetecting) return;
+
+      isDetecting = true;
+      try {
+        const predictions = await model.detect(video, 20, MODE_CONFIG[activeMode].threshold);
+        drawOverlay(predictions);
+      } catch (error) {
+        console.error("Detection error:", error);
+        setStatus("Detection error. Try restarting the camera.", "error");
+        setScreenStatus("Error", false);
+      } finally {
+        isDetecting = false;
+      }
+    }
+
+    function detectionLoop(now) {
+      if (!aiRunning) return;
+
+      const interval = MODE_CONFIG[activeMode].interval;
+      if (now - lastDetectTime >= interval) {
+        lastDetectTime = now;
+        detectStep();
+      }
+
+      animationFrameId = requestAnimationFrame(detectionLoop);
+    }
+
+    function restartDetectionLoop() {
+      if (!aiRunning) return;
+      stopLoops();
+      lastDetectTime = 0;
+      animationFrameId = requestAnimationFrame(detectionLoop);
+    }
+
+    function captureSnapshot() {
+      if (!videoReady || !canvas.width || !canvas.height) return;
+
+      const snapCanvas = document.createElement("canvas");
+      snapCanvas.width = canvas.width;
+      snapCanvas.height = canvas.height;
+
+      const sctx = snapCanvas.getContext("2d");
+      sctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = snapCanvas.toDataURL("image/png");
+      snapshotPreview.src = dataURL;
+      previewSection.style.display = "block";
+
+      const a = document.createElement("a");
+      const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
+      a.href = dataURL;
+      a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      showFlash("Snapshot Saved", "Saved as a PNG to your device.");
+      setStatus("Snapshot saved to your device.", "active");
+    }
+
+    async function startExperience() {
+      try {
+        if (aiRunning) return;
+
+        startBtn.disabled = true;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setStatus("Requesting rear camera access…", "idle");
+        setScreenStatus("Loading…", false);
+        updateCounts(0);
+
+        await setupCamera();
+
+        setStatus("Loading AI model…", "idle");
+        metricModel.textContent = "Loading";
+
+        await getBestBackend();
+
+        model = await cocoSsd.load({
+          base: "lite_mobilenet_v2"
         });
 
-        window.addEventListener("resize", handleResize, { passive: true });
-        window.addEventListener("orientationchange", handleResize, { passive: true });
-      }
+        aiRunning = true;
+        captureBtn.disabled = false;
+        stopBtn.disabled = false;
+        metricModel.textContent = "Ready";
 
-      function handleResize() {
-        if (!videoReady) return;
-        setTimeout(updateCanvasBufferSize, 120);
-      }
+        restartDetectionLoop();
+        await detectStep();
 
-      function stopLoops() {
-        if (detectTimer) clearInterval(detectTimer);
-        detectTimer = null;
-      }
-
-      function resetTracker() {
-        tracker.nextId = 1;
-        tracker.tracks.clear();
-        updateTrackedMetric();
-      }
-
-      function stopCamera() {
-        stopLoops();
-
-        if (mediaStream) {
-          mediaStream.getTracks().forEach((track) => track.stop());
-          mediaStream = null;
-        }
-
-        if (video.srcObject) {
-          video.srcObject = null;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        videoReady = false;
-        aiRunning = false;
-        currentCount = 0;
-        smoothedCount = 0;
-        peakCount = 0;
-        resetTracker();
+        setStatus("Rear camera and AI counter are ready.", "active");
+        setScreenStatus("Ready", true);
+      } catch (error) {
+        console.error("Start error:", error);
 
         startBtn.disabled = false;
         captureBtn.disabled = true;
         stopBtn.disabled = true;
-
-        videoSkeleton.style.display = "block";
-        setScreenStatus("Offline", false);
+        metricModel.textContent = "Error";
         updateCounts(0);
-        metricModel.textContent = "Offline";
-        setStatus("Camera turned off.", "idle");
-      }
+        setScreenStatus("Offline", false);
 
-      function getFilteredPeople(predictions) {
-        const threshold = MODE_CONFIG[activeMode].threshold;
+        let message = "This demo needs camera access and HTTPS to run.";
 
-        return predictions
-          .filter((item) => item.class === "person" && item.score >= threshold)
-          .filter((item) => {
-            const [x, y, w, h] = item.bbox;
-            return w > 24 && h > 45 && x >= 0 && y >= 0;
-          })
-          .map((item) => {
-            const [x, y, w, h] = item.bbox;
-            return {
-              ...item,
-              centerX: x + w / 2,
-              centerY: y + h / 2
-            };
-          })
-          .sort((a, b) => b.score - a.score);
-      }
-
-      function distance(a, b) {
-        const dx = a.centerX - b.centerX;
-        const dy = a.centerY - b.centerY;
-        return Math.hypot(dx, dy);
-      }
-
-      function updateTracker(people) {
-        const trackEntries = Array.from(tracker.tracks.entries()).map(([id, track]) => ({
-          id,
-          ...track
-        }));
-
-        const unmatchedTrackIds = new Set(trackEntries.map(t => t.id));
-        const unmatchedDetections = new Set(people.map((_, idx) => idx));
-        const candidateMatches = [];
-
-        for (const track of trackEntries) {
-          for (let i = 0; i < people.length; i++) {
-            const person = people[i];
-            const d = distance(track, person);
-            if (d <= tracker.matchDistance) {
-              candidateMatches.push({
-                trackId: track.id,
-                detectionIndex: i,
-                dist: d
-              });
-            }
-          }
+        if (error && error.name === "NotAllowedError") {
+          message = "Camera permission was blocked. Allow camera access and try again.";
+        } else if (error && error.name === "NotFoundError") {
+          message = "No camera was found on this device.";
+        } else if (error && error.name === "NotReadableError") {
+          message = "The camera is already in use by another app or browser tab.";
         }
 
-        candidateMatches.sort((a, b) => a.dist - b.dist);
-
-        for (const match of candidateMatches) {
-          if (!unmatchedTrackIds.has(match.trackId)) continue;
-          if (!unmatchedDetections.has(match.detectionIndex)) continue;
-
-          const detection = people[match.detectionIndex];
-          tracker.tracks.set(match.trackId, {
-            centerX: detection.centerX,
-            centerY: detection.centerY,
-            bbox: detection.bbox,
-            score: detection.score,
-            misses: 0,
-            lastSeen: Date.now()
-          });
-
-          detection.trackId = match.trackId;
-
-          unmatchedTrackIds.delete(match.trackId);
-          unmatchedDetections.delete(match.detectionIndex);
-        }
-
-        for (const detectionIndex of unmatchedDetections) {
-          const detection = people[detectionIndex];
-          const newId = tracker.nextId++;
-
-          tracker.tracks.set(newId, {
-            centerX: detection.centerX,
-            centerY: detection.centerY,
-            bbox: detection.bbox,
-            score: detection.score,
-            misses: 0,
-            lastSeen: Date.now()
-          });
-
-          detection.trackId = newId;
-        }
-
-        for (const trackId of unmatchedTrackIds) {
-          const track = tracker.tracks.get(trackId);
-          if (!track) continue;
-
-          track.misses += 1;
-
-          if (track.misses > tracker.maxMisses) {
-            tracker.tracks.delete(trackId);
-          } else {
-            tracker.tracks.set(trackId, track);
-          }
-        }
-
-        updateTrackedMetric();
-
-        return people.filter(person => typeof person.trackId === "number");
+        setStatus(message, "error");
       }
+    }
 
-      function drawRoundedRect(x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-      }
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeMode = btn.getAttribute("data-mode") || "balanced";
 
-      function getColorForId(id) {
-        const palette = [
-          "#f7b718", "#22c55e", "#60a5fa", "#f472b6",
-          "#fb7185", "#a78bfa", "#34d399", "#f59e0b",
-          "#38bdf8", "#e879f9", "#84cc16", "#f97316"
-        ];
-        return palette[(id - 1) % palette.length];
-      }
-
-      function drawOverlay(predictions) {
-        if (!videoReady) return;
-
-        const config = MODE_CONFIG[activeMode];
-        const people = updateTracker(getFilteredPeople(predictions));
-
-        updateCounts(people.length);
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        if (people.length > 0) {
-          setScreenStatus("Live", true);
-          setStatus(`${people.length} tracked person${people.length === 1 ? "" : "s"} in frame.`, "active");
-        } else {
-          setScreenStatus("Searching…", false);
-          setStatus("AI is running. Aim the rear camera at the audience.", "active");
-        }
-
-        people.forEach((person) => {
-          const [x, y, width, height] = person.bbox;
-          const scorePct = Math.round(person.score * 100);
-          const color = getColorForId(person.trackId);
-
-          if (config.drawBoxes) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 4;
-            ctx.strokeRect(x, y, width, height);
-
-            ctx.strokeStyle = "rgba(255,255,255,0.18)";
-            ctx.lineWidth = 1.25;
-            ctx.strokeRect(x + 5, y + 5, width - 10, height - 10);
-          }
-
-          if (config.drawLabels) {
-            const label = `Person ${person.trackId} · ${scorePct}%`;
-            ctx.font = "700 14px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-            const textWidth = ctx.measureText(label).width;
-            const pillWidth = textWidth + 22;
-            const pillHeight = 30;
-            const pillX = x;
-            const pillY = Math.max(10, y - 38);
-
-            ctx.fillStyle = "rgba(17,17,17,0.88)";
-            drawRoundedRect(pillX, pillY, pillWidth, pillHeight, 14);
-            ctx.fill();
-
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.textBaseline = "middle";
-            ctx.fillText(label, pillX + 11, pillY + pillHeight / 2 + 0.5);
-          }
-
-          const badgeSize = 34;
-          const badgeX = x + 8;
-          const badgeY = y + 8;
-
-          ctx.fillStyle = color;
-          drawRoundedRect(badgeX, badgeY, badgeSize, badgeSize, 10);
-          ctx.fill();
-
-          ctx.fillStyle = "#111111";
-          ctx.font = "900 16px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(String(person.trackId), badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 0.5);
-          ctx.textAlign = "start";
+        modeButtons.forEach((b) => {
+          b.classList.remove("active");
+          b.setAttribute("aria-pressed", "false");
+          b.setAttribute("aria-checked", "false");
         });
 
-        ctx.save();
-        ctx.fillStyle = "rgba(17,17,17,0.70)";
-        drawRoundedRect(18, 18, 210, 78, 18);
-        ctx.fill();
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+        btn.setAttribute("aria-checked", "true");
 
-        ctx.strokeStyle = "rgba(247,183,24,0.95)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "800 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText("LIVE TRACKED COUNT", 32, 42);
-
-        ctx.fillStyle = "#f7b718";
-        ctx.font = "1000 30px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText(String(smoothedCount), 32, 76);
-        ctx.restore();
-      }
-
-      async function detectStep() {
-        if (!aiRunning || !videoReady || !model) return;
-
-        try {
-          const predictions = await model.detect(video, undefined, 0.4);
-          drawOverlay(predictions);
-        } catch (error) {
-          console.error("Detection error:", error);
-          setStatus("Detection error. Try restarting the camera.", "error");
-          setScreenStatus("Error", false);
-        }
-      }
-
-      function restartDetectionLoop() {
-        if (!aiRunning) return;
-        stopLoops();
-        detectTimer = setInterval(detectStep, MODE_CONFIG[activeMode].interval);
-      }
-
-      function captureSnapshot() {
-        if (!videoReady || !canvas.width || !canvas.height) return;
-
-        const snapCanvas = document.createElement("canvas");
-        snapCanvas.width = canvas.width;
-        snapCanvas.height = canvas.height;
-
-        const sctx = snapCanvas.getContext("2d");
-        sctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-
-        const dataURL = snapCanvas.toDataURL("image/png");
-        snapshotPreview.src = dataURL;
-        previewSection.style.display = "block";
-
-        const a = document.createElement("a");
-        const timestampText = new Date().toISOString().replace(/[:.]/g, "-");
-        a.href = dataURL;
-        a.download = `${TARGET_FOLDER_LABEL}-${timestampText}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        showFlash("Snapshot Saved", "Saved as a PNG to your device.");
-        setStatus("Snapshot saved to your device.", "active");
-      }
-
-      async function startExperience() {
-        try {
-          if (aiRunning) return;
-
-          startBtn.disabled = true;
-          captureBtn.disabled = true;
-          stopBtn.disabled = true;
-
-          setStatus("Requesting rear camera access…", "idle");
-          setScreenStatus("Loading…", false);
-          updateCounts(0);
-          resetTracker();
-
-          await setupCamera();
-
-          setStatus("Loading AI model…", "idle");
-          metricModel.textContent = "Loading";
-
-          await getBestBackend();
-
-          model = await cocoSsd.load({
-            base: "lite_mobilenet_v2"
-          });
-
-          aiRunning = true;
-          captureBtn.disabled = false;
-          stopBtn.disabled = false;
-          metricModel.textContent = "Ready";
-
+        if (aiRunning) {
           restartDetectionLoop();
-          await detectStep();
-
-          setStatus("Rear camera and AI tracking are ready.", "active");
-          setScreenStatus("Ready", true);
-        } catch (error) {
-          console.error("Start error:", error);
-
-          startBtn.disabled = false;
-          captureBtn.disabled = true;
-          stopBtn.disabled = true;
-          metricModel.textContent = "Error";
-          updateCounts(0);
-          resetTracker();
-          setScreenStatus("Offline", false);
-
-          let message = "This demo needs camera access and HTTPS to run.";
-
-          if (error && error.name === "NotAllowedError") {
-            message = "Camera permission was blocked. Allow camera access and try again.";
-          } else if (error && error.name === "NotFoundError") {
-            message = "No camera was found on this device.";
-          } else if (error && error.name === "NotReadableError") {
-            message = "The camera is already in use by another app or browser tab.";
-          }
-
-          setStatus(message, "error");
+          detectStep();
+          setStatus(`Mode switched to ${btn.textContent.trim()}.`, "active");
+        } else {
+          setStatus(`Mode set to ${btn.textContent.trim()}.`, "idle");
         }
-      }
-
-      modeButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          activeMode = btn.getAttribute("data-mode") || "balanced";
-
-          modeButtons.forEach((b) => {
-            b.classList.remove("active");
-            b.setAttribute("aria-pressed", "false");
-            b.setAttribute("aria-checked", "false");
-          });
-
-          btn.classList.add("active");
-          btn.setAttribute("aria-pressed", "true");
-          btn.setAttribute("aria-checked", "true");
-
-          if (aiRunning) {
-            restartDetectionLoop();
-            detectStep();
-            setStatus(`Mode switched to ${btn.firstChild.textContent.trim()}.`, "active");
-          } else {
-            setStatus(`Mode set to ${btn.firstChild.textContent.trim()}.`, "idle");
-          }
-        });
       });
+    });
 
-      startBtn.addEventListener("click", startExperience);
-      captureBtn.addEventListener("click", captureSnapshot);
-      stopBtn.addEventListener("click", stopCamera);
-      window.addEventListener("beforeunload", stopCamera);
+    startBtn.addEventListener("click", startExperience);
+    captureBtn.addEventListener("click", captureSnapshot);
+    stopBtn.addEventListener("click", stopCamera);
+    window.addEventListener("beforeunload", stopCamera);
 
-      updateCounts(0);
-      updateTrackedMetric();
-      setScreenStatus("Offline", false);
-      metricPeak.textContent = "0";
-      metricModel.textContent = "Offline";
-    })();
-  </script>
+    updateCounts(0);
+    setScreenStatus("Offline", false);
+    metricPeak.textContent = "0";
+    metricTracked.textContent = "0";
+    metricModel.textContent = "Offline";
+  })();
+</script>
 </body>
 </html>

@@ -4,185 +4,166 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>webAI Presence — Break the Internet</title>
-  <meta name="description" content="A browser-native AI experience where the webpage responds to your face, hands, and voice." />
+  <meta name="description" content="A browser-native interactive experience where the page reacts to your camera, hand, movement, touch, and voice." />
   <meta name="theme-color" content="#050505" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
-
   <style>
-    :root {
-      --bg:#050505;--ink:#f7f7f7;--muted:#a1a1aa;--line:rgba(255,255,255,.12);
-      --glass:rgba(255,255,255,.065);--gold:#ffc72c;--cyan:#67e8f9;--violet:#c084fc;
-      --face-x:0;--face-y:0;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
-    body{height:100vh}
-    button{font:inherit}
-    .app{position:relative;width:100%;height:100%;isolation:isolate;background:
-      radial-gradient(circle at calc(50% + var(--face-x)*8%) calc(28% + var(--face-y)*8%),rgba(103,232,249,.13),transparent 28%),
-      radial-gradient(circle at 78% 18%,rgba(192,132,252,.12),transparent 24%),
-      radial-gradient(circle at 20% 80%,rgba(255,199,44,.10),transparent 26%),#050505;transition:background-position .12s linear}
-    .noise{position:absolute;inset:0;pointer-events:none;opacity:.13;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E")}
-    .camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;filter:saturate(.72) contrast(1.08) brightness(.48);transition:opacity .8s ease;z-index:-3}
-    .camera.on{opacity:.52}
-    .shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.62));z-index:-2}
-    .hud{position:absolute;left:22px;right:22px;top:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:30}
-    .brand{font-size:.76rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.brand b{color:var(--gold)}
-    .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .pill{border:1px solid var(--line);background:rgba(0,0,0,.32);backdrop-filter:blur(14px);border-radius:999px;padding:7px 11px;font-size:.68rem;font-weight:800;color:#d4d4d8}
-    .pill.live{color:#bbf7d0;border-color:rgba(34,197,94,.34)}
-    .hero{position:absolute;inset:0;display:grid;place-items:center;padding:84px 24px 130px;z-index:5;pointer-events:none}
-    .hero-inner{text-align:center;max-width:980px;transform:translate(calc(var(--face-x)*-10px),calc(var(--face-y)*-8px));transition:transform .14s linear}
-    .eyebrow{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;font-weight:900;color:var(--cyan);margin-bottom:14px}
-    h1{margin:0;font-size:clamp(3.3rem,9.4vw,9rem);line-height:.83;letter-spacing:-.075em;font-weight:950;text-wrap:balance;text-shadow:0 20px 80px rgba(0,0,0,.5)}
-    h1 span{display:block;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.52)}
-    .sub{margin:24px auto 0;max-width:720px;color:#d4d4d8;font-size:clamp(1rem,1.8vw,1.25rem);line-height:1.6}
-    .start{pointer-events:auto;margin-top:28px;border:1px solid rgba(255,255,255,.18);background:#fff;color:#080808;border-radius:999px;padding:14px 22px;font-weight:900;cursor:pointer;box-shadow:0 20px 60px rgba(255,255,255,.12);transition:.18s ease}
-    .start:hover{transform:translateY(-2px) scale(1.02)}
-    .instruction{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:25;text-align:center;max-width:min(680px,88vw);border:1px solid var(--line);background:rgba(8,8,8,.55);backdrop-filter:blur(18px);border-radius:999px;padding:11px 16px;color:#e4e4e7;font-size:.82rem;transition:.3s}
-    .instruction strong{color:var(--gold)}
-    .deck{position:absolute;inset:0;z-index:12;pointer-events:none}
-    .card{position:absolute;width:min(260px,34vw);min-height:150px;padding:18px;border-radius:24px;border:1px solid var(--line);background:rgba(255,255,255,.075);backdrop-filter:blur(20px);box-shadow:0 24px 80px rgba(0,0,0,.35);user-select:none;pointer-events:auto;touch-action:none;cursor:grab;transition:border-color .15s,box-shadow .15s}
-    .card:hover{border-color:rgba(255,255,255,.25)}.card.grabbed{cursor:grabbing;border-color:rgba(103,232,249,.5);box-shadow:0 0 0 6px rgba(103,232,249,.08),0 30px 100px rgba(0,0,0,.45)}
-    .card small{display:block;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;font-weight:900;color:var(--muted);margin-bottom:9px}.card h2{margin:0;font-size:clamp(1.3rem,2.2vw,2rem);line-height:1;letter-spacing:-.045em}.card p{margin:10px 0 0;color:#c4c4ca;font-size:.82rem;line-height:1.45}
-    #c1{left:6vw;top:20vh;transform:rotate(-5deg)}#c2{right:5vw;top:22vh;transform:rotate(5deg)}#c3{left:10vw;bottom:17vh;transform:rotate(3deg)}#c4{right:10vw;bottom:15vh;transform:rotate(-4deg)}
-    .cursor{position:absolute;width:34px;height:34px;border:2px solid rgba(255,255,255,.9);border-radius:50%;z-index:60;pointer-events:none;opacity:0;transform:translate(-50%,-50%);transition:opacity .2s,background .12s,scale .12s;box-shadow:0 0 0 6px rgba(255,255,255,.07)}
-    .cursor.on{opacity:1}.cursor.pinching{background:rgba(103,232,249,.7);scale:.7;border-color:var(--cyan)}
-    .cursor:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:50%;top:50%;transform:translate(-50%,-50%)}
-    .flash{position:absolute;inset:0;z-index:70;pointer-events:none;background:white;opacity:0}.flash.go{animation:flash .55s ease}@keyframes flash{0%{opacity:0}15%{opacity:.88}100%{opacity:0}}
-    .message{position:absolute;inset:0;z-index:55;display:grid;place-items:center;pointer-events:none;opacity:0;transform:scale(.96);transition:.45s ease;padding:24px}.message.show{opacity:1;transform:scale(1)}
-    .message-inner{text-align:center}.message-kicker{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;font-weight:900;color:var(--gold)}.message-title{font-size:clamp(3.4rem,8vw,8rem);line-height:.86;font-weight:950;letter-spacing:-.065em;margin-top:10px}.message-copy{margin:18px auto 0;color:#d4d4d8;max-width:620px;font-size:1rem;line-height:1.6}
-    .voice{position:absolute;right:22px;bottom:28px;z-index:30;border:1px solid var(--line);background:rgba(0,0,0,.42);color:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;font-size:.75rem;font-weight:900;backdrop-filter:blur(14px)}
-    .voice.listening{border-color:rgba(192,132,252,.6);box-shadow:0 0 0 6px rgba(192,132,252,.08)}
-    .hidden-ui .hero{opacity:0;transition:.45s}.hidden-ui .card{transition:none}
-    @media(max-width:760px){.hud{left:14px;right:14px}.pills .pill:nth-child(2){display:none}.hero{padding:80px 18px 150px}.card{width:42vw;min-height:120px;padding:14px}.card p{display:none}#c1{left:3vw;top:17vh}#c2{right:3vw;top:18vh}#c3{left:4vw;bottom:18vh}#c4{right:4vw;bottom:17vh}.instruction{bottom:76px;border-radius:18px}.voice{right:50%;transform:translateX(50%);bottom:22px}}
+    :root{--bg:#050505;--ink:#f8fafc;--muted:#9ca3af;--line:rgba(255,255,255,.13);--gold:#ffc72c;--cyan:#55e7ff;--violet:#a56cff;--pink:#ff4fd8;--green:#55f49a;--px:50%;--py:35%}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}button{font:inherit}
+    body{touch-action:manipulation;background:#030303}.app{position:relative;width:100%;height:100%;isolation:isolate;overflow:hidden;background:radial-gradient(circle at var(--px) var(--py),rgba(85,231,255,.16),transparent 18%),radial-gradient(circle at 72% 18%,rgba(165,108,255,.12),transparent 24%),radial-gradient(circle at 20% 82%,rgba(255,199,44,.08),transparent 24%),#050505}
+    .noise{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E")}
+    video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;filter:grayscale(.25) saturate(.7) contrast(1.15) brightness(.35);transition:opacity .8s ease;z-index:-3}video.live{opacity:.48}.shade{position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.64))}
+    .hud{position:absolute;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:70}.brand{font-size:.72rem;letter-spacing:.18em;font-weight:900;text-transform:uppercase}.brand b{color:var(--gold)}.status{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.35);backdrop-filter:blur(14px);font-size:.63rem;font-weight:800;letter-spacing:.04em;color:#d4d4d8}.pill.live{color:#b7f7d0;border-color:rgba(85,244,154,.4)}
+    .scene{position:absolute;inset:0;display:grid;place-items:center;padding:92px 22px 92px;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .5s ease,transform .5s ease;z-index:10}.scene.active{opacity:1;visibility:visible;transform:scale(1)}.center{text-align:center;width:min(1040px,94vw)}.kicker{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;font-weight:900;color:var(--cyan);margin-bottom:14px}.title{margin:0;font-size:clamp(3rem,9vw,8rem);line-height:.86;letter-spacing:-.07em;font-weight:950;text-wrap:balance}.title .outline{display:block;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.5)}.lead{max-width:680px;margin:22px auto 0;font-size:clamp(1rem,1.8vw,1.2rem);line-height:1.6;color:#d4d4d8}
+    .enter{margin-top:30px;min-width:min(420px,86vw);border-radius:22px;border:1px solid rgba(255,199,44,.6);background:linear-gradient(180deg,rgba(255,199,44,.12),rgba(255,255,255,.04));color:#fff;padding:17px 24px;cursor:pointer;box-shadow:0 0 0 1px rgba(255,199,44,.1),0 20px 80px rgba(255,199,44,.08);transition:.18s}.enter strong{display:block;color:var(--gold);font-size:1rem;letter-spacing:.02em}.enter span{display:block;margin-top:4px;font-size:.72rem;letter-spacing:.08em;color:#b8b8c0}.enter:active{transform:scale(.98)}.enter[disabled]{opacity:.7;cursor:wait}
+    .privacy{margin-top:15px;color:#8f949d;font-size:.72rem}.loader{width:78px;height:78px;border-radius:50%;border:1px solid rgba(255,255,255,.12);margin:0 auto 26px;position:relative;box-shadow:0 0 80px rgba(85,231,255,.1)}.loader:before{content:"";position:absolute;inset:7px;border-radius:50%;border-top:2px solid var(--cyan);animation:spin 1s linear infinite}.loader:after{content:"";position:absolute;inset:19px;border-radius:50%;background:rgba(85,231,255,.14);box-shadow:0 0 30px rgba(85,231,255,.18)}@keyframes spin{to{transform:rotate(360deg)}}
+    .prompt{font-size:clamp(2.4rem,8vw,7rem);font-weight:950;letter-spacing:-.06em;line-height:.88;margin:0}.prompt small{display:block;font-size:.17em;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:20px}.micro{margin:18px auto 0;color:#aab0ba;max-width:620px;line-height:1.55}.pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 0 0 rgba(85,244,154,.3);animation:pulse 1.6s infinite}@keyframes pulse{70%{box-shadow:0 0 0 12px rgba(85,244,154,0)}100%{box-shadow:0 0 0 0 rgba(85,244,154,0)}}
+    .object-stage{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;transition:.45s}.object-stage.active{opacity:1}.orb{position:absolute;left:50%;top:50%;width:min(300px,66vw);aspect-ratio:1;border-radius:34px;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;cursor:grab;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));backdrop-filter:blur(25px);box-shadow:0 40px 120px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.14);display:grid;place-items:center;text-align:center;padding:28px;user-select:none;will-change:transform}.orb:before{content:"";position:absolute;inset:-2px;border-radius:36px;background:linear-gradient(135deg,rgba(85,231,255,.5),transparent 32%,transparent 65%,rgba(255,79,216,.5));z-index:-1;filter:blur(8px);opacity:.35}.orb.grabbed{cursor:grabbing;box-shadow:0 0 0 8px rgba(85,231,255,.08),0 40px 120px rgba(0,0,0,.5)}.orb .num{font-size:.67rem;letter-spacing:.19em;text-transform:uppercase;color:var(--cyan);font-weight:900}.orb h2{font-size:clamp(2rem,6vw,4rem);line-height:.9;letter-spacing:-.055em;margin:12px 0 0}.orb p{color:#b7bbc4;font-size:.88rem;line-height:1.45;margin:14px 0 0}.hand-cursor{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;border:2px solid #fff;z-index:90;pointer-events:none;opacity:0;transform:translate(-50%,-50%);transition:opacity .2s,background .12s,width .12s,height .12s;box-shadow:0 0 0 8px rgba(255,255,255,.05)}.hand-cursor.show{opacity:1}.hand-cursor.pinch{width:30px;height:30px;border-color:var(--cyan);background:rgba(85,231,255,.6);box-shadow:0 0 0 10px rgba(85,231,255,.08)}
+    .coach{position:absolute;left:50%;bottom:max(26px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:80;width:min(650px,90vw);text-align:center;color:#e5e7eb;font-size:.84rem;line-height:1.45;padding:12px 16px;border:1px solid var(--line);border-radius:18px;background:rgba(5,5,5,.62);backdrop-filter:blur(18px);opacity:0;transition:.3s;pointer-events:none}.coach.show{opacity:1}.coach b{color:var(--gold)}
+    .break-btn{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));z-index:85;border:1px solid rgba(165,108,255,.38);background:rgba(5,5,5,.55);backdrop-filter:blur(16px);color:#fff;border-radius:999px;padding:11px 15px;font-size:.72rem;font-weight:900;cursor:pointer;display:none}.break-btn.show{display:block}.break-btn.listening{box-shadow:0 0 0 8px rgba(165,108,255,.08);border-color:var(--violet)}
+    .crack{position:absolute;inset:0;z-index:100;pointer-events:none;opacity:0;background:repeating-linear-gradient(18deg,transparent 0 74px,rgba(255,255,255,.6) 75px 76px,transparent 77px 120px);mix-blend-mode:screen}.crack.go{animation:crack .8s ease forwards}@keyframes crack{0%{opacity:0;transform:scale(1.2)}25%{opacity:.85}100%{opacity:0;transform:scale(.95)}}.flash{position:absolute;inset:0;background:#fff;z-index:110;opacity:0;pointer-events:none}.flash.go{animation:flash .55s ease}@keyframes flash{0%{opacity:0}12%{opacity:.95}100%{opacity:0}}
+    .final{background:radial-gradient(circle at 50% 45%,rgba(165,108,255,.17),transparent 25%),#030303}.final .title{font-size:clamp(3.4rem,10vw,9rem)}.final .gradient{background:linear-gradient(90deg,var(--cyan),#8aa7ff,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.tech{margin:26px auto 0;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.tech span{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);color:#aeb4bd}
+    .skip{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));z-index:88;border:0;background:transparent;color:#737985;font-size:.7rem;cursor:pointer;display:none}.skip.show{display:block}
+    .error-box{max-width:620px;margin:20px auto 0;border:1px solid rgba(255,199,44,.28);border-radius:18px;padding:16px;background:rgba(255,199,44,.06);color:#d6d7db;font-size:.86rem;line-height:1.5}.error-box strong{color:var(--gold)}
+    @media(max-width:700px){.hud{align-items:flex-start}.brand{max-width:160px;line-height:1.4}.status .pill:nth-child(2){display:none}.scene{padding:92px 18px 116px}.title{font-size:clamp(3.2rem,16vw,6rem)}.lead{font-size:.98rem}.object-stage .orb{width:64vw;max-width:280px}.break-btn{left:50%;right:auto;transform:translateX(-50%);bottom:max(22px,env(safe-area-inset-bottom))}.coach{bottom:78px}.skip{bottom:22px}.final .title{font-size:clamp(3.2rem,15vw,6.5rem)}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
 <div class="app" id="app">
-  <video id="video" class="camera" autoplay playsinline muted></video>
-  <div class="shade"></div><div class="noise"></div><div class="flash" id="flash"></div>
-  <header class="hud">
-    <div class="brand">ITSBAD LABS · <b>webAI Presence</b></div>
-    <div class="pills"><span class="pill" id="cameraPill">CAMERA OFF</span><span class="pill" id="handPill">HAND SEARCHING</span><span class="pill">ON-DEVICE INTERACTION</span></div>
-  </header>
+  <video id="video" autoplay muted playsinline></video><div class="shade"></div><div class="noise"></div><div class="crack" id="crack"></div><div class="flash" id="flash"></div>
+  <header class="hud"><div class="brand">ITSBAD LABS · <b>webAI Presence</b></div><div class="status"><span class="pill" id="cameraPill">CAMERA OFF</span><span class="pill" id="handPill">GESTURE STANDBY</span><span class="pill">ON-DEVICE</span></div></header>
 
-  <main class="hero" id="hero">
-    <div class="hero-inner">
-      <div class="eyebrow">The browser is paying attention.</div>
-      <h1>THE WEB HAS <span>BEEN WAITING FOR YOU.</span></h1>
-      <p class="sub">Turn on your camera. Move closer. Raise your hand. Pinch something. Throw it. Then break the page.</p>
-      <button class="start" id="startBtn">ENTER THE EXPERIENCE</button>
-    </div>
-  </main>
+  <section class="scene active" id="s0"><div class="center"><div class="kicker">The web doesn't have to sit still.</div><h1 class="title">THE WEB HAS BEEN <span class="outline">WAITING FOR YOU.</span></h1><p class="lead">This page changes when you enter it. Camera, movement, gesture and voice become part of the interface.</p><button class="enter" id="enterBtn"><strong>ENTER THE EXPERIENCE</strong><span>TURN ON YOUR CAMERA TO BEGIN</span></button><div class="privacy">Camera access is used only on your device. Nothing is uploaded by this page.</div></div></section>
 
-  <section class="deck" aria-label="Interactive webpage objects">
-    <article class="card physics" id="c1"><small>01 · PERCEPTION</small><h2>THE PAGE CAN SEE.</h2><p>Your position changes the environment. Presence becomes input.</p></article>
-    <article class="card physics" id="c2"><small>02 · GESTURE</small><h2>TOUCH WITHOUT TOUCHING.</h2><p>Pinch a card with your hand and move it through the page.</p></article>
-    <article class="card physics" id="c3"><small>03 · PHYSICS</small><h2>THE UI DOESN'T HAVE TO STAY PUT.</h2><p>Release a grabbed object and momentum takes over.</p></article>
-    <article class="card physics" id="c4"><small>04 · COMMAND</small><h2>SAY “BREAK IT.”</h2><p>Voice becomes another browser-native interface.</p></article>
-  </section>
+  <section class="scene" id="sLoading"><div class="center"><div class="loader"></div><div class="kicker" id="loadKicker">Waking up the browser</div><h2 class="prompt" id="loadTitle">CONNECTING TO YOU.</h2><p class="micro" id="loadCopy">Requesting camera access…</p></div></section>
 
-  <div class="cursor" id="cursor" aria-hidden="true"></div>
-  <div class="instruction" id="instruction">Start the camera, then <strong>pinch your thumb + index finger</strong> near a card to grab it.</div>
-  <button class="voice" id="voiceBtn">🎙 SAY “BREAK IT”</button>
+  <section class="scene" id="sSee"><div class="center"><h2 class="prompt"><small>01 · PERCEPTION</small>I SEE YOU.</h2><p class="micro"><span class="pulse"></span>Move a little. The light field follows your presence.</p></div></section>
 
-  <section class="message" id="message">
-    <div class="message-inner"><div class="message-kicker">webAI Presence</div><div class="message-title">YOU BROKE<br>THE INTERNET.</div><p class="message-copy">Good. Websites don't have to behave like websites anymore.<br><strong>The web doesn't have to sit still.</strong></p></div>
-  </section>
+  <section class="scene" id="sHand"><div class="center"><h2 class="prompt"><small>02 · GESTURE</small>SHOW ME YOUR HAND.</h2><p class="micro" id="handCopy">Raise one hand in front of the camera. If hand tracking is unavailable, you can still touch or drag directly.</p></div></section>
+
+  <div class="object-stage" id="objectStage"><div class="orb" id="orb"><div><div class="num">03 · TOUCH</div><h2>TOUCH ME.</h2><p>Pinch thumb + index near this object — or drag it with your finger/mouse.</p></div></div></div>
+  <div class="hand-cursor" id="handCursor"></div>
+  <div class="coach" id="coach"></div>
+  <button class="break-btn" id="breakBtn">🎙 SAY “BREAK IT”</button>
+  <button class="skip" id="skipBtn">Skip to finale</button>
+
+  <section class="scene final" id="sFinal"><div class="center"><div class="kicker">webAI Presence</div><h2 class="title">THE WEB DOESN'T HAVE TO <span class="gradient">SIT STILL.</span></h2><p class="lead">You didn't browse this page. You changed it.</p><div class="tech"><span>Camera</span><span>Gesture</span><span>Touch</span><span>Voice</span><span>Browser AI</span></div></div></section>
 </div>
+<script>
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const scenes=['s0','sLoading','sSee','sHand','sFinal'];
+  const video=$('video'),enterBtn=$('enterBtn'),cameraPill=$('cameraPill'),handPill=$('handPill'),objectStage=$('objectStage'),orb=$('orb'),cursor=$('handCursor'),coach=$('coach'),breakBtn=$('breakBtn'),skipBtn=$('skipBtn'),flash=$('flash'),crack=$('crack');
+  let stream=null,landmarker=null,tracking=false,lastVideoTime=-1,grabbed=false,thrown=false,broken=false;
+  let pos={x:innerWidth/2,y:innerHeight/2},vel={x:0,y:0},last={x:pos.x,y:pos.y,t:performance.now()},rot=0;
+  let recognition=null;
 
-<script type="module">
-import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
+  function scene(id){scenes.forEach(s=>$(s).classList.toggle('active',s===id));}
+  function setLoad(title,copy,kicker='Waking up the browser'){ $('loadTitle').textContent=title;$('loadCopy').textContent=copy;$('loadKicker').textContent=kicker; }
+  function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+  function render(){orb.style.transform=`translate3d(${pos.x- orb.offsetWidth/2}px,${pos.y-orb.offsetHeight/2}px,0) rotate(${rot}deg)`;}
+  function clamp(){const w=orb.offsetWidth,h=orb.offsetHeight;pos.x=Math.max(w*.45,Math.min(innerWidth-w*.45,pos.x));pos.y=Math.max(h*.45,Math.min(innerHeight-h*.45,pos.y));}
+  function setCoach(html){coach.innerHTML=html;coach.classList.add('show');}
 
-const app=document.getElementById('app'),video=document.getElementById('video'),startBtn=document.getElementById('startBtn');
-const cursor=document.getElementById('cursor'),cameraPill=document.getElementById('cameraPill'),handPill=document.getElementById('handPill');
-const instruction=document.getElementById('instruction'),voiceBtn=document.getElementById('voiceBtn'),message=document.getElementById('message'),flash=document.getElementById('flash');
-const cards=[...document.querySelectorAll('.physics')];
-let stream=null,handLandmarker=null,faceModel=null,running=false,lastVideoTime=-1,lastHandAt=0,lastFaceAt=0;
-let pinch=false,grabbed=null,lastCursor={x:innerWidth/2,y:innerHeight/2,t:performance.now()},velocity={x:0,y:0};
-let physics=new Map();
+  // Bind immediately. No model import blocks the Enter button.
+  enterBtn.addEventListener('click',startExperience,{passive:true});
+  skipBtn.addEventListener('click',finale);
 
-cards.forEach(el=>{
-  const r=el.getBoundingClientRect();
-  physics.set(el,{x:r.left,y:r.top,w:r.width,h:r.height,vx:0,vy:0,rot:(Math.random()-.5)*8,free:false});
-  el.style.left='0px';el.style.top='0px';el.style.right='auto';el.style.bottom='auto';
-  el.addEventListener('pointerdown',e=>manualGrab(el,e));
-});
+  async function startExperience(){
+    if(stream)return;
+    enterBtn.disabled=true;scene('sLoading');setLoad('CONNECTING TO YOU.','Requesting camera access…');
+    if(!navigator.mediaDevices?.getUserMedia){return showCameraError('This browser does not expose camera access to this page.');}
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});
+      video.srcObject=stream;
+      await video.play();
+      video.classList.add('live');cameraPill.textContent='CAMERA LIVE';cameraPill.classList.add('live');
+      setLoad('CAMERA CONNECTED.','Loading gesture intelligence…','You are in.');
+      // Gesture AI loads after camera success. Failure does not stop the experience.
+      initHands().catch(err=>{console.warn('Hand tracking fallback',err);handPill.textContent='TOUCH FALLBACK';});
+      await wait(900);scene('sSee');
+      installPresenceMotion();
+      await wait(1700);scene('sHand');skipBtn.classList.add('show');
+      setTimeout(()=>{if(!tracking)beginTouchStage(false)},3800);
+    }catch(err){
+      console.error(err);showCameraError(err?.name==='NotAllowedError'?'Camera permission was not granted.':'The camera could not be started.');
+    }
+  }
 
-function placeCards(){for(const [el,s] of physics){if(!s.free&&!grabbed){/* retain */}renderCard(el,s)}}
-function renderCard(el,s){el.style.transform=`translate3d(${s.x}px,${s.y}px,0) rotate(${s.rot}deg)`}
-placeCards();
+  function showCameraError(message){
+    scene('sLoading');setLoad('CAMERA DIDN’T START.',message,'Still fixable');
+    $('loadCopy').innerHTML=`${message}<div class="error-box"><strong>Try this:</strong> allow camera access in your browser settings, then reload this page. You can also continue with touch/mouse fallback.</div>`;
+    enterBtn.disabled=false;setTimeout(()=>beginTouchStage(false),1800);
+  }
 
-async function initHand(){
-  const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-  handLandmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.5,minHandPresenceConfidence:.5,minTrackingConfidence:.45});
-}
-async function initFace(){try{await tf.setBackend('webgl');await tf.ready();faceModel=await blazeface.load();}catch(e){console.warn('Face tracking unavailable',e)}}
+  async function initHands(){
+    const mod=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm');
+    const vision=await mod.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
+    landmarker=await mod.HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.45,minHandPresenceConfidence:.45,minTrackingConfidence:.4});
+    handPill.textContent='HAND SEARCHING';
+    requestAnimationFrame(trackHands);
+  }
 
-async function start(){
-  if(running)return;
-  startBtn.disabled=true;startBtn.textContent='INITIALIZING…';
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});
-    video.srcObject=stream;await video.play();video.classList.add('on');cameraPill.textContent='CAMERA LIVE';cameraPill.classList.add('live');
-    await Promise.all([initHand(),initFace()]);
-    running=true;startBtn.textContent='YOU’RE IN';instruction.innerHTML='Raise one hand. <strong>Pinch thumb + index finger</strong> near a card to grab it.';
-    requestAnimationFrame(loop);
-  }catch(e){console.error(e);startBtn.disabled=false;startBtn.textContent='TRY AGAIN';instruction.textContent='Camera or AI could not start. Use Chrome/Edge over HTTPS and allow camera access.'}
-}
-startBtn.addEventListener('click',start);
+  function installPresenceMotion(){
+    const move=(x,y)=>{document.documentElement.style.setProperty('--px',`${Math.round(x/innerWidth*100)}%`);document.documentElement.style.setProperty('--py',`${Math.round(y/innerHeight*100)}%`);};
+    addEventListener('pointermove',e=>move(e.clientX,e.clientY),{passive:true});
+    if(window.DeviceOrientationEvent)addEventListener('deviceorientation',e=>{const x=innerWidth/2+(e.gamma||0)*6,y=innerHeight*.35+(e.beta||0)*2;move(x,y);},{passive:true});
+  }
 
-async function loop(t){
-  if(!running)return;
-  if(video.readyState>=2&&video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;detectHand(t);if(t-lastFaceAt>140){lastFaceAt=t;detectFace()}}
-  stepPhysics();requestAnimationFrame(loop);
-}
+  async function trackHands(){
+    if(!landmarker||!video.videoWidth){requestAnimationFrame(trackHands);return;}
+    if(video.currentTime!==lastVideoTime){
+      lastVideoTime=video.currentTime;
+      let res=null;try{res=landmarker.detectForVideo(video,performance.now())}catch(e){}
+      const lm=res?.landmarks?.[0];
+      if(lm){
+        if(!tracking){tracking=true;handPill.textContent='HAND FOUND';handPill.classList.add('live');$('handCopy').textContent='There you are.';setTimeout(()=>beginTouchStage(true),650);}
+        const tip=lm[8],thumb=lm[4];
+        const x=(1-tip.x)*innerWidth,y=tip.y*innerHeight;
+        const dx=(tip.x-thumb.x),dy=(tip.y-thumb.y),dist=Math.hypot(dx,dy);const pinching=dist<.055;
+        cursor.style.left=`${x}px`;cursor.style.top=`${y}px`;cursor.classList.add('show');cursor.classList.toggle('pinch',pinching);
+        handleGesture(x,y,pinching);
+      }
+    }
+    requestAnimationFrame(trackHands);
+  }
 
-function detectHand(t){
-  try{
-    const result=handLandmarker.detectForVideo(video,t);
-    if(result.landmarks?.length){lastHandAt=t;handPill.textContent='HAND LOCKED';handPill.classList.add('live');const lm=result.landmarks[0];
-      const ix=(1-lm[8].x)*innerWidth,iy=lm[8].y*innerHeight,tx=(1-lm[4].x)*innerWidth,ty=lm[4].y*innerHeight;
-      const d=Math.hypot(ix-tx,iy-ty);const isPinch=d<Math.min(innerWidth,innerHeight)*.055;
-      updateCursor(ix,iy,isPinch);handlePinch(ix,iy,isPinch);
-    }else if(t-lastHandAt>300){handPill.textContent='HAND SEARCHING';handPill.classList.remove('live');cursor.classList.remove('on');if(grabbed)releaseGrab()}
-  }catch(e){console.warn(e)}
-}
+  function beginTouchStage(usingHand){
+    if(objectStage.classList.contains('active')||broken)return;
+    scenes.forEach(s=>$(s).classList.remove('active'));objectStage.classList.add('active');
+    pos={x:innerWidth/2,y:innerHeight/2};vel={x:0,y:0};rot=0;render();
+    setCoach(usingHand?'Move your hand over the object. <b>Pinch thumb + index</b> to grab it.':'Gesture tracking is optional here. <b>Drag the object</b> with your finger or mouse.');
+    installPointerFallback();
+  }
 
-async function detectFace(){
-  if(!faceModel||video.readyState<2)return;
-  try{const p=await faceModel.estimateFaces(video,false);if(!p.length)return;const a=p[0].topLeft,b=p[0].bottomRight;const cx=((a[0]+b[0])/2)/video.videoWidth,cy=((a[1]+b[1])/2)/video.videoHeight;document.documentElement.style.setProperty('--face-x',((.5-cx)*2).toFixed(3));document.documentElement.style.setProperty('--face-y',((cy-.5)*2).toFixed(3))}catch(e){}
-}
+  function handleGesture(x,y,pinching){
+    if(!objectStage.classList.contains('active')||broken)return;
+    const now=performance.now(),dt=Math.max(16,now-last.t);const vx=(x-last.x)/dt*16,vy=(y-last.y)/dt*16;last={x,y,t:now};
+    const r=orb.getBoundingClientRect(),inside=x>=r.left-40&&x<=r.right+40&&y>=r.top-40&&y<=r.bottom+40;
+    if(pinching&&!grabbed&&inside){grabbed=true;orb.classList.add('grabbed');setCoach('<b>GRABBED.</b> Move your hand. Then open your fingers and throw it.');}
+    if(grabbed&&pinching){pos.x=x;pos.y=y;vel.x=vx;vel.y=vy;rot+=vx*.15;clamp();render();}
+    if(grabbed&&!pinching){release();}
+  }
 
-function updateCursor(x,y,isPinch){const now=performance.now(),dt=Math.max(16,now-lastCursor.t);velocity.x=(x-lastCursor.x)/(dt/16);velocity.y=(y-lastCursor.y)/(dt/16);lastCursor={x,y,t:now};cursor.style.left=x+'px';cursor.style.top=y+'px';cursor.classList.add('on');cursor.classList.toggle('pinching',isPinch)}
+  function installPointerFallback(){
+    let pointer=false;
+    orb.onpointerdown=e=>{pointer=true;grabbed=true;orb.setPointerCapture?.(e.pointerId);orb.classList.add('grabbed');last={x:e.clientX,y:e.clientY,t:performance.now()};setCoach('<b>GRABBED.</b> Move it fast and release.');};
+    orb.onpointermove=e=>{if(!pointer)return;const now=performance.now(),dt=Math.max(16,now-last.t);vel.x=(e.clientX-last.x)/dt*16;vel.y=(e.clientY-last.y)/dt*16;last={x:e.clientX,y:e.clientY,t:now};pos.x=e.clientX;pos.y=e.clientY;rot+=vel.x*.12;clamp();render();};
+    orb.onpointerup=orb.onpointercancel=()=>{if(pointer){pointer=false;release();}};
+  }
 
-function nearestCard(x,y){let best=null,dist=Infinity;for(const el of cards){const r=el.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const d=Math.hypot(x-cx,y-cy);if(d<dist&&d<Math.max(115,r.width*.65)){best=el;dist=d}}return best}
-function handlePinch(x,y,isPinch){
-  if(isPinch&&!pinch){pinch=true;const el=nearestCard(x,y);if(el)beginGrab(el,x,y)}
-  if(isPinch&&grabbed){const s=physics.get(grabbed);s.x=x-s.w/2;s.y=y-s.h/2;s.vx=velocity.x;s.vy=velocity.y;s.free=true;renderCard(grabbed,s)}
-  if(!isPinch&&pinch){pinch=false;if(grabbed)releaseGrab()}
-}
-function beginGrab(el,x,y){grabbed=el;el.classList.add('grabbed');instruction.innerHTML='<strong>Got it.</strong> Move your hand, then open your fingers to throw.';const s=physics.get(el);s.free=true;s.x=x-s.w/2;s.y=y-s.h/2;s.vx=s.vy=0;renderCard(el,s)}
-function releaseGrab(){if(!grabbed)return;const s=physics.get(grabbed);s.vx=velocity.x*1.35;s.vy=velocity.y*1.35;grabbed.classList.remove('grabbed');grabbed=null;instruction.innerHTML='Nice. Grab another — or say <strong>“BREAK IT.”</strong>'}
-function manualGrab(el,e){e.preventDefault();const move=ev=>{const s=physics.get(el);s.free=true;s.x=ev.clientX-s.w/2;s.y=ev.clientY-s.h/2;renderCard(el,s)};const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);move(e)}
+  function release(){grabbed=false;orb.classList.remove('grabbed');if(Math.hypot(vel.x,vel.y)<3){vel.x=4.5;vel.y=-3.2;}thrown=true;setCoach('YOU WEREN’T SUPPOSED TO BE ABLE TO DO THAT.');animateThrow();setTimeout(armBreak,1200);}
+  function animateThrow(){if(!thrown||grabbed||broken)return;pos.x+=vel.x;pos.y+=vel.y;vel.x*=.985;vel.y=vel.y*.985+.11;rot+=vel.x*.45;const w=orb.offsetWidth,h=orb.offsetHeight;if(pos.x<w*.42||pos.x>innerWidth-w*.42){vel.x*=-.82;pos.x=Math.max(w*.42,Math.min(innerWidth-w*.42,pos.x));}if(pos.y<h*.42||pos.y>innerHeight-h*.42){vel.y*=-.78;pos.y=Math.max(h*.42,Math.min(innerHeight-h*.42,pos.y));}render();requestAnimationFrame(animateThrow);}
 
-function stepPhysics(){for(const [el,s] of physics){if(el===grabbed||!s.free)continue;s.x+=s.vx;s.y+=s.vy;s.vx*=.985;s.vy*=.985;s.vy+=.18;s.rot+=s.vx*.04;if(s.x<0){s.x=0;s.vx*=-.7}if(s.x+s.w>innerWidth){s.x=innerWidth-s.w;s.vx*=-.7}if(s.y<0){s.y=0;s.vy*=-.7}if(s.y+s.h>innerHeight){s.y=innerHeight-s.h;s.vy*=-.72}renderCard(el,s)}}
+  function armBreak(){if(broken)return;setCoach('Want the rest? <b>Say “BREAK IT”</b> — or tap the button.');breakBtn.classList.add('show');setupVoice();}
+  breakBtn.addEventListener('click',()=>{if(recognition){try{recognition.start();breakBtn.classList.add('listening');breakBtn.textContent='LISTENING…';return;}catch(e){}}finale();});
+  function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){breakBtn.textContent='BREAK IT';return;}recognition=new SR();recognition.lang='en-US';recognition.interimResults=false;recognition.maxAlternatives=1;recognition.onresult=e=>{const phrase=e.results?.[0]?.[0]?.transcript?.toLowerCase()||'';if(phrase.includes('break'))finale();else{breakBtn.textContent='TRY “BREAK IT”';breakBtn.classList.remove('listening');}};recognition.onerror=()=>{breakBtn.textContent='BREAK IT';breakBtn.classList.remove('listening');};recognition.onend=()=>breakBtn.classList.remove('listening');}
 
-function breakIt(){
-  app.classList.add('hidden-ui');flash.classList.remove('go');void flash.offsetWidth;flash.classList.add('go');
-  cards.forEach((el,i)=>{const s=physics.get(el);s.free=true;const angle=(i/cards.length)*Math.PI*2+Math.random()*.7;s.vx=Math.cos(angle)*(18+Math.random()*18);s.vy=Math.sin(angle)*(18+Math.random()*14)-8;s.rot=(Math.random()-.5)*18});
-  instruction.style.opacity='0';voiceBtn.style.opacity='0';setTimeout(()=>message.classList.add('show'),620);setTimeout(()=>app.classList.remove('hidden-ui'),3600);
-}
+  async function finale(){if(broken)return;broken=true;tracking=false;coach.classList.remove('show');breakBtn.classList.remove('show');skipBtn.classList.remove('show');cursor.classList.remove('show');crack.classList.add('go');await wait(160);flash.classList.add('go');objectStage.style.transition='transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s';objectStage.style.transform='scale(1.35) rotate(9deg)';objectStage.style.opacity='0';await wait(520);scene('sFinal');}
 
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SR){const rec=new SR();rec.lang='en-US';rec.interimResults=false;rec.continuous=false;rec.onstart=()=>{voiceBtn.classList.add('listening');voiceBtn.textContent='LISTENING…'};rec.onend=()=>{voiceBtn.classList.remove('listening');voiceBtn.textContent='🎙 SAY “BREAK IT”'};rec.onresult=e=>{const text=e.results[0][0].transcript.toLowerCase();if(text.includes('break')||text.includes('destroy')||text.includes('explode'))breakIt();else{instruction.innerHTML=`I heard “${text}.” Try <strong>“break it.”</strong>`}};voiceBtn.addEventListener('click',()=>rec.start())}else{voiceBtn.textContent='BREAK IT';voiceBtn.addEventListener('click',breakIt)}
-
-window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='b')breakIt()});
-window.addEventListener('resize',()=>{for(const [el,s] of physics){s.w=el.offsetWidth;s.h=el.offsetHeight;s.x=Math.min(s.x,innerWidth-s.w);s.y=Math.min(s.y,innerHeight-s.h)}});
+  addEventListener('resize',()=>{clamp();render();});
+})();
 </script>
 </body>
 </html>

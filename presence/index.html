@@ -1,168 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>webAI Presence — Break the Internet</title>
-  <meta name="description" content="A browser-native interactive experience where the page reacts to your camera, hand, movement, touch, and voice." />
-  <meta name="theme-color" content="#050505" />
-  <style>
-    :root{--bg:#050505;--ink:#f8fafc;--muted:#9ca3af;--line:rgba(255,255,255,.13);--gold:#ffc72c;--cyan:#55e7ff;--violet:#a56cff;--pink:#ff4fd8;--green:#55f49a;--px:50%;--py:35%}
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}button{font:inherit}
-    body{touch-action:manipulation;background:#030303}.app{position:relative;width:100%;height:100%;isolation:isolate;overflow:hidden;background:radial-gradient(circle at var(--px) var(--py),rgba(85,231,255,.16),transparent 18%),radial-gradient(circle at 72% 18%,rgba(165,108,255,.12),transparent 24%),radial-gradient(circle at 20% 82%,rgba(255,199,44,.08),transparent 24%),#050505}
-    .noise{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E")}
-    video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;filter:grayscale(.25) saturate(.7) contrast(1.15) brightness(.35);transition:opacity .8s ease;z-index:-3}video.live{opacity:.48}.shade{position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.64))}
-    .hud{position:absolute;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:70}.brand{font-size:.72rem;letter-spacing:.18em;font-weight:900;text-transform:uppercase}.brand b{color:var(--gold)}.status{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.35);backdrop-filter:blur(14px);font-size:.63rem;font-weight:800;letter-spacing:.04em;color:#d4d4d8}.pill.live{color:#b7f7d0;border-color:rgba(85,244,154,.4)}
-    .scene{position:absolute;inset:0;display:grid;place-items:center;padding:92px 22px 92px;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .5s ease,transform .5s ease;z-index:10}.scene.active{opacity:1;visibility:visible;transform:scale(1)}.center{text-align:center;width:min(1040px,94vw)}.kicker{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;font-weight:900;color:var(--cyan);margin-bottom:14px}.title{margin:0;font-size:clamp(3rem,9vw,8rem);line-height:.86;letter-spacing:-.07em;font-weight:950;text-wrap:balance}.title .outline{display:block;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.5)}.lead{max-width:680px;margin:22px auto 0;font-size:clamp(1rem,1.8vw,1.2rem);line-height:1.6;color:#d4d4d8}
-    .enter{margin-top:30px;min-width:min(420px,86vw);border-radius:22px;border:1px solid rgba(255,199,44,.6);background:linear-gradient(180deg,rgba(255,199,44,.12),rgba(255,255,255,.04));color:#fff;padding:17px 24px;cursor:pointer;box-shadow:0 0 0 1px rgba(255,199,44,.1),0 20px 80px rgba(255,199,44,.08);transition:.18s}.enter strong{display:block;color:var(--gold);font-size:1rem;letter-spacing:.02em}.enter span{display:block;margin-top:4px;font-size:.72rem;letter-spacing:.08em;color:#b8b8c0}.enter:active{transform:scale(.98)}.enter[disabled]{opacity:.7;cursor:wait}
-    .privacy{margin-top:15px;color:#8f949d;font-size:.72rem}.loader{width:78px;height:78px;border-radius:50%;border:1px solid rgba(255,255,255,.12);margin:0 auto 26px;position:relative;box-shadow:0 0 80px rgba(85,231,255,.1)}.loader:before{content:"";position:absolute;inset:7px;border-radius:50%;border-top:2px solid var(--cyan);animation:spin 1s linear infinite}.loader:after{content:"";position:absolute;inset:19px;border-radius:50%;background:rgba(85,231,255,.14);box-shadow:0 0 30px rgba(85,231,255,.18)}@keyframes spin{to{transform:rotate(360deg)}}
-    .prompt{font-size:clamp(2.4rem,8vw,7rem);font-weight:950;letter-spacing:-.06em;line-height:.88;margin:0}.prompt small{display:block;font-size:.17em;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:20px}.micro{margin:18px auto 0;color:#aab0ba;max-width:620px;line-height:1.55}.pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 0 0 rgba(85,244,154,.3);animation:pulse 1.6s infinite}@keyframes pulse{70%{box-shadow:0 0 0 12px rgba(85,244,154,0)}100%{box-shadow:0 0 0 0 rgba(85,244,154,0)}}
-    .object-stage{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;transition:.45s}.object-stage.active{opacity:1}.orb{position:absolute;left:50%;top:50%;width:min(300px,66vw);aspect-ratio:1;border-radius:34px;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;cursor:grab;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));backdrop-filter:blur(25px);box-shadow:0 40px 120px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.14);display:grid;place-items:center;text-align:center;padding:28px;user-select:none;will-change:transform}.orb:before{content:"";position:absolute;inset:-2px;border-radius:36px;background:linear-gradient(135deg,rgba(85,231,255,.5),transparent 32%,transparent 65%,rgba(255,79,216,.5));z-index:-1;filter:blur(8px);opacity:.35}.orb.grabbed{cursor:grabbing;box-shadow:0 0 0 8px rgba(85,231,255,.08),0 40px 120px rgba(0,0,0,.5)}.orb .num{font-size:.67rem;letter-spacing:.19em;text-transform:uppercase;color:var(--cyan);font-weight:900}.orb h2{font-size:clamp(2rem,6vw,4rem);line-height:.9;letter-spacing:-.055em;margin:12px 0 0}.orb p{color:#b7bbc4;font-size:.88rem;line-height:1.45;margin:14px 0 0}.hand-cursor{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;border:2px solid #fff;z-index:90;pointer-events:none;opacity:0;transform:translate(-50%,-50%);transition:opacity .2s,background .12s,width .12s,height .12s;box-shadow:0 0 0 8px rgba(255,255,255,.05)}.hand-cursor.show{opacity:1}.hand-cursor.pinch{width:30px;height:30px;border-color:var(--cyan);background:rgba(85,231,255,.6);box-shadow:0 0 0 10px rgba(85,231,255,.08)}
-    .coach{position:absolute;left:50%;bottom:max(26px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:80;width:min(650px,90vw);text-align:center;color:#e5e7eb;font-size:.84rem;line-height:1.45;padding:12px 16px;border:1px solid var(--line);border-radius:18px;background:rgba(5,5,5,.62);backdrop-filter:blur(18px);opacity:0;transition:.3s;pointer-events:none}.coach.show{opacity:1}.coach b{color:var(--gold)}
-    .break-btn{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));z-index:85;border:1px solid rgba(165,108,255,.38);background:rgba(5,5,5,.55);backdrop-filter:blur(16px);color:#fff;border-radius:999px;padding:11px 15px;font-size:.72rem;font-weight:900;cursor:pointer;display:none}.break-btn.show{display:block}.break-btn.listening{box-shadow:0 0 0 8px rgba(165,108,255,.08);border-color:var(--violet)}
-    .crack{position:absolute;inset:0;z-index:100;pointer-events:none;opacity:0;background:repeating-linear-gradient(18deg,transparent 0 74px,rgba(255,255,255,.6) 75px 76px,transparent 77px 120px);mix-blend-mode:screen}.crack.go{animation:crack .8s ease forwards}@keyframes crack{0%{opacity:0;transform:scale(1.2)}25%{opacity:.85}100%{opacity:0;transform:scale(.95)}}.flash{position:absolute;inset:0;background:#fff;z-index:110;opacity:0;pointer-events:none}.flash.go{animation:flash .55s ease}@keyframes flash{0%{opacity:0}12%{opacity:.95}100%{opacity:0}}
-    .final{background:radial-gradient(circle at 50% 45%,rgba(165,108,255,.17),transparent 25%),#030303}.final .title{font-size:clamp(3.4rem,10vw,9rem)}.final .gradient{background:linear-gradient(90deg,var(--cyan),#8aa7ff,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.tech{margin:26px auto 0;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.tech span{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);color:#aeb4bd}
-    .skip{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));z-index:88;border:0;background:transparent;color:#737985;font-size:.7rem;cursor:pointer;display:none}.skip.show{display:block}
-    .error-box{max-width:620px;margin:20px auto 0;border:1px solid rgba(255,199,44,.28);border-radius:18px;padding:16px;background:rgba(255,199,44,.06);color:#d6d7db;font-size:.86rem;line-height:1.5}.error-box strong{color:var(--gold)}
-    @media(max-width:700px){.hud{align-items:flex-start}.brand{max-width:160px;line-height:1.4}.status .pill:nth-child(2){display:none}.scene{padding:92px 18px 116px}.title{font-size:clamp(3.2rem,16vw,6rem)}.lead{font-size:.98rem}.object-stage .orb{width:64vw;max-width:280px}.break-btn{left:50%;right:auto;transform:translateX(-50%);bottom:max(22px,env(safe-area-inset-bottom))}.coach{bottom:78px}.skip{bottom:22px}.final .title{font-size:clamp(3.2rem,15vw,6.5rem)}}
-    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>webAI Presence — Break the Internet</title>
+<meta name="theme-color" content="#030303" />
+<style>
+:root{--gold:#ffc72c;--cyan:#54e8ff;--violet:#a970ff;--pink:#ff4fd8;--green:#55ef9a;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030303;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button{font:inherit}.app{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;background:radial-gradient(circle at 50% 34%,rgba(84,232,255,.14),transparent 22%),radial-gradient(circle at 78% 18%,rgba(169,112,255,.12),transparent 26%),radial-gradient(circle at 20% 82%,rgba(255,199,44,.07),transparent 22%),#030303}.app:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.48))}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;filter:grayscale(.25) saturate(.8) contrast(1.08) brightness(.42);transition:opacity .6s ease;z-index:-2}video.live{opacity:.54}
+.hud{position:absolute;top:max(18px,env(safe-area-inset-top));left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));display:flex;justify-content:space-between;gap:12px;align-items:flex-start;z-index:50}.brand{font-size:.72rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;line-height:1.4}.brand b{color:var(--gold)}.pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.42);backdrop-filter:blur(14px);font-size:.63rem;font-weight:800;color:#d4d4d8}.pill.live{color:#baf7d1;border-color:rgba(85,239,154,.42)}
+.scene{position:absolute;inset:0;padding:96px 20px 110px;display:grid;place-items:center;text-align:center;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .4s ease,transform .4s ease;z-index:10}.scene.active{opacity:1;visibility:visible;transform:scale(1)}.center{width:min(980px,94vw)}.kicker{font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;font-weight:900;color:var(--cyan);margin-bottom:15px}.title{margin:0;font-size:clamp(3rem,12vw,8rem);line-height:.86;letter-spacing:-.07em;font-weight:950}.outline{display:block;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.5)}.lead{max-width:650px;margin:22px auto 0;color:#c9ccd4;font-size:clamp(.98rem,2vw,1.18rem);line-height:1.6}.primary,.secondary{border-radius:20px;padding:16px 20px;font-weight:900;cursor:pointer}.primary{margin-top:28px;min-width:min(430px,88vw);border:1px solid rgba(255,199,44,.62);background:linear-gradient(180deg,rgba(255,199,44,.13),rgba(255,255,255,.04));color:var(--gold);box-shadow:0 18px 70px rgba(255,199,44,.09)}.primary span{display:block;font-size:.7rem;color:#b8bbc3;letter-spacing:.08em;margin-top:5px}.secondary{border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff}.privacy{margin-top:14px;color:#858b95;font-size:.72rem}.loader{width:78px;height:78px;margin:0 auto 24px;border-radius:50%;border:1px solid var(--line);position:relative}.loader:before{content:"";position:absolute;inset:7px;border-radius:50%;border-top:2px solid var(--cyan);animation:spin 1s linear infinite}.loader:after{content:"";position:absolute;inset:20px;border-radius:50%;background:rgba(84,232,255,.12);box-shadow:0 0 45px rgba(84,232,255,.14)}@keyframes spin{to{transform:rotate(360deg)}}
+.error-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}.error-note{max-width:600px;margin:18px auto 0;color:#c6c9d1;font-size:.86rem;line-height:1.55;padding:15px;border:1px solid rgba(255,199,44,.25);border-radius:18px;background:rgba(255,199,44,.05)}
+.stage{position:absolute;inset:0;z-index:20;opacity:0;visibility:hidden;transition:opacity .4s ease}.stage.active{opacity:1;visibility:visible}.orb{position:absolute;left:0;top:0;width:min(300px,68vw);aspect-ratio:1;border-radius:34px;padding:28px;display:grid;place-items:center;text-align:center;touch-action:none;user-select:none;cursor:grab;border:1px solid rgba(255,255,255,.19);background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.045));backdrop-filter:blur(24px);box-shadow:0 40px 120px rgba(0,0,0,.44),inset 0 1px 0 rgba(255,255,255,.14);will-change:transform}.orb:before{content:"";position:absolute;inset:-2px;border-radius:36px;background:linear-gradient(135deg,rgba(84,232,255,.5),transparent 32%,transparent 68%,rgba(255,79,216,.5));z-index:-1;filter:blur(8px);opacity:.38}.orb.grabbed{box-shadow:0 0 0 9px rgba(84,232,255,.08),0 45px 120px rgba(0,0,0,.48)}.num{font-size:.67rem;letter-spacing:.19em;text-transform:uppercase;font-weight:900;color:var(--cyan)}.orb h2{margin:12px 0 0;font-size:clamp(2.1rem,8vw,4rem);line-height:.88;letter-spacing:-.055em}.orb p{margin:14px 0 0;color:#b9bdc6;font-size:.86rem;line-height:1.48}.coach{position:absolute;left:50%;bottom:max(82px,calc(env(safe-area-inset-bottom) + 70px));transform:translateX(-50%);width:min(650px,90vw);padding:12px 16px;border-radius:18px;border:1px solid var(--line);background:rgba(4,4,4,.7);backdrop-filter:blur(18px);text-align:center;font-size:.84rem;line-height:1.45;z-index:40}.coach b{color:var(--gold)}.break{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);border-radius:999px;padding:12px 18px;border:1px solid rgba(169,112,255,.45);background:rgba(4,4,4,.68);color:#fff;font-weight:900;font-size:.76rem;z-index:41;display:none}.break.show{display:block}.break.listening{box-shadow:0 0 0 9px rgba(169,112,255,.09)}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:80}.flash.go{animation:flash .55s ease}@keyframes flash{0%{opacity:0}15%{opacity:.95}100%{opacity:0}}.final{background:radial-gradient(circle at 50% 45%,rgba(169,112,255,.18),transparent 27%),#030303}.gradient{background:linear-gradient(90deg,var(--cyan),#8aa7ff,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.tech{margin:24px auto 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.tech span{padding:7px 10px;border-radius:999px;border:1px solid var(--line);font-size:.66rem;color:#aeb4bd;letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:700px){.brand{max-width:160px}.pills .pill:nth-child(2){display:none}.scene{padding:100px 18px 118px}.title{font-size:clamp(3.15rem,15vw,6.2rem)}.orb{width:66vw;max-width:278px}.coach{bottom:max(84px,calc(env(safe-area-inset-bottom) + 72px))}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
 <div class="app" id="app">
-  <video id="video" autoplay muted playsinline></video><div class="shade"></div><div class="noise"></div><div class="crack" id="crack"></div><div class="flash" id="flash"></div>
-  <header class="hud"><div class="brand">ITSBAD LABS · <b>webAI Presence</b></div><div class="status"><span class="pill" id="cameraPill">CAMERA OFF</span><span class="pill" id="handPill">GESTURE STANDBY</span><span class="pill">ON-DEVICE</span></div></header>
-
-  <section class="scene active" id="s0"><div class="center"><div class="kicker">The web doesn't have to sit still.</div><h1 class="title">THE WEB HAS BEEN <span class="outline">WAITING FOR YOU.</span></h1><p class="lead">This page changes when you enter it. Camera, movement, gesture and voice become part of the interface.</p><button class="enter" id="enterBtn"><strong>ENTER THE EXPERIENCE</strong><span>TURN ON YOUR CAMERA TO BEGIN</span></button><div class="privacy">Camera access is used only on your device. Nothing is uploaded by this page.</div></div></section>
-
-  <section class="scene" id="sLoading"><div class="center"><div class="loader"></div><div class="kicker" id="loadKicker">Waking up the browser</div><h2 class="prompt" id="loadTitle">CONNECTING TO YOU.</h2><p class="micro" id="loadCopy">Requesting camera access…</p></div></section>
-
-  <section class="scene" id="sSee"><div class="center"><h2 class="prompt"><small>01 · PERCEPTION</small>I SEE YOU.</h2><p class="micro"><span class="pulse"></span>Move a little. The light field follows your presence.</p></div></section>
-
-  <section class="scene" id="sHand"><div class="center"><h2 class="prompt"><small>02 · GESTURE</small>SHOW ME YOUR HAND.</h2><p class="micro" id="handCopy">Raise one hand in front of the camera. If hand tracking is unavailable, you can still touch or drag directly.</p></div></section>
-
-  <div class="object-stage" id="objectStage"><div class="orb" id="orb"><div><div class="num">03 · TOUCH</div><h2>TOUCH ME.</h2><p>Pinch thumb + index near this object — or drag it with your finger/mouse.</p></div></div></div>
-  <div class="hand-cursor" id="handCursor"></div>
-  <div class="coach" id="coach"></div>
-  <button class="break-btn" id="breakBtn">🎙 SAY “BREAK IT”</button>
-  <button class="skip" id="skipBtn">Skip to finale</button>
-
-  <section class="scene final" id="sFinal"><div class="center"><div class="kicker">webAI Presence</div><h2 class="title">THE WEB DOESN'T HAVE TO <span class="gradient">SIT STILL.</span></h2><p class="lead">You didn't browse this page. You changed it.</p><div class="tech"><span>Camera</span><span>Gesture</span><span>Touch</span><span>Voice</span><span>Browser AI</span></div></div></section>
+<video id="video" autoplay muted playsinline></video><div class="flash" id="flash"></div>
+<header class="hud"><div class="brand">ITSBAD LABS · <b>webAI Presence</b></div><div class="pills"><span class="pill" id="cameraPill">CAMERA OFF</span><span class="pill">TOUCH + VOICE</span><span class="pill">ON-DEVICE</span></div></header>
+<section class="scene active" id="intro"><div class="center"><div class="kicker">The web doesn't have to sit still.</div><h1 class="title">THE WEB HAS BEEN <span class="outline">WAITING FOR YOU.</span></h1><p class="lead">Enter a browser experience that reacts to your camera, your movement, your touch, and your voice.</p><button class="primary" id="enter"><strong>ENTER THE EXPERIENCE</strong><span>TURN ON YOUR CAMERA TO BEGIN</span></button><div class="privacy">Camera frames stay on your device. Nothing is uploaded by this page.</div></div></section>
+<section class="scene" id="loading"><div class="center"><div class="loader"></div><div class="kicker">Waking up the browser</div><h2 class="title" style="font-size:clamp(2.7rem,10vw,6rem)">CONNECTING TO YOU.</h2><p class="lead" id="loadingCopy">Requesting camera access…</p></div></section>
+<section class="scene" id="error"><div class="center"><div class="kicker">Camera connection</div><h2 class="title" style="font-size:clamp(2.8rem,10vw,6rem)">I CAN'T SEE YOU YET.</h2><div class="error-note" id="errorText">Camera access did not start.</div><div class="error-actions"><button class="secondary" id="retry">RETRY CAMERA</button><button class="primary" style="margin-top:0;min-width:250px" id="continueTouch"><strong>CONTINUE WITH TOUCH</strong><span>THE EXPERIENCE STILL WORKS</span></button></div></div></section>
+<section class="scene" id="seen"><div class="center"><div class="kicker">01 · Perception</div><h2 class="title" style="font-size:clamp(3rem,12vw,7rem)">I SEE YOU.</h2><p class="lead">Now the page is part of the room you're in.</p></div></section>
+<div class="stage" id="stage"><div class="orb" id="orb"><div><div class="num">02 · TOUCH</div><h2>TOUCH ME.</h2><p>Grab this object with your finger or mouse. Move it. Throw it. The interface no longer has to stay put.</p></div></div><div class="coach" id="coach">Drag the object. <b>Move it fast and let go.</b></div><button class="break" id="breakBtn">BREAK IT</button></div>
+<section class="scene final" id="final"><div class="center"><div class="kicker">webAI Presence</div><h2 class="title">THE WEB DOESN'T HAVE TO <span class="gradient">SIT STILL.</span></h2><p class="lead">You didn't browse this page. You changed it.</p><div class="tech"><span>Camera</span><span>Touch</span><span>Physics</span><span>Voice</span><span>Browser AI</span></div></div></section>
 </div>
 <script>
-(()=>{
-  'use strict';
-  const $=id=>document.getElementById(id);
-  const scenes=['s0','sLoading','sSee','sHand','sFinal'];
-  const video=$('video'),enterBtn=$('enterBtn'),cameraPill=$('cameraPill'),handPill=$('handPill'),objectStage=$('objectStage'),orb=$('orb'),cursor=$('handCursor'),coach=$('coach'),breakBtn=$('breakBtn'),skipBtn=$('skipBtn'),flash=$('flash'),crack=$('crack');
-  let stream=null,landmarker=null,tracking=false,lastVideoTime=-1,grabbed=false,thrown=false,broken=false;
-  let pos={x:innerWidth/2,y:innerHeight/2},vel={x:0,y:0},last={x:pos.x,y:pos.y,t:performance.now()},rot=0;
-  let recognition=null;
-
-  function scene(id){scenes.forEach(s=>$(s).classList.toggle('active',s===id));}
-  function setLoad(title,copy,kicker='Waking up the browser'){ $('loadTitle').textContent=title;$('loadCopy').textContent=copy;$('loadKicker').textContent=kicker; }
-  function wait(ms){return new Promise(r=>setTimeout(r,ms));}
-  function render(){orb.style.transform=`translate3d(${pos.x- orb.offsetWidth/2}px,${pos.y-orb.offsetHeight/2}px,0) rotate(${rot}deg)`;}
-  function clamp(){const w=orb.offsetWidth,h=orb.offsetHeight;pos.x=Math.max(w*.45,Math.min(innerWidth-w*.45,pos.x));pos.y=Math.max(h*.45,Math.min(innerHeight-h*.45,pos.y));}
-  function setCoach(html){coach.innerHTML=html;coach.classList.add('show');}
-
-  // Bind immediately. No model import blocks the Enter button.
-  enterBtn.addEventListener('click',startExperience,{passive:true});
-  skipBtn.addEventListener('click',finale);
-
-  async function startExperience(){
-    if(stream)return;
-    enterBtn.disabled=true;scene('sLoading');setLoad('CONNECTING TO YOU.','Requesting camera access…');
-    if(!navigator.mediaDevices?.getUserMedia){return showCameraError('This browser does not expose camera access to this page.');}
-    try{
-      stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});
-      video.srcObject=stream;
-      await video.play();
-      video.classList.add('live');cameraPill.textContent='CAMERA LIVE';cameraPill.classList.add('live');
-      setLoad('CAMERA CONNECTED.','Loading gesture intelligence…','You are in.');
-      // Gesture AI loads after camera success. Failure does not stop the experience.
-      initHands().catch(err=>{console.warn('Hand tracking fallback',err);handPill.textContent='TOUCH FALLBACK';});
-      await wait(900);scene('sSee');
-      installPresenceMotion();
-      await wait(1700);scene('sHand');skipBtn.classList.add('show');
-      setTimeout(()=>{if(!tracking)beginTouchStage(false)},3800);
-    }catch(err){
-      console.error(err);showCameraError(err?.name==='NotAllowedError'?'Camera permission was not granted.':'The camera could not be started.');
-    }
-  }
-
-  function showCameraError(message){
-    scene('sLoading');setLoad('CAMERA DIDN’T START.',message,'Still fixable');
-    $('loadCopy').innerHTML=`${message}<div class="error-box"><strong>Try this:</strong> allow camera access in your browser settings, then reload this page. You can also continue with touch/mouse fallback.</div>`;
-    enterBtn.disabled=false;setTimeout(()=>beginTouchStage(false),1800);
-  }
-
-  async function initHands(){
-    const mod=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm');
-    const vision=await mod.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-    landmarker=await mod.HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.45,minHandPresenceConfidence:.45,minTrackingConfidence:.4});
-    handPill.textContent='HAND SEARCHING';
-    requestAnimationFrame(trackHands);
-  }
-
-  function installPresenceMotion(){
-    const move=(x,y)=>{document.documentElement.style.setProperty('--px',`${Math.round(x/innerWidth*100)}%`);document.documentElement.style.setProperty('--py',`${Math.round(y/innerHeight*100)}%`);};
-    addEventListener('pointermove',e=>move(e.clientX,e.clientY),{passive:true});
-    if(window.DeviceOrientationEvent)addEventListener('deviceorientation',e=>{const x=innerWidth/2+(e.gamma||0)*6,y=innerHeight*.35+(e.beta||0)*2;move(x,y);},{passive:true});
-  }
-
-  async function trackHands(){
-    if(!landmarker||!video.videoWidth){requestAnimationFrame(trackHands);return;}
-    if(video.currentTime!==lastVideoTime){
-      lastVideoTime=video.currentTime;
-      let res=null;try{res=landmarker.detectForVideo(video,performance.now())}catch(e){}
-      const lm=res?.landmarks?.[0];
-      if(lm){
-        if(!tracking){tracking=true;handPill.textContent='HAND FOUND';handPill.classList.add('live');$('handCopy').textContent='There you are.';setTimeout(()=>beginTouchStage(true),650);}
-        const tip=lm[8],thumb=lm[4];
-        const x=(1-tip.x)*innerWidth,y=tip.y*innerHeight;
-        const dx=(tip.x-thumb.x),dy=(tip.y-thumb.y),dist=Math.hypot(dx,dy);const pinching=dist<.055;
-        cursor.style.left=`${x}px`;cursor.style.top=`${y}px`;cursor.classList.add('show');cursor.classList.toggle('pinch',pinching);
-        handleGesture(x,y,pinching);
-      }
-    }
-    requestAnimationFrame(trackHands);
-  }
-
-  function beginTouchStage(usingHand){
-    if(objectStage.classList.contains('active')||broken)return;
-    scenes.forEach(s=>$(s).classList.remove('active'));objectStage.classList.add('active');
-    pos={x:innerWidth/2,y:innerHeight/2};vel={x:0,y:0};rot=0;render();
-    setCoach(usingHand?'Move your hand over the object. <b>Pinch thumb + index</b> to grab it.':'Gesture tracking is optional here. <b>Drag the object</b> with your finger or mouse.');
-    installPointerFallback();
-  }
-
-  function handleGesture(x,y,pinching){
-    if(!objectStage.classList.contains('active')||broken)return;
-    const now=performance.now(),dt=Math.max(16,now-last.t);const vx=(x-last.x)/dt*16,vy=(y-last.y)/dt*16;last={x,y,t:now};
-    const r=orb.getBoundingClientRect(),inside=x>=r.left-40&&x<=r.right+40&&y>=r.top-40&&y<=r.bottom+40;
-    if(pinching&&!grabbed&&inside){grabbed=true;orb.classList.add('grabbed');setCoach('<b>GRABBED.</b> Move your hand. Then open your fingers and throw it.');}
-    if(grabbed&&pinching){pos.x=x;pos.y=y;vel.x=vx;vel.y=vy;rot+=vx*.15;clamp();render();}
-    if(grabbed&&!pinching){release();}
-  }
-
-  function installPointerFallback(){
-    let pointer=false;
-    orb.onpointerdown=e=>{pointer=true;grabbed=true;orb.setPointerCapture?.(e.pointerId);orb.classList.add('grabbed');last={x:e.clientX,y:e.clientY,t:performance.now()};setCoach('<b>GRABBED.</b> Move it fast and release.');};
-    orb.onpointermove=e=>{if(!pointer)return;const now=performance.now(),dt=Math.max(16,now-last.t);vel.x=(e.clientX-last.x)/dt*16;vel.y=(e.clientY-last.y)/dt*16;last={x:e.clientX,y:e.clientY,t:now};pos.x=e.clientX;pos.y=e.clientY;rot+=vel.x*.12;clamp();render();};
-    orb.onpointerup=orb.onpointercancel=()=>{if(pointer){pointer=false;release();}};
-  }
-
-  function release(){grabbed=false;orb.classList.remove('grabbed');if(Math.hypot(vel.x,vel.y)<3){vel.x=4.5;vel.y=-3.2;}thrown=true;setCoach('YOU WEREN’T SUPPOSED TO BE ABLE TO DO THAT.');animateThrow();setTimeout(armBreak,1200);}
-  function animateThrow(){if(!thrown||grabbed||broken)return;pos.x+=vel.x;pos.y+=vel.y;vel.x*=.985;vel.y=vel.y*.985+.11;rot+=vel.x*.45;const w=orb.offsetWidth,h=orb.offsetHeight;if(pos.x<w*.42||pos.x>innerWidth-w*.42){vel.x*=-.82;pos.x=Math.max(w*.42,Math.min(innerWidth-w*.42,pos.x));}if(pos.y<h*.42||pos.y>innerHeight-h*.42){vel.y*=-.78;pos.y=Math.max(h*.42,Math.min(innerHeight-h*.42,pos.y));}render();requestAnimationFrame(animateThrow);}
-
-  function armBreak(){if(broken)return;setCoach('Want the rest? <b>Say “BREAK IT”</b> — or tap the button.');breakBtn.classList.add('show');setupVoice();}
-  breakBtn.addEventListener('click',()=>{if(recognition){try{recognition.start();breakBtn.classList.add('listening');breakBtn.textContent='LISTENING…';return;}catch(e){}}finale();});
-  function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){breakBtn.textContent='BREAK IT';return;}recognition=new SR();recognition.lang='en-US';recognition.interimResults=false;recognition.maxAlternatives=1;recognition.onresult=e=>{const phrase=e.results?.[0]?.[0]?.transcript?.toLowerCase()||'';if(phrase.includes('break'))finale();else{breakBtn.textContent='TRY “BREAK IT”';breakBtn.classList.remove('listening');}};recognition.onerror=()=>{breakBtn.textContent='BREAK IT';breakBtn.classList.remove('listening');};recognition.onend=()=>breakBtn.classList.remove('listening');}
-
-  async function finale(){if(broken)return;broken=true;tracking=false;coach.classList.remove('show');breakBtn.classList.remove('show');skipBtn.classList.remove('show');cursor.classList.remove('show');crack.classList.add('go');await wait(160);flash.classList.add('go');objectStage.style.transition='transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s';objectStage.style.transform='scale(1.35) rotate(9deg)';objectStage.style.opacity='0';await wait(520);scene('sFinal');}
-
-  addEventListener('resize',()=>{clamp();render();});
+(()=>{'use strict';
+const $=id=>document.getElementById(id),scenes=['intro','loading','error','seen','final'];
+const video=$('video'),cameraPill=$('cameraPill'),stage=$('stage'),orb=$('orb'),coach=$('coach'),breakBtn=$('breakBtn'),flash=$('flash');
+let stream=null,grabbed=false,thrown=false,broken=false,raf=null,recognition=null;
+let pos={x:innerWidth/2,y:innerHeight/2},vel={x:0,y:0},rot=0,last={x:pos.x,y:pos.y,t:performance.now()};
+function scene(id){scenes.forEach(s=>$(s).classList.toggle('active',s===id));stage.classList.remove('active');}
+function render(){const w=orb.offsetWidth,h=orb.offsetHeight;orb.style.transform=`translate3d(${pos.x-w/2}px,${pos.y-h/2}px,0) rotate(${rot}deg)`;}
+function clamp(){const w=orb.offsetWidth,h=orb.offsetHeight;pos.x=Math.max(w*.5+8,Math.min(innerWidth-w*.5-8,pos.x));pos.y=Math.max(h*.5+90,Math.min(innerHeight-h*.5-105,pos.y));}
+async function requestCamera(){scene('loading');$('loadingCopy').textContent='Requesting camera access…';try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('Camera APIs are unavailable in this browser.');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;await video.play();video.classList.add('live');cameraPill.textContent='CAMERA LIVE';cameraPill.classList.add('live');$('loadingCopy').textContent='Camera connected.';setTimeout(()=>{scene('seen');setTimeout(()=>startStage(true),1200)},600)}catch(err){cameraPill.textContent='CAMERA OFF';cameraPill.classList.remove('live');scene('error');$('errorText').innerHTML=`<strong style="color:var(--gold)">${err?.name==='NotAllowedError'?'Camera permission was not granted.':'The camera could not be started.'}</strong><br><br>On iPhone, check Safari camera permission for this site and retry. Or continue with touch — the experience will not advance until you choose.`;}}
+function startStage(withCamera){scenes.forEach(s=>$(s).classList.remove('active'));stage.classList.add('active');pos={x:innerWidth/2,y:Math.max(innerHeight*.47,250)};vel={x:0,y:0};rot=0;clamp();render();coach.innerHTML=withCamera?'The camera is live. Now <b>grab the object and throw it.</b>':'Touch mode is active. <b>Grab the object and throw it.</b>';installDrag();}
+function installDrag(){let pointer=false;orb.onpointerdown=e=>{pointer=true;grabbed=true;thrown=false;if(raf)cancelAnimationFrame(raf);orb.setPointerCapture?.(e.pointerId);orb.classList.add('grabbed');last={x:e.clientX,y:e.clientY,t:performance.now()};coach.innerHTML='<b>GRABBED.</b> Move fast. Then release.'};orb.onpointermove=e=>{if(!pointer)return;const now=performance.now(),dt=Math.max(16,now-last.t);vel.x=(e.clientX-last.x)/dt*16;vel.y=(e.clientY-last.y)/dt*16;last={x:e.clientX,y:e.clientY,t:now};pos.x=e.clientX;pos.y=e.clientY;rot+=vel.x*.13;clamp();render()};orb.onpointerup=orb.onpointercancel=()=>{if(!pointer)return;pointer=false;grabbed=false;orb.classList.remove('grabbed');release()}}
+function release(){if(Math.hypot(vel.x,vel.y)<3){vel.x=5;vel.y=-3.5}thrown=true;coach.textContent="YOU WEREN'T SUPPOSED TO BE ABLE TO DO THAT.";animateThrow();setTimeout(armBreak,1100)}
+function animateThrow(){if(!thrown||grabbed||broken)return;pos.x+=vel.x;pos.y+=vel.y;vel.x*=.984;vel.y=vel.y*.984+.12;rot+=vel.x*.42;const w=orb.offsetWidth,h=orb.offsetHeight;if(pos.x<w*.5+8||pos.x>innerWidth-w*.5-8){vel.x*=-.82;pos.x=Math.max(w*.5+8,Math.min(innerWidth-w*.5-8,pos.x))}if(pos.y<h*.5+90||pos.y>innerHeight-h*.5-105){vel.y*=-.78;pos.y=Math.max(h*.5+90,Math.min(innerHeight-h*.5-105,pos.y))}render();raf=requestAnimationFrame(animateThrow)}
+function armBreak(){if(broken)return;coach.innerHTML='Want the rest? <b>Say “BREAK IT”</b> — or tap the button.';breakBtn.classList.add('show');setupVoice()}
+function setupVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){breakBtn.textContent='BREAK IT';return}recognition=new SR();recognition.lang='en-US';recognition.interimResults=false;recognition.onresult=e=>{const phrase=e.results?.[0]?.[0]?.transcript?.toLowerCase()||'';if(phrase.includes('break'))finale();else{breakBtn.textContent='TRY “BREAK IT”';breakBtn.classList.remove('listening')}};recognition.onerror=()=>{breakBtn.textContent='BREAK IT';breakBtn.classList.remove('listening')};recognition.onend=()=>breakBtn.classList.remove('listening')}
+function finale(){if(broken)return;broken=true;breakBtn.classList.remove('show');coach.style.opacity='0';flash.classList.add('go');orb.style.transition='transform .65s cubic-bezier(.2,.8,.2,1),opacity .65s';orb.style.transform+=' scale(1.8)';orb.style.opacity='0';setTimeout(()=>scene('final'),520)}
+$('enter').addEventListener('click',requestCamera);$('retry').addEventListener('click',requestCamera);$('continueTouch').addEventListener('click',()=>startStage(false));breakBtn.addEventListener('click',()=>{if(recognition){try{recognition.start();breakBtn.classList.add('listening');breakBtn.textContent='LISTENING…';return}catch(e){}}finale()});
+addEventListener('resize',()=>{if(stage.classList.contains('active')){clamp();render()}});
 })();
 </script>
 </body>

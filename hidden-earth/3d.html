@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Hidden Earth — 3D Terrain</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#08151c;color:#e8f7f3;font:15px system-ui,-apple-system,sans-serif}header{padding:12px 15px;background:#102630}h1{font-size:20px;margin:3px 0}small{color:#a4c4c0}a{color:#7ae8da}main{display:flex;flex-direction:column;height:100dvh;min-height:450px}#map{flex:1;min-height:250px}nav{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 13px;background:#102630}button{border:1px solid #447078;border-radius:10px;background:#173640;color:#f4fffc;padding:10px 12px;font-weight:600}button.active{background:#147a70;border-color:#56d7c5}#status{padding:7px 13px;font-size:12px;background:#122e37;color:#b9d2ce;min-height:32px}#exaggeration{width:95px}label{font-size:13px}#warning{font-size:11px;color:#bbd2cf;padding:7px 13px;background:#0a1d24}.maplibregl-ctrl-attrib{font-size:10px!important} .maplibregl-popup-content{color:#142a2c}
+</style></head><body><main>
+<header><small>ITSBAD LABS / HIDDEN EARTH v0.3</small><h1>3D Terrain Explorer</h1><small>Wrigley, Kentucky · <a href="./">Back to 2D LiDAR map</a></small></header>
+<nav><button id="tilt" class="active">3D view</button><button id="overhead">Overhead</button><button id="reset">Cabin</button><label for="exaggeration">Relief <span id="reliefLabel">1.5×</span></label><input id="exaggeration" type="range" min="10" max="30" value="15" aria-label="Terrain vertical exaggeration"></nav>
+<div id="status" role="status">Loading terrain and aerial imagery…</div><div id="map" aria-label="Interactive three-dimensional terrain map"></div>
+<div id="warning">3D uses a global elevation tile dataset (not Kentucky's 5-foot LiDAR). For high-resolution bare-earth detail, use the 2D LiDAR map. 3D relief is exaggerated for visibility. No caves or property boundaries are identified.</div>
+</main><script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(()=>{'use strict';
+const center=[-83.298350,38.023436], status=document.getElementById('status');
+if(!window.maplibregl){status.textContent='3D engine could not load. Check your connection or use the 2D LiDAR map.';return}
+const map=new maplibregl.Map({container:'map',center,zoom:13.6,pitch:65,bearing:-25,antialias:true,maxPitch:85,attributionControl:true,
+style:{version:8,sources:{
+'aerial':{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Imagery © Esri and contributors',maxzoom:19},
+'elevation':{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,encoding:'terrarium',maxzoom:15,attribution:'Elevation © Mapzen / AWS Terrain Tiles'}
+},layers:[{id:'imagery',type:'raster',source:'aerial'}]}});
+let ready=false,failed=false;
+map.addControl(new maplibregl.NavigationControl({showCompass:true,showZoom:true}),'top-right');
+const cabin=document.createElement('div');cabin.style.cssText='width:17px;height:17px;border:3px solid #fff;background:#148cdd;border-radius:50%;box-shadow:0 0 0 4px #003c58aa';
+new maplibregl.Marker({element:cabin}).setLngLat(center).setPopup(new maplibregl.Popup().setText('Cabin reference only — not a property boundary')).addTo(map);
+map.on('load',()=>{try{map.setTerrain({source:'elevation',exaggeration:1.5});ready=true;status.textContent='3D terrain enabled. Drag to explore; use two fingers to rotate and tilt on iPhone.'}catch(e){failed=true;status.textContent='3D terrain unavailable on this browser. Use the 2D LiDAR map.'}});
+map.on('error',e=>{if(failed)return;const message=String(e.error?.message||'');if(/elevation|terrain|terrarium|webgl/i.test(message)){status.textContent='Some terrain tiles failed to load. Check connectivity or use the 2D LiDAR map.'}});
+document.getElementById('tilt').onclick=()=>{map.easeTo({pitch:65,bearing:-25,duration:650});document.getElementById('tilt').classList.add('active');document.getElementById('overhead').classList.remove('active')};
+document.getElementById('overhead').onclick=()=>{map.easeTo({pitch:0,bearing:0,duration:650});document.getElementById('overhead').classList.add('active');document.getElementById('tilt').classList.remove('active')};
+document.getElementById('reset').onclick=()=>map.flyTo({center,zoom:13.6,pitch:65,bearing:-25,duration:900});
+document.getElementById('exaggeration').oninput=e=>{const n=Number(e.target.value)/10;document.getElementById('reliefLabel').textContent=n.toFixed(1)+'×';if(ready)map.setTerrain({source:'elevation',exaggeration:n})};
+})();
+</script></body></html>
